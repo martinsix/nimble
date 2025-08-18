@@ -11,6 +11,7 @@ export interface BaseItem {
 
 export interface WeaponItem extends BaseItem {
   type: 'weapon';
+  equipped?: boolean;
   attribute?: AttributeName;
   damage?: string;
   properties?: string[];
@@ -18,6 +19,7 @@ export interface WeaponItem extends BaseItem {
 
 export interface ArmorItem extends BaseItem {
   type: 'armor';
+  equipped?: boolean;
   armor?: number;
   properties?: string[];
 }
@@ -38,6 +40,7 @@ export interface CreateItemData {
   name: string;
   size: number;
   type: ItemType;
+  equipped?: boolean;
   attribute?: AttributeName;
   damage?: string;
   armor?: number;

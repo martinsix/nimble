@@ -24,3 +24,18 @@ export const createDefaultInventory = (): Inventory => {
     items: [],
   };
 };
+
+export const createDefaultHitPoints = () => {
+  return {
+    current: 10,
+    max: 10,
+  };
+};
+
+export const createDefaultInitiative = () => {
+  return {
+    name: 'Initiative',
+    associatedAttribute: 'dexterity' as AttributeName,
+    modifier: 0,
+  };
+};

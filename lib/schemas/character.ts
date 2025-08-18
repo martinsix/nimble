@@ -8,6 +8,7 @@ export const itemSchema = z.object({
   name: z.string().min(1),
   size: z.number().min(0),
   type: z.enum(['weapon', 'armor', 'freeform']),
+  equipped: z.boolean().optional(),
   attribute: attributeNameSchema.optional(),
   damage: z.string().optional(),
   armor: z.number().optional(),
@@ -46,9 +47,16 @@ export const skillsSchema = z.object({
   stealth: skillSchema,
 });
 
+export const hitPointsSchema = z.object({
+  current: z.number().min(0),
+  max: z.number().min(1),
+});
+
 export const createCharacterSchema = z.object({
   name: z.string().min(1).max(50),
   attributes: attributeSchema,
+  hitPoints: hitPointsSchema,
+  initiative: skillSchema,
   skills: skillsSchema,
   inventory: inventorySchema,
 });
@@ -57,6 +65,8 @@ export const characterSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1).max(50),
   attributes: attributeSchema,
+  hitPoints: hitPointsSchema,
+  initiative: skillSchema,
   skills: skillsSchema,
   inventory: inventorySchema,
   createdAt: z.date(),

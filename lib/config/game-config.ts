@@ -19,6 +19,9 @@ export interface GameConfig {
   storage: {
     maxRollHistory: number;
   };
+  equipment: {
+    maxWeaponSize: number;
+  };
 }
 
 export const gameConfig: GameConfig = {
@@ -41,5 +44,8 @@ export const gameConfig: GameConfig = {
   },
   storage: {
     maxRollHistory: 100,
+  },
+  equipment: {
+    maxWeaponSize: 2,
   },
 };

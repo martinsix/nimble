@@ -17,6 +17,11 @@ export interface Character {
     intelligence: number;
     will: number;
   };
+  hitPoints: {
+    current: number;
+    max: number;
+  };
+  initiative: Skill;
   skills: {
     arcana: Skill;
     examination: Skill;
@@ -42,6 +47,11 @@ export interface CreateCharacterData {
     intelligence: number;
     will: number;
   };
+  hitPoints: {
+    current: number;
+    max: number;
+  };
+  initiative: Skill;
   skills: {
     arcana: Skill;
     examination: Skill;

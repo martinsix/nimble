@@ -7,7 +7,7 @@ import { Character, AttributeName, SkillName } from "@/lib/types/character";
 import { DiceRoll } from "@/lib/types/dice";
 import { characterService } from "@/lib/services/character-service";
 import { diceService } from "@/lib/services/dice-service";
-import { createDefaultSkills, createDefaultInventory } from "@/lib/utils/character-defaults";
+import { createDefaultSkills, createDefaultInventory, createDefaultHitPoints, createDefaultInitiative } from "@/lib/utils/character-defaults";
 
 const sampleCharacter: Character = {
   id: "default-character",
@@ -18,6 +18,8 @@ const sampleCharacter: Character = {
     intelligence: 3,
     will: 0,
   },
+  hitPoints: createDefaultHitPoints(),
+  initiative: createDefaultInitiative(),
   skills: createDefaultSkills(),
   inventory: createDefaultInventory(),
   createdAt: new Date(),
@@ -40,6 +42,8 @@ export default function Home() {
           const newCharacter = await characterService.createCharacter({
             name: sampleCharacter.name,
             attributes: sampleCharacter.attributes,
+            hitPoints: sampleCharacter.hitPoints,
+            initiative: sampleCharacter.initiative,
             skills: sampleCharacter.skills,
             inventory: sampleCharacter.inventory,
           }, "default-character");
@@ -99,6 +103,15 @@ export default function Home() {
     }
   };
 
+  const handleRollInitiative = async (totalModifier: number, advantageLevel: number) => {
+    try {
+      const roll = await diceService.addRoll(20, totalModifier, "Initiative", advantageLevel);
+      setRolls(prevRolls => [roll, ...prevRolls.slice(0, 99)]); // Keep only 100 rolls
+    } catch (error) {
+      console.error("Failed to roll initiative:", error);
+    }
+  };
+
   const handleClearRolls = async () => {
     try {
       await diceService.clearRolls();
@@ -125,6 +138,7 @@ export default function Home() {
           onUpdate={handleCharacterUpdate} 
           onRollAttribute={handleRollAttribute}
           onRollSkill={handleRollSkill}
+          onRollInitiative={handleRollInitiative}
           onAttack={handleAttack}
         />
         <RollLog rolls={rolls} onClearRolls={handleClearRolls} />

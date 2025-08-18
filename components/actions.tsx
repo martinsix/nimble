@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Character, AttributeName } from "@/lib/types/character";
 import { WeaponItem } from "@/lib/types/inventory";
+import { getEquippedWeapons } from "@/lib/utils/equipment";
 import { Sword } from "lucide-react";
 
 interface ActionsProps {
@@ -13,9 +14,7 @@ interface ActionsProps {
 }
 
 export function Actions({ character, onAttack, advantageLevel }: ActionsProps) {
-  const weapons = character.inventory.items.filter(
-    item => item.type === 'weapon'
-  ) as WeaponItem[];
+  const weapons = getEquippedWeapons(character.inventory.items);
 
   const getAttributeModifier = (attributeName?: AttributeName): number => {
     if (!attributeName) return 0;
@@ -33,7 +32,7 @@ export function Actions({ character, onAttack, advantageLevel }: ActionsProps) {
     return (
       <Card>
         <CardContent className="p-6 text-center text-muted-foreground">
-          No weapons in inventory. Add weapons to see attack actions.
+          No equipped weapons. Equip weapons in your inventory to see attack actions.
         </CardContent>
       </Card>
     );

@@ -7,7 +7,8 @@ import { Label } from "./ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { Inventory as InventoryType, Item, ItemType, CreateItemData } from "@/lib/types/inventory";
+import { Inventory as InventoryType, Item, ItemType, CreateItemData, WeaponItem, ArmorItem } from "@/lib/types/inventory";
+import { canEquipWeapon, canEquipArmor, getEquipmentValidationMessage } from "@/lib/utils/equipment";
 import { Plus, Trash2, Package, Sword, Shield } from "lucide-react";
 
 interface InventoryProps {
@@ -23,7 +24,13 @@ export function Inventory({ inventory, onUpdateInventory }: InventoryProps) {
     type: "freeform",
   });
 
-  const currentSize = inventory.items.reduce((total, item) => total + item.size, 0);
+  const currentSize = inventory.items.reduce((total, item) => {
+    // Exclude equipped weapons and armor from inventory size calculation
+    if ((item.type === 'weapon' || item.type === 'armor') && item.equipped) {
+      return total;
+    }
+    return total + item.size;
+  }, 0);
   const sizePercent = inventory.maxSize > 0 ? (currentSize / inventory.maxSize) * 100 : 0;
 
   const updateMaxSize = (maxSize: number) => {
@@ -59,6 +66,31 @@ export function Inventory({ inventory, onUpdateInventory }: InventoryProps) {
     onUpdateInventory({
       ...inventory,
       items: inventory.items.filter(item => item.id !== itemId),
+    });
+  };
+
+  const toggleEquipped = (itemId: string) => {
+    const updatedItems = inventory.items.map(item => {
+      if (item.id === itemId && (item.type === 'weapon' || item.type === 'armor')) {
+        const newEquippedState = !item.equipped;
+        
+        // If trying to equip, check validation
+        if (newEquippedState) {
+          const validationMessage = getEquipmentValidationMessage(inventory.items, item);
+          if (validationMessage) {
+            alert(validationMessage);
+            return item; // Don't change the item
+          }
+        }
+        
+        return { ...item, equipped: newEquippedState };
+      }
+      return item;
+    });
+    
+    onUpdateInventory({
+      ...inventory,
+      items: updatedItems,
     });
   };
 
@@ -293,6 +325,16 @@ export function Inventory({ inventory, onUpdateInventory }: InventoryProps) {
                     <span className="text-sm text-muted-foreground">
                       Size: {item.size}
                     </span>
+                    {(item.type === 'weapon' || item.type === 'armor') && (
+                      <Button
+                        variant={item.equipped ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => toggleEquipped(item.id)}
+                        className={item.equipped ? "text-white" : ""}
+                      >
+                        {item.equipped ? "Equipped" : "Equip"}
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
