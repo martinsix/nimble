@@ -69,30 +69,30 @@ export default function Home() {
     }
   };
 
-  const handleRollAttribute = async (attributeName: AttributeName, value: number) => {
+  const handleRollAttribute = async (attributeName: AttributeName, value: number, advantageLevel: number) => {
     try {
       const attributeLabel = attributeName.charAt(0).toUpperCase() + attributeName.slice(1);
-      const roll = await diceService.addRoll(20, value, `${attributeLabel} check`);
+      const roll = await diceService.addRoll(20, value, `${attributeLabel} check`, advantageLevel);
       setRolls(prevRolls => [roll, ...prevRolls.slice(0, 99)]); // Keep only 100 rolls
     } catch (error) {
       console.error("Failed to roll dice:", error);
     }
   };
 
-  const handleRollSkill = async (skillName: SkillName, attributeValue: number, skillModifier: number) => {
+  const handleRollSkill = async (skillName: SkillName, attributeValue: number, skillModifier: number, advantageLevel: number) => {
     try {
       const skill = character.skills[skillName];
       const totalModifier = attributeValue + skillModifier;
-      const roll = await diceService.addRoll(20, totalModifier, skill.name);
+      const roll = await diceService.addRoll(20, totalModifier, skill.name, advantageLevel);
       setRolls(prevRolls => [roll, ...prevRolls.slice(0, 99)]); // Keep only 100 rolls
     } catch (error) {
       console.error("Failed to roll skill:", error);
     }
   };
 
-  const handleAttack = async (weaponName: string, damage: string, attributeModifier: number) => {
+  const handleAttack = async (weaponName: string, damage: string, attributeModifier: number, advantageLevel: number) => {
     try {
-      const roll = await diceService.addAttackRoll(damage, attributeModifier, `${weaponName} attack`);
+      const roll = await diceService.addAttackRoll(damage, attributeModifier, `${weaponName} attack`, advantageLevel);
       setRolls(prevRolls => [roll, ...prevRolls.slice(0, 99)]); // Keep only 100 rolls
     } catch (error) {
       console.error("Failed to roll attack:", error);

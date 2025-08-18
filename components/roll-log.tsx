@@ -56,6 +56,16 @@ export function RollLog({ rolls, onClearRolls }: RollLogProps) {
                         CRIT x{roll.criticalHits}
                       </span>
                     )}
+                    {roll.advantageLevel && roll.advantageLevel > 0 && (
+                      <span className="text-green-600 font-semibold text-xs bg-green-100 px-2 py-1 rounded">
+                        ADV {roll.advantageLevel}
+                      </span>
+                    )}
+                    {roll.advantageLevel && roll.advantageLevel < 0 && (
+                      <span className="text-red-600 font-semibold text-xs bg-red-100 px-2 py-1 rounded">
+                        DIS {Math.abs(roll.advantageLevel)}
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className="text-muted-foreground">{formatTime(roll.timestamp)}</span>
@@ -78,12 +88,27 @@ export function RollLog({ rolls, onClearRolls }: RollLogProps) {
                               CRITICAL HIT! ({roll.criticalHits} crits)
                             </div>
                           )}
+                          {roll.advantageLevel && roll.advantageLevel !== 0 && (
+                            <div className={roll.advantageLevel > 0 ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
+                              {roll.advantageLevel > 0 ? `Advantage ${roll.advantageLevel}` : `Disadvantage ${Math.abs(roll.advantageLevel)}`}
+                            </div>
+                          )}
                           <div className="text-sm mt-1">
                             {roll.dice.map((die, index) => (
                               <div key={index} className={die.isCritical ? "text-yellow-600 font-semibold" : ""}>
                                 d{die.type}: {die.result} {die.isCritical ? "(CRIT!)" : ""}
                               </div>
                             ))}
+                            {roll.droppedDice && roll.droppedDice.length > 0 && (
+                              <div className="text-muted-foreground mt-1 pt-1 border-t">
+                                <div className="text-xs font-semibold">Dropped dice:</div>
+                                {roll.droppedDice.map((die, index) => (
+                                  <div key={index} className="text-xs line-through">
+                                    d{die.type}: {die.result}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                           {roll.modifier !== 0 && (
                             <div className="text-sm">

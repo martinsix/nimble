@@ -7,12 +7,14 @@ export interface SingleDie {
 export interface DiceRoll {
   id: string;
   timestamp: Date;
-  dice: SingleDie[]; // Array of individual dice
+  dice: SingleDie[]; // Array of individual dice (after advantage/disadvantage applied)
+  droppedDice?: SingleDie[]; // Dice that were dropped due to advantage/disadvantage
   modifier: number;
   total: number;
   description: string; // e.g., "Strength check" or "Sword attack"
   isMiss?: boolean; // For attack rolls
   criticalHits?: number; // Number of critical hits that occurred
+  advantageLevel?: number; // Positive for advantage, negative for disadvantage, 0/undefined for normal
 }
 
 export type DiceType = 4 | 6 | 8 | 10 | 12 | 20 | 100;

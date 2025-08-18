@@ -8,10 +8,11 @@ import { Sword } from "lucide-react";
 
 interface ActionsProps {
   character: Character;
-  onAttack: (weaponName: string, damage: string, attributeModifier: number) => void;
+  onAttack: (weaponName: string, damage: string, attributeModifier: number, advantageLevel: number) => void;
+  advantageLevel: number;
 }
 
-export function Actions({ character, onAttack }: ActionsProps) {
+export function Actions({ character, onAttack, advantageLevel }: ActionsProps) {
   const weapons = character.inventory.items.filter(
     item => item.type === 'weapon'
   ) as WeaponItem[];
@@ -25,7 +26,7 @@ export function Actions({ character, onAttack }: ActionsProps) {
     if (!weapon.damage) return;
     
     const attributeModifier = getAttributeModifier(weapon.attribute);
-    onAttack(weapon.name, weapon.damage, attributeModifier);
+    onAttack(weapon.name, weapon.damage, attributeModifier, advantageLevel);
   };
 
   if (weapons.length === 0) {

@@ -10,15 +10,16 @@ import { Character, AttributeName, SkillName } from "@/lib/types/character";
 import { Inventory as InventoryType } from "@/lib/types/inventory";
 import { Inventory } from "./inventory";
 import { Actions } from "./actions";
+import { AdvantageToggle } from "./advantage-toggle";
 import { uiStateService, UIState } from "@/lib/services/ui-state-service";
 import { ChevronDown, ChevronRight, Dice6 } from "lucide-react";
 
 interface CharacterSheetProps {
   character: Character;
   onUpdate: (character: Character) => void;
-  onRollAttribute: (attributeName: AttributeName, value: number) => void;
-  onRollSkill: (skillName: SkillName, attributeValue: number, skillModifier: number) => void;
-  onAttack: (weaponName: string, damage: string, attributeModifier: number) => void;
+  onRollAttribute: (attributeName: AttributeName, value: number, advantageLevel: number) => void;
+  onRollSkill: (skillName: SkillName, attributeValue: number, skillModifier: number, advantageLevel: number) => void;
+  onAttack: (weaponName: string, damage: string, attributeModifier: number, advantageLevel: number) => void;
 }
 
 export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSkill, onAttack }: CharacterSheetProps) {
@@ -30,6 +31,7 @@ export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSki
       actions: true,
       inventory: true,
     },
+    advantageLevel: 0,
   });
 
   useEffect(() => {
@@ -47,6 +49,15 @@ export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSki
         ...uiState.collapsibleSections,
         [section]: isOpen,
       },
+    };
+    setUIState(newUIState);
+    await uiStateService.saveUIState(newUIState);
+  };
+
+  const updateAdvantageLevel = async (advantageLevel: number) => {
+    const newUIState = {
+      ...uiState,
+      advantageLevel,
     };
     setUIState(newUIState);
     await uiStateService.saveUIState(newUIState);
@@ -124,6 +135,12 @@ export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSki
         />
       </div>
 
+      {/* Advantage/Disadvantage Toggle */}
+      <AdvantageToggle 
+        advantageLevel={uiState.advantageLevel} 
+        onAdvantageChange={updateAdvantageLevel} 
+      />
+
       {/* Attributes Section */}
       <Collapsible 
         open={uiState.collapsibleSections.attributes} 
@@ -137,105 +154,105 @@ export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSki
         </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-center text-lg">Strength</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Input
-              type="number"
-              min="-2"
-              max="10"
-              value={localCharacter.attributes.strength}
-              onChange={(e) => handleAttributeChange("strength", e.target.value)}
-              className="text-center text-xl font-bold"
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onRollAttribute("strength", localCharacter.attributes.strength)}
-              className="w-full"
-            >
-              <Dice6 className="w-4 h-4 mr-2" />
-              Roll
-            </Button>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-center text-lg">Strength</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Input
+                  type="number"
+                  min="-2"
+                  max="10"
+                  value={localCharacter.attributes.strength}
+                  onChange={(e) => handleAttributeChange("strength", e.target.value)}
+                  className="text-center text-xl font-bold"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onRollAttribute("strength", localCharacter.attributes.strength, uiState.advantageLevel)}
+                  className="w-full"
+                >
+                  <Dice6 className="w-4 h-4 mr-2" />
+                  Roll
+                </Button>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-center text-lg">Dexterity</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Input
-              type="number"
-              min="-2"
-              max="10"
-              value={localCharacter.attributes.dexterity}
-              onChange={(e) => handleAttributeChange("dexterity", e.target.value)}
-              className="text-center text-xl font-bold"
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onRollAttribute("dexterity", localCharacter.attributes.dexterity)}
-              className="w-full"
-            >
-              <Dice6 className="w-4 h-4 mr-2" />
-              Roll
-            </Button>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-center text-lg">Dexterity</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Input
+                  type="number"
+                  min="-2"
+                  max="10"
+                  value={localCharacter.attributes.dexterity}
+                  onChange={(e) => handleAttributeChange("dexterity", e.target.value)}
+                  className="text-center text-xl font-bold"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onRollAttribute("dexterity", localCharacter.attributes.dexterity, uiState.advantageLevel)}
+                  className="w-full"
+                >
+                  <Dice6 className="w-4 h-4 mr-2" />
+                  Roll
+                </Button>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-center text-lg">Intelligence</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Input
-              type="number"
-              min="-2"
-              max="10"
-              value={localCharacter.attributes.intelligence}
-              onChange={(e) => handleAttributeChange("intelligence", e.target.value)}
-              className="text-center text-xl font-bold"
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onRollAttribute("intelligence", localCharacter.attributes.intelligence)}
-              className="w-full"
-            >
-              <Dice6 className="w-4 h-4 mr-2" />
-              Roll
-            </Button>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-center text-lg">Intelligence</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Input
+                  type="number"
+                  min="-2"
+                  max="10"
+                  value={localCharacter.attributes.intelligence}
+                  onChange={(e) => handleAttributeChange("intelligence", e.target.value)}
+                  className="text-center text-xl font-bold"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onRollAttribute("intelligence", localCharacter.attributes.intelligence, uiState.advantageLevel)}
+                  className="w-full"
+                >
+                  <Dice6 className="w-4 h-4 mr-2" />
+                  Roll
+                </Button>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-center text-lg">Will</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Input
-              type="number"
-              min="-2"
-              max="10"
-              value={localCharacter.attributes.will}
-              onChange={(e) => handleAttributeChange("will", e.target.value)}
-              className="text-center text-xl font-bold"
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onRollAttribute("will", localCharacter.attributes.will)}
-              className="w-full"
-            >
-              <Dice6 className="w-4 h-4 mr-2" />
-              Roll
-            </Button>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-center text-lg">Will</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Input
+                  type="number"
+                  min="-2"
+                  max="10"
+                  value={localCharacter.attributes.will}
+                  onChange={(e) => handleAttributeChange("will", e.target.value)}
+                  className="text-center text-xl font-bold"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onRollAttribute("will", localCharacter.attributes.will, uiState.advantageLevel)}
+                  className="w-full"
+                >
+                  <Dice6 className="w-4 h-4 mr-2" />
+                  Roll
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </CollapsibleContent>
       </Collapsible>
@@ -283,7 +300,7 @@ export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSki
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => onRollSkill(skillName, attributeValue, skill.modifier)}
+                      onClick={() => onRollSkill(skillName, attributeValue, skill.modifier, uiState.advantageLevel)}
                       className="w-full"
                     >
                       <Dice6 className="w-4 h-4 mr-2" />
@@ -310,7 +327,7 @@ export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSki
         </CollapsibleTrigger>
         <CollapsibleContent>
           <div className="mt-4">
-            <Actions character={localCharacter} onAttack={onAttack} />
+            <Actions character={localCharacter} onAttack={onAttack} advantageLevel={uiState.advantageLevel} />
           </div>
         </CollapsibleContent>
       </Collapsible>

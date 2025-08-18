@@ -5,6 +5,7 @@ export interface UIState {
     actions: boolean;
     inventory: boolean;
   };
+  advantageLevel: number; // Positive for advantage, negative for disadvantage, 0 for normal
 }
 
 export class UIStateService {
@@ -35,6 +36,7 @@ export class UIStateService {
         actions: true,
         inventory: true,
       },
+      advantageLevel: 0,
     };
   }
 }
