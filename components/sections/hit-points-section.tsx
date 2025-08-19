@@ -6,8 +6,7 @@ import { Label } from "../ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
-import { Heart, Minus, Plus, Settings, ChevronDown, ChevronRight } from "lucide-react";
+import { Heart, Minus, Plus, ChevronDown, ChevronRight } from "lucide-react";
 
 import { characterService } from "@/lib/services/character-service";
 
@@ -23,8 +22,6 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
   const [damageAmount, setDamageAmount] = useState<string>("1");
   const [healAmount, setHealAmount] = useState<string>("1");
   const [tempHpAmount, setTempHpAmount] = useState<string>("1");
-  const [newMaxHp, setNewMaxHp] = useState<string>(maxHp.toString());
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const applyDamage = async (amount: number, resetInput: boolean = false) => {
     await characterService.applyDamage(amount);
@@ -58,15 +55,6 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
     setTempHpAmount("1");
   };
 
-  const handleMaxHpChange = async () => {
-    const newMax = parseInt(newMaxHp) || 1;
-    const adjustedCurrent = Math.min(currentHp, newMax);
-    await characterService.updateHitPoints(adjustedCurrent, newMax, temporaryHp);
-    setIsSettingsOpen(false);
-  };
-
-
-
   const getHealthBarColor = () => {
     const percentage = (currentHp / maxHp) * 100;
     if (percentage <= 25) return "bg-red-500";
@@ -89,46 +77,6 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
       </CollapsibleTrigger>
       <CollapsibleContent>
         <Card className="w-full">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-end">
-              <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <Settings className="h-4 w-4" />
-                  </Button>
-                </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Hit Points Settings</DialogTitle>
-                <DialogDescription>
-                  Change your character&rsquo;s maximum hit points.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="max-hp">Maximum Hit Points</Label>
-                  <Input
-                    id="max-hp"
-                    type="number"
-                    min="1"
-                    value={newMaxHp}
-                    onChange={(e) => setNewMaxHp(e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsSettingsOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleMaxHpChange}>
-                  Save Changes
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </CardHeader>
       <CardContent className="space-y-4">
         {/* HP Display and Bar */}
         <div className="text-center space-y-2">
