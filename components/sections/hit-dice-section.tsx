@@ -1,0 +1,229 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { Character, HitDice, HitDieSize } from "@/lib/types/character";
+import { ChevronDown, ChevronRight, Heart, Dices } from "lucide-react";
+
+interface HitDiceSectionProps {
+  character: Character;
+  isOpen: boolean;
+  onToggle: (isOpen: boolean) => void;
+  onUpdate: (character: Character) => void;
+  onCatchBreath?: () => void;
+  onMakeCamp?: () => void;
+}
+
+export function HitDiceSection({ 
+  character, 
+  isOpen, 
+  onToggle, 
+  onUpdate,
+  onCatchBreath,
+  onMakeCamp 
+}: HitDiceSectionProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValues, setEditValues] = useState({
+    level: character.level,
+    hitDieSize: character.hitDice.size,
+    currentHitDice: character.hitDice.current,
+  });
+
+  const handleSave = () => {
+    const updatedCharacter = {
+      ...character,
+      level: editValues.level,
+      hitDice: {
+        size: editValues.hitDieSize,
+        current: editValues.currentHitDice,
+        max: editValues.level, // Max hit dice always equals level
+      },
+    };
+    onUpdate(updatedCharacter);
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setEditValues({
+      level: character.level,
+      hitDieSize: character.hitDice.size,
+      currentHitDice: character.hitDice.current,
+    });
+    setIsEditing(false);
+  };
+
+  const handleLevelChange = (newLevel: number) => {
+    setEditValues(prev => ({
+      ...prev,
+      level: newLevel,
+      currentHitDice: Math.min(prev.currentHitDice, newLevel), // Don't exceed new max
+    }));
+  };
+
+  const canRollHitDie = character.hitDice.current > 0;
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={onToggle}>
+      <Card>
+        <CollapsibleTrigger className="w-full">
+          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Heart className="w-5 h-5 text-red-500" />
+                Hit Dice & Level
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-lg font-bold flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Level</span>
+                  <span>{character.level}</span>
+                </div>
+                <div className="text-lg font-bold flex items-center gap-2">
+                  <Dices className="w-4 h-4" />
+                  <span>{character.hitDice.current}/{character.hitDice.max}</span>
+                  <span className="text-sm text-muted-foreground">d{character.hitDice.size}</span>
+                </div>
+                {isOpen ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+              </div>
+            </CardTitle>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="space-y-4">
+            {isEditing ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="level">Character Level</Label>
+                    <Input
+                      id="level"
+                      type="number"
+                      min="1"
+                      max="20"
+                      value={editValues.level}
+                      onChange={(e) => handleLevelChange(parseInt(e.target.value) || 1)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="hit-die-size">Hit Die Size</Label>
+                    <Select
+                      value={editValues.hitDieSize.toString()}
+                      onValueChange={(value) => setEditValues(prev => ({ 
+                        ...prev, 
+                        hitDieSize: parseInt(value) as HitDieSize 
+                      }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="4">d4</SelectItem>
+                        <SelectItem value="6">d6</SelectItem>
+                        <SelectItem value="8">d8</SelectItem>
+                        <SelectItem value="10">d10</SelectItem>
+                        <SelectItem value="12">d12</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="current-hit-dice">Current Hit Dice</Label>
+                    <Input
+                      id="current-hit-dice"
+                      type="number"
+                      min="0"
+                      max={editValues.level}
+                      value={editValues.currentHitDice}
+                      onChange={(e) => setEditValues(prev => ({ 
+                        ...prev, 
+                        currentHitDice: Math.max(0, Math.min(parseInt(e.target.value) || 0, editValues.level))
+                      }))}
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button onClick={handleSave}>Save Changes</Button>
+                  <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center p-4 bg-muted/50 rounded-lg">
+                    <div className="text-2xl font-bold">{character.level}</div>
+                    <div className="text-sm text-muted-foreground">Level</div>
+                  </div>
+                  
+                  <div className="text-center p-4 bg-muted/50 rounded-lg">
+                    <div className="text-2xl font-bold">d{character.hitDice.size}</div>
+                    <div className="text-sm text-muted-foreground">Hit Die</div>
+                  </div>
+                  
+                  <div className="text-center p-4 bg-muted/50 rounded-lg">
+                    <div className="text-2xl font-bold">{character.hitDice.current}</div>
+                    <div className="text-sm text-muted-foreground">Available</div>
+                  </div>
+                  
+                  <div className="text-center p-4 bg-muted/50 rounded-lg">
+                    <div className="text-2xl font-bold">{character.hitDice.max}</div>
+                    <div className="text-sm text-muted-foreground">Maximum</div>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="text-center text-sm font-medium text-muted-foreground">
+                    Field Rest Options (d{character.hitDice.size} + STR {character.attributes.strength >= 0 ? '+' : ''}{character.attributes.strength})
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <Button
+                      variant="default"
+                      onClick={onCatchBreath}
+                      disabled={!canRollHitDie || !onCatchBreath}
+                      className="flex-1"
+                    >
+                      <Dices className="w-4 h-4 mr-2" />
+                      Catch Breath
+                      <div className="text-xs ml-2">(Roll + STR)</div>
+                    </Button>
+                    
+                    <Button
+                      variant="secondary"
+                      onClick={onMakeCamp}
+                      disabled={!canRollHitDie || !onMakeCamp}
+                      className="flex-1"
+                    >
+                      <Heart className="w-4 h-4 mr-2" />
+                      Make Camp
+                      <div className="text-xs ml-2">({character.hitDice.size} + STR)</div>
+                    </Button>
+                  </div>
+                  
+                  {!canRollHitDie && (
+                    <div className="text-center text-sm text-muted-foreground">
+                      No hit dice available
+                    </div>
+                  )}
+                  
+                  <Button variant="outline" onClick={() => setIsEditing(true)} className="w-full">
+                    Edit Level & Hit Dice
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
+  );
+}

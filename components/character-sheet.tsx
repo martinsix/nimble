@@ -9,6 +9,7 @@ import { AppMode } from "@/lib/services/settings-service";
 import { CharacterNameSection } from "./sections/character-name-section";
 import { AdvantageToggle } from "./advantage-toggle";
 import { HitPointsSection } from "./sections/hit-points-section";
+import { HitDiceSection } from "./sections/hit-dice-section";
 import { InitiativeSection } from "./sections/initiative-section";
 import { ActionTrackerSection } from "./sections/action-tracker-section";
 import { AttributesSection } from "./sections/attributes-section";
@@ -36,13 +37,16 @@ interface CharacterSheetProps {
   onUpdateAbilities?: (abilities: Abilities) => void;
   onEndTurn?: (actionTracker: ActionTracker, abilities: Abilities) => void;
   onUseAbility?: (abilityId: string) => void;
+  onCatchBreath?: () => void;
+  onMakeCamp?: () => void;
 }
 
-export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onRollSave, onRollSkill, onRollInitiative, onAttack, onLogDamage, onLogHealing, onLogTempHP, onUpdateActions, onEndEncounter, onUpdateAbilities, onEndTurn, onUseAbility }: CharacterSheetProps) {
+export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onRollSave, onRollSkill, onRollInitiative, onAttack, onLogDamage, onLogHealing, onLogTempHP, onUpdateActions, onEndEncounter, onUpdateAbilities, onEndTurn, onUseAbility, onCatchBreath, onMakeCamp }: CharacterSheetProps) {
   const [localCharacter, setLocalCharacter] = useState(character);
   const [uiState, setUIState] = useState<UIState>({
     collapsibleSections: {
       hitPoints: true,
+      hitDice: true,
       initiative: true,
       actionTracker: true,
       attributes: true,
@@ -90,6 +94,11 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
 
   const updateName = (name: string) => {
     const updated = { ...localCharacter, name };
+    setLocalCharacter(updated);
+    onUpdate(updated);
+  };
+
+  const updateCharacter = (updated: Character) => {
     setLocalCharacter(updated);
     onUpdate(updated);
   };
@@ -194,6 +203,16 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
         onLogDamage={onLogDamage}
         onLogHealing={onLogHealing}
         onLogTempHP={onLogTempHP}
+      />
+
+      {/* Hit Dice Section */}
+      <HitDiceSection
+        character={localCharacter}
+        isOpen={uiState.collapsibleSections.hitDice}
+        onToggle={(isOpen) => updateCollapsibleState('hitDice', isOpen)}
+        onUpdate={updateCharacter}
+        onCatchBreath={onCatchBreath}
+        onMakeCamp={onMakeCamp}
       />
 
       {/* Initiative Section */}

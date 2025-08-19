@@ -1,4 +1,4 @@
-import { Skill, AttributeName } from '../types/character';
+import { Skill, AttributeName, HitDice } from '../types/character';
 import { Inventory } from '../types/inventory';
 import { Abilities } from '../types/abilities';
 
@@ -66,6 +66,14 @@ export const createDefaultActionTracker = () => {
     current: 3,
     base: 3,
     bonus: 0,
+  };
+};
+
+export const createDefaultHitDice = (level: number = 1): HitDice => {
+  return {
+    size: 8, // Default to d8 hit dice
+    current: level,
+    max: level,
   };
 };
 

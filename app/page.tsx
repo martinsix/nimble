@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { CharacterSheet } from "@/components/character-sheet";
 import { ActivityLog } from "@/components/activity-log";
 import { Character, AttributeName, SkillName, ActionTracker } from "@/lib/types/character";
@@ -12,11 +12,12 @@ import { activityLogService } from "@/lib/services/activity-log-service";
 import { abilityService } from "@/lib/services/ability-service";
 import { settingsService, AppSettings } from "@/lib/services/settings-service";
 import { AppMenu } from "@/components/app-menu";
-import { createDefaultSkills, createDefaultInventory, createDefaultHitPoints, createDefaultInitiative, createDefaultActionTracker, createDefaultAbilities } from "@/lib/utils/character-defaults";
+import { createDefaultSkills, createDefaultInventory, createDefaultHitPoints, createDefaultInitiative, createDefaultActionTracker, createDefaultAbilities, createDefaultHitDice } from "@/lib/utils/character-defaults";
 
 const sampleCharacter: Character = {
   id: "default-character",
   name: "Sample Character",
+  level: 1,
   attributes: {
     strength: 2,
     dexterity: 1,
@@ -24,6 +25,7 @@ const sampleCharacter: Character = {
     will: 0,
   },
   hitPoints: createDefaultHitPoints(),
+  hitDice: createDefaultHitDice(1),
   initiative: createDefaultInitiative(),
   actionTracker: createDefaultActionTracker(),
   inEncounter: false,
@@ -60,8 +62,10 @@ export default function Home() {
           // Create default character if none exists
           const newCharacter = await characterService.createCharacter({
             name: sampleCharacter.name,
+            level: sampleCharacter.level,
             attributes: sampleCharacter.attributes,
             hitPoints: sampleCharacter.hitPoints,
+            hitDice: sampleCharacter.hitDice,
             initiative: sampleCharacter.initiative,
             actionTracker: sampleCharacter.actionTracker,
             inEncounter: sampleCharacter.inEncounter,
@@ -368,12 +372,124 @@ export default function Home() {
     }
   };
 
+  const handleCatchBreath = async () => {
+    try {
+      if (character.hitDice.current <= 0) {
+        console.error("No hit dice available");
+        return;
+      }
+
+      // Roll the hit die
+      const hitDieRoll = diceService.rollAttack(`1d${character.hitDice.size}`, 0, 0);
+      
+      // Log the hit die roll
+      const rollLogEntry = activityLogService.createDiceRollEntry(
+        hitDieRoll.dice,
+        hitDieRoll.droppedDice,
+        0,
+        hitDieRoll.total,
+        `Catching Breath - Hit Die (d${character.hitDice.size})`,
+        0
+      );
+      await activityLogService.addLogEntry(rollLogEntry);
+      setLogEntries(prevEntries => [rollLogEntry, ...prevEntries.slice(0, 99)]);
+
+      // Calculate healing (hit die roll + strength modifier, minimum 1)
+      const strengthModifier = character.attributes.strength;
+      const healingAmount = Math.max(1, hitDieRoll.total + strengthModifier);
+      
+      // Apply healing
+      const newCurrentHp = Math.min(character.hitPoints.max, character.hitPoints.current + healingAmount);
+      
+      // Consume the hit die and update character
+      const updatedCharacter = {
+        ...character,
+        hitPoints: {
+          ...character.hitPoints,
+          current: newCurrentHp,
+        },
+        hitDice: {
+          ...character.hitDice,
+          current: character.hitDice.current - 1,
+        },
+      };
+      
+      setCharacter(updatedCharacter);
+      await characterService.updateCharacter(updatedCharacter);
+
+      // Log the healing
+      if (healingAmount > 0) {
+        const healingLogEntry = activityLogService.createHealingEntry(healingAmount);
+        await activityLogService.addLogEntry(healingLogEntry);
+        setLogEntries(prevEntries => [healingLogEntry, ...prevEntries.slice(0, 99)]);
+      }
+    } catch (error) {
+      console.error("Failed to catch breath:", error);
+    }
+  };
+
+  const handleMakeCamp = async () => {
+    try {
+      if (character.hitDice.current <= 0) {
+        console.error("No hit dice available");
+        return;
+      }
+
+      // Use maximum value of hit die (no roll)
+      const maxHitDieValue = character.hitDice.size;
+      
+      // Log the field rest activity
+      const restLogEntry = activityLogService.createDiceRollEntry(
+        [], // No dice rolled
+        undefined,
+        0,
+        maxHitDieValue,
+        `Making Camp - Max Hit Die (d${character.hitDice.size})`,
+        0
+      );
+      await activityLogService.addLogEntry(restLogEntry);
+      setLogEntries(prevEntries => [restLogEntry, ...prevEntries.slice(0, 99)]);
+
+      // Calculate healing (max hit die value + strength modifier, minimum 1)
+      const strengthModifier = character.attributes.strength;
+      const healingAmount = Math.max(1, maxHitDieValue + strengthModifier);
+      
+      // Apply healing
+      const newCurrentHp = Math.min(character.hitPoints.max, character.hitPoints.current + healingAmount);
+      
+      // Consume the hit die and update character
+      const updatedCharacter = {
+        ...character,
+        hitPoints: {
+          ...character.hitPoints,
+          current: newCurrentHp,
+        },
+        hitDice: {
+          ...character.hitDice,
+          current: character.hitDice.current - 1,
+        },
+      };
+      
+      setCharacter(updatedCharacter);
+      await characterService.updateCharacter(updatedCharacter);
+
+      // Log the healing
+      if (healingAmount > 0) {
+        const healingLogEntry = activityLogService.createHealingEntry(healingAmount);
+        await activityLogService.addLogEntry(healingLogEntry);
+        setLogEntries(prevEntries => [healingLogEntry, ...prevEntries.slice(0, 99)]);
+      }
+    } catch (error) {
+      console.error("Failed to make camp:", error);
+    }
+  };
+
   const handleSettingsChange = async (newSettings: AppSettings) => {
     setSettings(newSettings);
     await settingsService.saveSettings(newSettings);
   };
 
-  const handleCharacterSwitch = async (characterId: string) => {
+  const handleCharacterSwitch = useCallback(async (characterId: string) => {
     try {
       const newCharacter = await characterService.getCharacter(characterId);
       if (newCharacter) {
@@ -396,7 +512,7 @@ export default function Home() {
     } catch (error) {
       console.error("Failed to switch character:", error);
     }
-  };
+  }, [settings]);
 
   const handleCharacterDelete = async (characterId: string) => {
     try {
@@ -476,6 +592,8 @@ export default function Home() {
           onUpdateAbilities={handleUpdateAbilities}
           onEndTurn={handleEndTurn}
           onUseAbility={handleUseAbility}
+          onCatchBreath={handleCatchBreath}
+          onMakeCamp={handleMakeCamp}
         />
         <ActivityLog entries={logEntries} onClearRolls={handleClearRolls} />
       </div>

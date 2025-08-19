@@ -1,6 +1,7 @@
 export interface UIState {
   collapsibleSections: {
     hitPoints: boolean;
+    hitDice: boolean;
     initiative: boolean;
     actionTracker: boolean;
     attributes: boolean;
@@ -37,6 +38,7 @@ export class UIStateService {
     return {
       collapsibleSections: {
         hitPoints: true,
+        hitDice: true,
         initiative: true,
         actionTracker: true,
         attributes: true,

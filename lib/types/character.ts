@@ -15,9 +15,18 @@ export interface ActionTracker {
   bonus: number; // Additional permanent actions gained
 }
 
+export type HitDieSize = 4 | 6 | 8 | 10 | 12;
+
+export interface HitDice {
+  size: HitDieSize; // Die size (d4, d6, d8, d10, d12)
+  current: number; // Currently available hit dice
+  max: number; // Maximum hit dice (equals level)
+}
+
 export interface Character {
   id: string;
   name: string;
+  level: number; // Character level (starting at 1)
   attributes: {
     strength: number;
     dexterity: number;
@@ -29,6 +38,7 @@ export interface Character {
     max: number;
     temporary: number;
   };
+  hitDice: HitDice; // Hit dice for healing and recovery
   initiative: Skill;
   actionTracker: ActionTracker;
   inEncounter: boolean; // Whether currently in an encounter/combat
@@ -52,6 +62,7 @@ export interface Character {
 
 export interface CreateCharacterData {
   name: string;
+  level: number;
   attributes: {
     strength: number;
     dexterity: number;
@@ -63,6 +74,7 @@ export interface CreateCharacterData {
     max: number;
     temporary: number;
   };
+  hitDice: HitDice;
   initiative: Skill;
   actionTracker: ActionTracker;
   inEncounter: boolean;

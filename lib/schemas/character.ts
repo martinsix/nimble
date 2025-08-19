@@ -60,6 +60,12 @@ export const actionTrackerSchema = z.object({
   bonus: z.number().min(0),
 });
 
+export const hitDiceSchema = z.object({
+  size: z.union([z.literal(4), z.literal(6), z.literal(8), z.literal(10), z.literal(12)]),
+  current: z.number().min(0),
+  max: z.number().min(1),
+});
+
 const abilityRollSchema = z.object({
   dice: z.string(),
   modifier: z.number().optional(),
@@ -91,8 +97,10 @@ export const abilitiesSchema = z.object({
 
 export const createCharacterSchema = z.object({
   name: z.string().min(1).max(50),
+  level: z.number().min(1).max(20),
   attributes: attributeSchema,
   hitPoints: hitPointsSchema,
+  hitDice: hitDiceSchema,
   initiative: skillSchema,
   actionTracker: actionTrackerSchema,
   inEncounter: z.boolean(),
@@ -104,8 +112,10 @@ export const createCharacterSchema = z.object({
 export const characterSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1).max(50),
+  level: z.number().min(1).max(20),
   attributes: attributeSchema,
   hitPoints: hitPointsSchema,
+  hitDice: hitDiceSchema,
   initiative: skillSchema,
   actionTracker: actionTrackerSchema,
   inEncounter: z.boolean(),
