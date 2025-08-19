@@ -40,7 +40,7 @@ interface Character {
 ```
 
 #### Service Architecture
-- **CharacterService** handles character CRUD operations with validation
+- **CharacterStorageService** handles character CRUD operations with validation
 - **DiceService** manages all dice rolling mechanics
 - **ActivityLogService** tracks character actions and dice rolls
 - **AbilityService** handles ability usage, cooldowns, and roll calculations
@@ -215,7 +215,7 @@ lib/
 ├── schemas/         # Zod validation schemas
 │   └── character.ts
 ├── services/        # Business logic layer
-│   ├── character-service.ts
+│   ├── character-storage-service.ts
 │   ├── dice-service-clean.ts
 │   ├── activity-log-service.ts
 │   ├── ability-service.ts

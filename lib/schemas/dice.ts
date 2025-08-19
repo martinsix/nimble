@@ -67,6 +67,7 @@ export const safeRestEntrySchema = z.object({
   type: z.literal('safe_rest'),
   healingAmount: z.number().min(0),
   hitDiceRestored: z.number().min(0),
+  woundsRemoved: z.number().min(0),
   abilitiesReset: z.number().min(0),
 }).merge(baseLogEntrySchema);
 

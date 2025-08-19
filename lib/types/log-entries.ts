@@ -67,6 +67,7 @@ export interface SafeRestEntry extends BaseLogEntry {
   type: 'safe_rest';
   healingAmount: number; // Amount of HP restored
   hitDiceRestored: number; // Number of hit dice restored
+  woundsRemoved: number; // Number of wounds removed
   abilitiesReset: number; // Number of abilities reset
 }
 

@@ -15,97 +15,20 @@ interface HitPointsSectionProps {
   temporaryHp: number;
   isOpen: boolean;
   onToggle: (isOpen: boolean) => void;
-  onHpChange: (current: number, max: number, temporary: number) => void;
+  onHpChange: (current: number, max: number, temporary: number, shouldGainWound?: boolean) => void;
   onLogDamage?: (amount: number, targetType: 'hp' | 'temp_hp') => void;
   onLogHealing?: (amount: number) => void;
   onLogTempHP?: (amount: number, previous?: number) => void;
-  onWoundGained?: () => void;
 }
 
-export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onToggle, onHpChange, onLogDamage, onLogHealing, onLogTempHP, onWoundGained }: HitPointsSectionProps) {
+export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onToggle, onHpChange, onLogDamage, onLogHealing, onLogTempHP }: HitPointsSectionProps) {
   const [damageAmount, setDamageAmount] = useState<string>("1");
   const [healAmount, setHealAmount] = useState<string>("1");
   const [tempHpAmount, setTempHpAmount] = useState<string>("1");
   const [newMaxHp, setNewMaxHp] = useState<string>(maxHp.toString());
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  const handleDamage = () => {
-    const damage = parseInt(damageAmount) || 0;
-    let remainingDamage = damage;
-    let newTemporary = temporaryHp;
-    let newCurrent = currentHp;
-    let tempHpDamaged = false;
-
-    // Temp HP absorbs damage first
-    if (temporaryHp > 0) {
-      if (remainingDamage >= temporaryHp) {
-        remainingDamage -= temporaryHp;
-        newTemporary = 0;
-        tempHpDamaged = true;
-      } else {
-        newTemporary = temporaryHp - remainingDamage;
-        remainingDamage = 0;
-        tempHpDamaged = true;
-      }
-    }
-
-    // Apply remaining damage to regular HP
-    if (remainingDamage > 0) {
-      newCurrent = Math.max(0, currentHp - remainingDamage);
-    }
-
-    onHpChange(newCurrent, maxHp, newTemporary);
-    
-    // Check if character reached 0 HP and gained a wound
-    if (currentHp > 0 && newCurrent === 0) {
-      onWoundGained?.();
-    }
-    
-    // Log the damage
-    if (tempHpDamaged && remainingDamage === 0) {
-      onLogDamage?.(damage, 'temp_hp');
-    } else if (tempHpDamaged && remainingDamage > 0) {
-      onLogDamage?.(damage, 'hp'); // Mixed damage but log as regular damage
-    } else {
-      onLogDamage?.(damage, 'hp');
-    }
-    
-    setDamageAmount("1");
-  };
-
-  const handleHeal = () => {
-    const heal = parseInt(healAmount) || 0;
-    const newCurrent = Math.min(maxHp, currentHp + heal);
-    onHpChange(newCurrent, maxHp, temporaryHp);
-    
-    // Log the healing
-    onLogHealing?.(heal);
-    
-    setHealAmount("1");
-  };
-
-  const handleTempHp = () => {
-    const tempAmount = parseInt(tempHpAmount) || 0;
-    // Temp HP doesn't stack - take the higher value
-    const newTemporary = Math.max(temporaryHp, tempAmount);
-    const previousTempHp = temporaryHp > 0 ? temporaryHp : undefined;
-    
-    onHpChange(currentHp, maxHp, newTemporary);
-    
-    // Log the temp HP gain
-    onLogTempHP?.(tempAmount, previousTempHp);
-    
-    setTempHpAmount("1");
-  };
-
-  const handleMaxHpChange = () => {
-    const newMax = parseInt(newMaxHp) || 1;
-    const adjustedCurrent = Math.min(currentHp, newMax);
-    onHpChange(adjustedCurrent, newMax, temporaryHp);
-    setIsSettingsOpen(false);
-  };
-
-  const handleQuickDamage = (amount: number) => {
+  const applyDamage = (amount: number, resetInput: boolean = false) => {
     let remainingDamage = amount;
     let newTemporary = temporaryHp;
     let newCurrent = currentHp;
@@ -129,7 +52,11 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
       newCurrent = Math.max(0, currentHp - remainingDamage);
     }
 
-    onHpChange(newCurrent, maxHp, newTemporary);
+    // Check if character reached 0 HP and will gain a wound
+    const shouldGainWound = currentHp > 0 && newCurrent === 0;
+
+    // Update HP and pass wound information together
+    onHpChange(newCurrent, maxHp, newTemporary, shouldGainWound);
     
     // Log the damage
     if (tempHpDamaged && remainingDamage === 0) {
@@ -139,15 +66,56 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
     } else {
       onLogDamage?.(amount, 'hp');
     }
+    
+    if (resetInput) {
+      setDamageAmount("1");
+    }
   };
 
-  const handleQuickHeal = (amount: number) => {
+  const handleDamage = () => {
+    const damage = parseInt(damageAmount) || 0;
+    applyDamage(damage, true);
+  };
+
+  const applyHealing = (amount: number, resetInput: boolean = false) => {
     const newCurrent = Math.min(maxHp, currentHp + amount);
     onHpChange(newCurrent, maxHp, temporaryHp);
     
     // Log the healing
     onLogHealing?.(amount);
+    
+    if (resetInput) {
+      setHealAmount("1");
+    }
   };
+
+  const handleHeal = () => {
+    const heal = parseInt(healAmount) || 0;
+    applyHealing(heal, true);
+  };
+
+  const handleTempHp = () => {
+    const tempAmount = parseInt(tempHpAmount) || 0;
+    // Temp HP doesn't stack - take the higher value
+    const newTemporary = Math.max(temporaryHp, tempAmount);
+    const previousTempHp = temporaryHp > 0 ? temporaryHp : undefined;
+    
+    onHpChange(currentHp, maxHp, newTemporary);
+    
+    // Log the temp HP gain
+    onLogTempHP?.(tempAmount, previousTempHp);
+    
+    setTempHpAmount("1");
+  };
+
+  const handleMaxHpChange = () => {
+    const newMax = parseInt(newMaxHp) || 1;
+    const adjustedCurrent = Math.min(currentHp, newMax);
+    onHpChange(adjustedCurrent, newMax, temporaryHp);
+    setIsSettingsOpen(false);
+  };
+
+
 
   const getHealthBarColor = () => {
     const percentage = (currentHp / maxHp) * 100;
@@ -248,7 +216,7 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
               <Button 
                 variant="destructive" 
                 size="sm" 
-                onClick={() => handleQuickDamage(1)}
+                onClick={() => applyDamage(1)}
                 disabled={currentHp <= 0}
               >
                 -1
@@ -256,7 +224,7 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
               <Button 
                 variant="destructive" 
                 size="sm" 
-                onClick={() => handleQuickDamage(5)}
+                onClick={() => applyDamage(5)}
                 disabled={currentHp <= 0}
               >
                 -5
@@ -264,7 +232,7 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
               <Button 
                 variant="destructive" 
                 size="sm" 
-                onClick={() => handleQuickDamage(10)}
+                onClick={() => applyDamage(10)}
                 disabled={currentHp <= 0}
               >
                 -10
@@ -278,7 +246,7 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => handleQuickHeal(1)}
+                onClick={() => applyHealing(1)}
                 disabled={currentHp >= maxHp}
                 className="text-green-600 border-green-600 hover:bg-green-50"
               >
@@ -287,7 +255,7 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => handleQuickHeal(5)}
+                onClick={() => applyHealing(5)}
                 disabled={currentHp >= maxHp}
                 className="text-green-600 border-green-600 hover:bg-green-50"
               >
@@ -296,7 +264,7 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => handleQuickHeal(10)}
+                onClick={() => applyHealing(10)}
                 disabled={currentHp >= maxHp}
                 className="text-green-600 border-green-600 hover:bg-green-50"
               >

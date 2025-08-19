@@ -6,7 +6,7 @@ import { ActivityLog } from "@/components/activity-log";
 import { Character, AttributeName, SkillName, ActionTracker } from "@/lib/types/character";
 import { LogEntry, DiceRollEntry, AbilityUsageEntry } from "@/lib/types/log-entries";
 import { Abilities } from "@/lib/types/abilities";
-import { characterService } from "@/lib/services/character-service";
+import { characterStorageService } from "@/lib/services/character-storage-service";
 import { diceService } from "@/lib/services/dice-service";
 import { activityLogService } from "@/lib/services/activity-log-service";
 import { abilityService } from "@/lib/services/ability-service";
@@ -52,16 +52,16 @@ export default function Home() {
         setSettings(loadedSettings);
 
         // Load character list
-        const characterList = await characterService.getAllCharacters();
+        const characterList = await characterStorageService.getAllCharacters();
         setCharacters(characterList);
 
         // Load active character
-        const existingCharacter = await characterService.getCharacter(loadedSettings.activeCharacterId);
+        const existingCharacter = await characterStorageService.getCharacter(loadedSettings.activeCharacterId);
         if (existingCharacter) {
           setCharacter(existingCharacter);
         } else {
           // Create default character if none exists
-          const newCharacter = await characterService.createCharacter({
+          const newCharacter = await characterStorageService.createCharacter({
             name: sampleCharacter.name,
             level: sampleCharacter.level,
             attributes: sampleCharacter.attributes,
@@ -78,7 +78,7 @@ export default function Home() {
           setCharacter(newCharacter);
           
           // Character list will be updated automatically when we reload
-          const updatedCharacterList = await characterService.getAllCharacters();
+          const updatedCharacterList = await characterStorageService.getAllCharacters();
           setCharacters(updatedCharacterList);
         }
 
@@ -99,10 +99,10 @@ export default function Home() {
   const handleCharacterUpdate = async (updatedCharacter: Character) => {
     setCharacter(updatedCharacter);
     try {
-      await characterService.updateCharacter(updatedCharacter);
+      await characterStorageService.updateCharacter(updatedCharacter);
       
       // Refresh the character list to reflect name changes
-      const updatedCharacterList = await characterService.getAllCharacters();
+      const updatedCharacterList = await characterStorageService.getAllCharacters();
       setCharacters(updatedCharacterList);
     } catch (error) {
       console.error("Failed to save character:", error);
@@ -218,7 +218,7 @@ export default function Home() {
         inEncounter: true
       };
       setCharacter(updatedCharacter);
-      await characterService.updateCharacter(updatedCharacter);
+      await characterStorageService.updateCharacter(updatedCharacter);
     } catch (error) {
       console.error("Failed to roll initiative:", error);
     }
@@ -267,7 +267,7 @@ export default function Home() {
     const updatedCharacter = { ...character, actionTracker };
     setCharacter(updatedCharacter);
     try {
-      await characterService.updateCharacter(updatedCharacter);
+      await characterStorageService.updateCharacter(updatedCharacter);
     } catch (error) {
       console.error("Failed to update action tracker:", error);
     }
@@ -290,7 +290,7 @@ export default function Home() {
     };
     setCharacter(updatedCharacter);
     try {
-      await characterService.updateCharacter(updatedCharacter);
+      await characterStorageService.updateCharacter(updatedCharacter);
     } catch (error) {
       console.error("Failed to end encounter:", error);
     }
@@ -300,7 +300,7 @@ export default function Home() {
     const updatedCharacter = { ...character, abilities };
     setCharacter(updatedCharacter);
     try {
-      await characterService.updateCharacter(updatedCharacter);
+      await characterStorageService.updateCharacter(updatedCharacter);
     } catch (error) {
       console.error("Failed to update abilities:", error);
     }
@@ -321,7 +321,7 @@ export default function Home() {
     };
     setCharacter(updatedCharacter);
     try {
-      await characterService.updateCharacter(updatedCharacter);
+      await characterStorageService.updateCharacter(updatedCharacter);
     } catch (error) {
       console.error("Failed to end turn:", error);
     }
@@ -339,7 +339,7 @@ export default function Home() {
       // Update character with new abilities state
       const updatedCharacter = { ...character, abilities: result.updatedAbilities };
       setCharacter(updatedCharacter);
-      await characterService.updateCharacter(updatedCharacter);
+      await characterStorageService.updateCharacter(updatedCharacter);
 
       // Log the ability usage
       const logEntry = activityLogService.createAbilityUsageEntry(
@@ -417,7 +417,7 @@ export default function Home() {
       };
       
       setCharacter(updatedCharacter);
-      await characterService.updateCharacter(updatedCharacter);
+      await characterStorageService.updateCharacter(updatedCharacter);
 
       // Log the healing
       if (healingAmount > 0) {
@@ -473,7 +473,7 @@ export default function Home() {
       };
       
       setCharacter(updatedCharacter);
-      await characterService.updateCharacter(updatedCharacter);
+      await characterStorageService.updateCharacter(updatedCharacter);
 
       // Log the healing
       if (healingAmount > 0) {
@@ -506,6 +506,10 @@ export default function Home() {
           ...character.hitDice,
           current: character.hitDice.max, // Restore all hit dice
         },
+        wounds: {
+          ...character.wounds,
+          current: Math.max(0, character.wounds.current - 1), // Remove one wound
+        },
         abilities: resetAbilities,
         inEncounter: false, // Safe rest ends any encounter
         actionTracker: {
@@ -516,11 +520,12 @@ export default function Home() {
       };
 
       setCharacter(updatedCharacter);
-      await characterService.updateCharacter(updatedCharacter);
+      await characterStorageService.updateCharacter(updatedCharacter);
 
       // Calculate what was restored for logging
       const healingAmount = character.hitPoints.max - character.hitPoints.current;
       const hitDiceRestored = character.hitDice.max - character.hitDice.current;
+      const woundsRemoved = character.wounds.current > 0 ? 1 : 0;
       const abilitiesReset = character.abilities.abilities.filter(ability => 
         ability.type === 'action' && 
         ability.frequency !== 'at_will' && 
@@ -531,6 +536,7 @@ export default function Home() {
       const restLogEntry = activityLogService.createSafeRestEntry(
         healingAmount,
         hitDiceRestored,
+        woundsRemoved,
         abilitiesReset
       );
       await activityLogService.addLogEntry(restLogEntry);
@@ -547,7 +553,7 @@ export default function Home() {
 
   const handleCharacterSwitch = useCallback(async (characterId: string) => {
     try {
-      const newCharacter = await characterService.getCharacter(characterId);
+      const newCharacter = await characterStorageService.getCharacter(characterId);
       if (newCharacter) {
         setCharacter(newCharacter);
         
@@ -557,8 +563,8 @@ export default function Home() {
         await settingsService.saveSettings(newSettings);
         
         // Update last played timestamp
-        await characterService.updateLastPlayed(characterId);
-        const updatedCharacterList = await characterService.getAllCharacters();
+        await characterStorageService.updateLastPlayed(characterId);
+        const updatedCharacterList = await characterStorageService.getAllCharacters();
         setCharacters(updatedCharacterList);
         
         // Load log entries for new character (if we want per-character logs)
@@ -572,9 +578,9 @@ export default function Home() {
 
   const handleCharacterDelete = async (characterId: string) => {
     try {
-      await characterService.deleteCharacter(characterId);
+      await characterStorageService.deleteCharacter(characterId);
       
-      const updatedCharacterList = await characterService.getAllCharacters();
+      const updatedCharacterList = await characterStorageService.getAllCharacters();
       setCharacters(updatedCharacterList);
       
       // If we deleted the active character, switch to another one
@@ -592,9 +598,9 @@ export default function Home() {
     const handleCreateCharacter = async (event: CustomEvent<string>) => {
       try {
         const characterName = event.detail;
-        const newCharacter = await characterService.createCharacterWithDefaults(characterName);
+        const newCharacter = await characterStorageService.createCharacterWithDefaults(characterName);
         
-        const updatedCharacterList = await characterService.getAllCharacters();
+        const updatedCharacterList = await characterStorageService.getAllCharacters();
         setCharacters(updatedCharacterList);
         
         // Switch to the new character

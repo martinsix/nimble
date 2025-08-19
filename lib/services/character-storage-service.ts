@@ -2,7 +2,7 @@ import { Character, CreateCharacterData } from '../types/character';
 import { ICharacterRepository, LocalStorageCharacterRepository } from '../storage/character-repository';
 import { createCharacterSchema, characterSchema } from '../schemas/character';
 
-export class CharacterService {
+export class CharacterStorageService {
   private readonly characterListStorageKey = 'nimble-navigator-character-list';
   
   constructor(private repository: ICharacterRepository = new LocalStorageCharacterRepository()) {}
@@ -73,4 +73,4 @@ export class CharacterService {
   }
 }
 
-export const characterService = new CharacterService();
+export const characterStorageService = new CharacterStorageService();

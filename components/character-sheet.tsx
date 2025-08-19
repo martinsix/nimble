@@ -156,8 +156,8 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
     onUpdate(updated);
   };
 
-  const updateHitPoints = (current: number, max: number, temporary: number) => {
-    const updated = {
+  const updateHitPoints = (current: number, max: number, temporary: number, shouldGainWound?: boolean) => {
+    let updated = {
       ...localCharacter,
       hitPoints: {
         current,
@@ -165,6 +165,18 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
         temporary,
       },
     };
+
+    // Handle wound gain if needed
+    if (shouldGainWound && localCharacter.wounds.current < localCharacter.wounds.max) {
+      updated = {
+        ...updated,
+        wounds: {
+          ...updated.wounds,
+          current: updated.wounds.current + 1,
+        },
+      };
+    }
+
     setLocalCharacter(updated);
     onUpdate(updated);
   };
@@ -181,19 +193,6 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
     onUpdate(updated);
   };
 
-  const handleWoundGained = () => {
-    if (localCharacter.wounds.current < localCharacter.wounds.max) {
-      const updated = {
-        ...localCharacter,
-        wounds: {
-          ...localCharacter.wounds,
-          current: localCharacter.wounds.current + 1,
-        },
-      };
-      setLocalCharacter(updated);
-      onUpdate(updated);
-    }
-  };
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
@@ -220,7 +219,6 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
         onLogDamage={onLogDamage}
         onLogHealing={onLogHealing}
         onLogTempHP={onLogTempHP}
-        onWoundGained={handleWoundGained}
       />
 
       {/* Hit Dice Section */}

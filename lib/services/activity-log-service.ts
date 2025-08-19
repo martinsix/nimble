@@ -151,11 +151,13 @@ export class ActivityLogService {
   createSafeRestEntry(
     healingAmount: number,
     hitDiceRestored: number,
+    woundsRemoved: number,
     abilitiesReset: number
   ): SafeRestEntry {
     const parts: string[] = [];
     if (healingAmount > 0) parts.push(`restored ${healingAmount} HP`);
     if (hitDiceRestored > 0) parts.push(`restored ${hitDiceRestored} hit dice`);
+    if (woundsRemoved > 0) parts.push(`removed ${woundsRemoved} wound${woundsRemoved !== 1 ? 's' : ''}`);
     if (abilitiesReset > 0) parts.push(`reset ${abilitiesReset} abilities`);
     
     const description = parts.length > 0 
@@ -169,6 +171,7 @@ export class ActivityLogService {
       description,
       healingAmount,
       hitDiceRestored,
+      woundsRemoved,
       abilitiesReset,
     };
   }
