@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Character, AttributeName, SkillName } from "@/lib/types/character";
+import { Character, AttributeName, SkillName, ActionTracker } from "@/lib/types/character";
 import { Inventory as InventoryType } from "@/lib/types/inventory";
 import { CharacterNameSection } from "./sections/character-name-section";
 import { AdvantageToggle } from "./advantage-toggle";
 import { HitPointsSection } from "./sections/hit-points-section";
 import { InitiativeSection } from "./sections/initiative-section";
+import { ActionTrackerSection } from "./sections/action-tracker-section";
 import { AttributesSection } from "./sections/attributes-section";
 import { SkillsSection } from "./sections/skills-section";
 import { ActionsSection } from "./sections/actions-section";
@@ -22,14 +23,19 @@ interface CharacterSheetProps {
   onRollSkill: (skillName: SkillName, attributeValue: number, skillModifier: number, advantageLevel: number) => void;
   onRollInitiative: (totalModifier: number, advantageLevel: number) => void;
   onAttack: (weaponName: string, damage: string, attributeModifier: number, advantageLevel: number) => void;
+  onLogDamage?: (amount: number, targetType: 'hp' | 'temp_hp') => void;
+  onLogHealing?: (amount: number) => void;
+  onLogTempHP?: (amount: number, previous?: number) => void;
+  onUpdateActions?: (actionTracker: ActionTracker) => void;
 }
 
-export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSave, onRollSkill, onRollInitiative, onAttack }: CharacterSheetProps) {
+export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSave, onRollSkill, onRollInitiative, onAttack, onLogDamage, onLogHealing, onLogTempHP, onUpdateActions }: CharacterSheetProps) {
   const [localCharacter, setLocalCharacter] = useState(character);
   const [uiState, setUIState] = useState<UIState>({
     collapsibleSections: {
       hitPoints: true,
       initiative: true,
+      actionTracker: true,
       attributes: true,
       skills: true,
       actions: true,
@@ -46,6 +52,10 @@ export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSav
     };
     loadUIState();
   }, []);
+
+  useEffect(() => {
+    setLocalCharacter(character);
+  }, [character]);
 
   const updateCollapsibleState = async (section: keyof UIState['collapsibleSections'], isOpen: boolean) => {
     const newUIState = {
@@ -171,6 +181,9 @@ export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSav
         isOpen={uiState.collapsibleSections.hitPoints}
         onToggle={(isOpen) => updateCollapsibleState('hitPoints', isOpen)}
         onHpChange={updateHitPoints}
+        onLogDamage={onLogDamage}
+        onLogHealing={onLogHealing}
+        onLogTempHP={onLogTempHP}
       />
 
       {/* Initiative Section */}
@@ -182,6 +195,14 @@ export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSav
         onInitiativeChange={updateInitiative}
         onRollInitiative={onRollInitiative}
         advantageLevel={uiState.advantageLevel}
+      />
+
+      {/* Action Tracker Section */}
+      <ActionTrackerSection 
+        actionTracker={character.actionTracker}
+        isOpen={uiState.collapsibleSections.actionTracker}
+        onToggle={(isOpen) => updateCollapsibleState('actionTracker', isOpen)}
+        onUpdateActions={onUpdateActions || (() => {})}
       />
 
       {/* Armor Section */}

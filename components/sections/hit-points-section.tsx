@@ -16,9 +16,12 @@ interface HitPointsSectionProps {
   isOpen: boolean;
   onToggle: (isOpen: boolean) => void;
   onHpChange: (current: number, max: number, temporary: number) => void;
+  onLogDamage?: (amount: number, targetType: 'hp' | 'temp_hp') => void;
+  onLogHealing?: (amount: number) => void;
+  onLogTempHP?: (amount: number, previous?: number) => void;
 }
 
-export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onToggle, onHpChange }: HitPointsSectionProps) {
+export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onToggle, onHpChange, onLogDamage, onLogHealing, onLogTempHP }: HitPointsSectionProps) {
   const [damageAmount, setDamageAmount] = useState<string>("1");
   const [healAmount, setHealAmount] = useState<string>("1");
   const [tempHpAmount, setTempHpAmount] = useState<string>("1");
@@ -30,15 +33,18 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
     let remainingDamage = damage;
     let newTemporary = temporaryHp;
     let newCurrent = currentHp;
+    let tempHpDamaged = false;
 
     // Temp HP absorbs damage first
     if (temporaryHp > 0) {
       if (remainingDamage >= temporaryHp) {
         remainingDamage -= temporaryHp;
         newTemporary = 0;
+        tempHpDamaged = true;
       } else {
         newTemporary = temporaryHp - remainingDamage;
         remainingDamage = 0;
+        tempHpDamaged = true;
       }
     }
 
@@ -48,6 +54,16 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
     }
 
     onHpChange(newCurrent, maxHp, newTemporary);
+    
+    // Log the damage
+    if (tempHpDamaged && remainingDamage === 0) {
+      onLogDamage?.(damage, 'temp_hp');
+    } else if (tempHpDamaged && remainingDamage > 0) {
+      onLogDamage?.(damage, 'hp'); // Mixed damage but log as regular damage
+    } else {
+      onLogDamage?.(damage, 'hp');
+    }
+    
     setDamageAmount("1");
   };
 
@@ -55,6 +71,10 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
     const heal = parseInt(healAmount) || 0;
     const newCurrent = Math.min(maxHp, currentHp + heal);
     onHpChange(newCurrent, maxHp, temporaryHp);
+    
+    // Log the healing
+    onLogHealing?.(heal);
+    
     setHealAmount("1");
   };
 
@@ -62,7 +82,13 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
     const tempAmount = parseInt(tempHpAmount) || 0;
     // Temp HP doesn't stack - take the higher value
     const newTemporary = Math.max(temporaryHp, tempAmount);
+    const previousTempHp = temporaryHp > 0 ? temporaryHp : undefined;
+    
     onHpChange(currentHp, maxHp, newTemporary);
+    
+    // Log the temp HP gain
+    onLogTempHP?.(tempAmount, previousTempHp);
+    
     setTempHpAmount("1");
   };
 
@@ -77,15 +103,18 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
     let remainingDamage = amount;
     let newTemporary = temporaryHp;
     let newCurrent = currentHp;
+    let tempHpDamaged = false;
 
     // Temp HP absorbs damage first
     if (temporaryHp > 0) {
       if (remainingDamage >= temporaryHp) {
         remainingDamage -= temporaryHp;
         newTemporary = 0;
+        tempHpDamaged = true;
       } else {
         newTemporary = temporaryHp - remainingDamage;
         remainingDamage = 0;
+        tempHpDamaged = true;
       }
     }
 
@@ -95,11 +124,23 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
     }
 
     onHpChange(newCurrent, maxHp, newTemporary);
+    
+    // Log the damage
+    if (tempHpDamaged && remainingDamage === 0) {
+      onLogDamage?.(amount, 'temp_hp');
+    } else if (tempHpDamaged && remainingDamage > 0) {
+      onLogDamage?.(amount, 'hp'); // Mixed damage but log as regular damage
+    } else {
+      onLogDamage?.(amount, 'hp');
+    }
   };
 
   const handleQuickHeal = (amount: number) => {
     const newCurrent = Math.min(maxHp, currentHp + amount);
     onHpChange(newCurrent, maxHp, temporaryHp);
+    
+    // Log the healing
+    onLogHealing?.(amount);
   };
 
   const getHealthBarColor = () => {

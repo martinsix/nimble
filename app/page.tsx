@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { CharacterSheet } from "@/components/character-sheet";
-import { RollLog } from "@/components/roll-log";
-import { Character, AttributeName, SkillName } from "@/lib/types/character";
-import { DiceRoll } from "@/lib/types/dice";
+import { ActivityLog } from "@/components/activity-log";
+import { Character, AttributeName, SkillName, ActionTracker } from "@/lib/types/character";
+import { LogEntry, DiceRoll } from "@/lib/types/dice";
 import { characterService } from "@/lib/services/character-service";
 import { diceService } from "@/lib/services/dice-service";
-import { createDefaultSkills, createDefaultInventory, createDefaultHitPoints, createDefaultInitiative } from "@/lib/utils/character-defaults";
+import { createDefaultSkills, createDefaultInventory, createDefaultHitPoints, createDefaultInitiative, createDefaultActionTracker } from "@/lib/utils/character-defaults";
 
 const sampleCharacter: Character = {
   id: "default-character",
@@ -20,6 +20,7 @@ const sampleCharacter: Character = {
   },
   hitPoints: createDefaultHitPoints(),
   initiative: createDefaultInitiative(),
+  actionTracker: createDefaultActionTracker(),
   skills: createDefaultSkills(),
   inventory: createDefaultInventory(),
   createdAt: new Date(),
@@ -28,7 +29,7 @@ const sampleCharacter: Character = {
 
 export default function Home() {
   const [character, setCharacter] = useState<Character>(sampleCharacter);
-  const [rolls, setRolls] = useState<DiceRoll[]>([]);
+  const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -44,15 +45,16 @@ export default function Home() {
             attributes: sampleCharacter.attributes,
             hitPoints: sampleCharacter.hitPoints,
             initiative: sampleCharacter.initiative,
+            actionTracker: sampleCharacter.actionTracker,
             skills: sampleCharacter.skills,
             inventory: sampleCharacter.inventory,
           }, "default-character");
           setCharacter(newCharacter);
         }
 
-        // Load rolls
-        const existingRolls = await diceService.getRolls();
-        setRolls(existingRolls);
+        // Load log entries
+        const existingEntries = await diceService.getLogEntries();
+        setLogEntries(existingEntries);
       } catch (error) {
         console.error("Failed to load data:", error);
         setCharacter(sampleCharacter);
@@ -77,7 +79,7 @@ export default function Home() {
     try {
       const attributeLabel = attributeName.charAt(0).toUpperCase() + attributeName.slice(1);
       const roll = await diceService.addRoll(20, value, `${attributeLabel} check`, advantageLevel);
-      setRolls(prevRolls => [roll, ...prevRolls.slice(0, 99)]); // Keep only 100 rolls
+      setLogEntries(prevEntries => [roll, ...prevEntries.slice(0, 99)]); // Keep only 100 entries
     } catch (error) {
       console.error("Failed to roll dice:", error);
     }
@@ -87,7 +89,7 @@ export default function Home() {
     try {
       const attributeLabel = attributeName.charAt(0).toUpperCase() + attributeName.slice(1);
       const roll = await diceService.addRoll(20, value, `${attributeLabel} save`, advantageLevel);
-      setRolls(prevRolls => [roll, ...prevRolls.slice(0, 99)]); // Keep only 100 rolls
+      setLogEntries(prevEntries => [roll, ...prevEntries.slice(0, 99)]); // Keep only 100 entries
     } catch (error) {
       console.error("Failed to roll save:", error);
     }
@@ -98,7 +100,7 @@ export default function Home() {
       const skill = character.skills[skillName];
       const totalModifier = attributeValue + skillModifier;
       const roll = await diceService.addRoll(20, totalModifier, skill.name, advantageLevel);
-      setRolls(prevRolls => [roll, ...prevRolls.slice(0, 99)]); // Keep only 100 rolls
+      setLogEntries(prevEntries => [roll, ...prevEntries.slice(0, 99)]); // Keep only 100 entries
     } catch (error) {
       console.error("Failed to roll skill:", error);
     }
@@ -107,7 +109,7 @@ export default function Home() {
   const handleAttack = async (weaponName: string, damage: string, attributeModifier: number, advantageLevel: number) => {
     try {
       const roll = await diceService.addAttackRoll(damage, attributeModifier, `${weaponName} attack`, advantageLevel);
-      setRolls(prevRolls => [roll, ...prevRolls.slice(0, 99)]); // Keep only 100 rolls
+      setLogEntries(prevEntries => [roll, ...prevEntries.slice(0, 99)]); // Keep only 100 entries
     } catch (error) {
       console.error("Failed to roll attack:", error);
     }
@@ -116,7 +118,22 @@ export default function Home() {
   const handleRollInitiative = async (totalModifier: number, advantageLevel: number) => {
     try {
       const roll = await diceService.addRoll(20, totalModifier, "Initiative", advantageLevel);
-      setRolls(prevRolls => [roll, ...prevRolls.slice(0, 99)]); // Keep only 100 rolls
+      setLogEntries(prevEntries => [roll, ...prevEntries.slice(0, 99)]); // Keep only 100 entries
+
+      // Handle action tracker initialization from initiative
+      const initiativeEntry = await diceService.addInitiativeEntry(roll.total!, character.actionTracker.bonus);
+      setLogEntries(prevEntries => [initiativeEntry, ...prevEntries.slice(0, 99)]);
+      
+      // Update character's action tracker
+      const updatedCharacter = {
+        ...character,
+        actionTracker: {
+          ...character.actionTracker,
+          current: initiativeEntry.actionsGranted,
+        }
+      };
+      setCharacter(updatedCharacter);
+      await characterService.updateCharacter(updatedCharacter);
     } catch (error) {
       console.error("Failed to roll initiative:", error);
     }
@@ -124,10 +141,47 @@ export default function Home() {
 
   const handleClearRolls = async () => {
     try {
-      await diceService.clearRolls();
-      setRolls([]);
+      await diceService.clearLogEntries();
+      setLogEntries([]);
     } catch (error) {
-      console.error("Failed to clear rolls:", error);
+      console.error("Failed to clear log entries:", error);
+    }
+  };
+
+  const handleLogDamage = async (amount: number, targetType: 'hp' | 'temp_hp') => {
+    try {
+      const entry = await diceService.addDamageEntry(amount, targetType);
+      setLogEntries(prevEntries => [entry, ...prevEntries.slice(0, 99)]);
+    } catch (error) {
+      console.error("Failed to log damage:", error);
+    }
+  };
+
+  const handleLogHealing = async (amount: number) => {
+    try {
+      const entry = await diceService.addHealingEntry(amount);
+      setLogEntries(prevEntries => [entry, ...prevEntries.slice(0, 99)]);
+    } catch (error) {
+      console.error("Failed to log healing:", error);
+    }
+  };
+
+  const handleLogTempHP = async (amount: number, previous?: number) => {
+    try {
+      const entry = await diceService.addTempHPEntry(amount, previous);
+      setLogEntries(prevEntries => [entry, ...prevEntries.slice(0, 99)]);
+    } catch (error) {
+      console.error("Failed to log temp HP:", error);
+    }
+  };
+
+  const handleUpdateActions = async (actionTracker: ActionTracker) => {
+    const updatedCharacter = { ...character, actionTracker };
+    setCharacter(updatedCharacter);
+    try {
+      await characterService.updateCharacter(updatedCharacter);
+    } catch (error) {
+      console.error("Failed to update action tracker:", error);
     }
   };
 
@@ -151,8 +205,12 @@ export default function Home() {
           onRollSkill={handleRollSkill}
           onRollInitiative={handleRollInitiative}
           onAttack={handleAttack}
+          onLogDamage={handleLogDamage}
+          onLogHealing={handleLogHealing}
+          onLogTempHP={handleLogTempHP}
+          onUpdateActions={handleUpdateActions}
         />
-        <RollLog rolls={rolls} onClearRolls={handleClearRolls} />
+        <ActivityLog entries={logEntries} onClearRolls={handleClearRolls} />
       </div>
     </main>
   );

@@ -49,7 +49,7 @@ export function Inventory({ inventory, onUpdateInventory }: InventoryProps) {
       size: newItem.size,
       type: newItem.type,
       ...(newItem.type === 'weapon' && { attribute: newItem.attribute, damage: newItem.damage, properties: newItem.properties }),
-      ...(newItem.type === 'armor' && { armor: newItem.armor, properties: newItem.properties }),
+      ...(newItem.type === 'armor' && { armor: newItem.armor, maxDexBonus: newItem.maxDexBonus, properties: newItem.properties }),
       ...(newItem.type === 'freeform' && { description: newItem.description }),
     };
 
@@ -233,16 +233,30 @@ export function Inventory({ inventory, onUpdateInventory }: InventoryProps) {
               )}
 
               {newItem.type === 'armor' && (
-                <div>
-                  <Label htmlFor="armor-value">Armor</Label>
-                  <Input
-                    id="armor-value"
-                    type="number"
-                    value={newItem.armor || ""}
-                    onChange={(e) => setNewItem({ ...newItem, armor: parseInt(e.target.value) || undefined })}
-                    placeholder="Armor value"
-                  />
-                </div>
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="armor-value">Armor</Label>
+                      <Input
+                        id="armor-value"
+                        type="number"
+                        value={newItem.armor || ""}
+                        onChange={(e) => setNewItem({ ...newItem, armor: parseInt(e.target.value) || undefined })}
+                        placeholder="Armor value"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="max-dex-bonus">Max Dex Bonus</Label>
+                      <Input
+                        id="max-dex-bonus"
+                        type="number"
+                        value={newItem.maxDexBonus ?? ""}
+                        onChange={(e) => setNewItem({ ...newItem, maxDexBonus: e.target.value === "" ? undefined : parseInt(e.target.value) || 0 })}
+                        placeholder="No limit"
+                      />
+                    </div>
+                  </div>
+                </>
               )}
 
               {newItem.type === 'freeform' && (

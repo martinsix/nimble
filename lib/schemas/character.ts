@@ -12,6 +12,7 @@ export const itemSchema = z.object({
   attribute: attributeNameSchema.optional(),
   damage: z.string().optional(),
   armor: z.number().optional(),
+  maxDexBonus: z.number().optional(),
   properties: z.array(z.string()).optional(),
   description: z.string().optional(),
 });
@@ -53,11 +54,18 @@ export const hitPointsSchema = z.object({
   temporary: z.number().min(0),
 });
 
+export const actionTrackerSchema = z.object({
+  current: z.number().min(0),
+  base: z.number().min(1),
+  bonus: z.number().min(0),
+});
+
 export const createCharacterSchema = z.object({
   name: z.string().min(1).max(50),
   attributes: attributeSchema,
   hitPoints: hitPointsSchema,
   initiative: skillSchema,
+  actionTracker: actionTrackerSchema,
   skills: skillsSchema,
   inventory: inventorySchema,
 });
@@ -68,6 +76,7 @@ export const characterSchema = z.object({
   attributes: attributeSchema,
   hitPoints: hitPointsSchema,
   initiative: skillSchema,
+  actionTracker: actionTrackerSchema,
   skills: skillsSchema,
   inventory: inventorySchema,
   createdAt: z.date(),

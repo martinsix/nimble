@@ -21,7 +21,26 @@ export const createDefaultSkills = () => {
 export const createDefaultInventory = (): Inventory => {
   return {
     maxSize: 10,
-    items: [],
+    items: [
+      {
+        id: 'sample-leather-armor',
+        name: 'Leather Armor',
+        size: 2,
+        type: 'armor',
+        armor: 2,
+        maxDexBonus: 3,
+        properties: ['Light'],
+      },
+      {
+        id: 'sample-sword',
+        name: 'Sword',
+        size: 1,
+        type: 'weapon',
+        attribute: 'strength',
+        damage: '1d8',
+        properties: ['Versatile'],
+      },
+    ],
   };
 };
 
@@ -38,5 +57,13 @@ export const createDefaultInitiative = () => {
     name: 'Initiative',
     associatedAttribute: 'dexterity' as AttributeName,
     modifier: 0,
+  };
+};
+
+export const createDefaultActionTracker = () => {
+  return {
+    current: 3,
+    base: 3,
+    bonus: 0,
   };
 };

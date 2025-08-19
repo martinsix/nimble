@@ -21,6 +21,7 @@ export interface ArmorItem extends BaseItem {
   type: 'armor';
   equipped?: boolean;
   armor?: number;
+  maxDexBonus?: number; // Maximum dexterity bonus this armor allows
   properties?: string[];
 }
 
@@ -44,6 +45,7 @@ export interface CreateItemData {
   attribute?: AttributeName;
   damage?: string;
   armor?: number;
+  maxDexBonus?: number;
   properties?: string[];
   description?: string;
 }

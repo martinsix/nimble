@@ -8,6 +8,12 @@ export interface Skill {
 
 import { Inventory } from './inventory';
 
+export interface ActionTracker {
+  current: number; // Currently available actions
+  base: number; // Base actions per turn (default 3)
+  bonus: number; // Additional permanent actions gained
+}
+
 export interface Character {
   id: string;
   name: string;
@@ -23,6 +29,7 @@ export interface Character {
     temporary: number;
   };
   initiative: Skill;
+  actionTracker: ActionTracker;
   skills: {
     arcana: Skill;
     examination: Skill;
@@ -54,6 +61,7 @@ export interface CreateCharacterData {
     temporary: number;
   };
   initiative: Skill;
+  actionTracker: ActionTracker;
   skills: {
     arcana: Skill;
     examination: Skill;

@@ -1,9 +1,9 @@
-import { DiceRoll, DiceType, DiceExpression, SingleDie } from '../types/dice';
+import { LogEntry, DiceRoll, DamageEntry, HealingEntry, TempHPEntry, InitiativeEntry, DiceType, DiceExpression, SingleDie } from '../types/dice';
 import { gameConfig } from '../config/game-config';
 
 export class DiceService {
-  private readonly storageKey = 'nimble-navigator-dice-rolls';
-  private readonly maxRolls = gameConfig.storage.maxRollHistory;
+  private readonly storageKey = 'nimble-navigator-log-entries';
+  private readonly maxEntries = gameConfig.storage.maxRollHistory;
 
   rollSingleDie(sides: DiceType): number {
     return Math.floor(Math.random() * sides) + 1;
@@ -127,6 +127,7 @@ export class DiceService {
     const roll: DiceRoll = {
       id: crypto.randomUUID(),
       timestamp: new Date(),
+      type: 'roll',
       dice,
       droppedDice: droppedDice.length > 0 ? droppedDice : undefined,
       modifier,
@@ -155,6 +156,7 @@ export class DiceService {
     const roll: DiceRoll = {
       id: crypto.randomUUID(),
       timestamp: new Date(),
+      type: 'roll',
       dice,
       droppedDice: droppedDice.length > 0 ? droppedDice : undefined,
       modifier,
@@ -169,29 +171,116 @@ export class DiceService {
     return roll;
   }
 
-  async getRolls(): Promise<DiceRoll[]> {
+  async getLogEntries(): Promise<LogEntry[]> {
     const stored = localStorage.getItem(this.storageKey);
     if (!stored) return [];
     
     try {
       const parsed = JSON.parse(stored);
-      return parsed.map((roll: any) => ({
-        ...roll,
-        timestamp: new Date(roll.timestamp),
+      return parsed.map((entry: any) => ({
+        ...entry,
+        timestamp: new Date(entry.timestamp),
       }));
     } catch {
       return [];
     }
   }
 
-  private async saveRoll(newRoll: DiceRoll): Promise<void> {
-    const existingRolls = await this.getRolls();
-    const updatedRolls = [newRoll, ...existingRolls].slice(0, this.maxRolls);
-    localStorage.setItem(this.storageKey, JSON.stringify(updatedRolls));
+  // Backward compatibility method
+  async getRolls(): Promise<DiceRoll[]> {
+    const entries = await this.getLogEntries();
+    return entries.filter((entry): entry is DiceRoll => entry.type === 'roll');
   }
 
-  async clearRolls(): Promise<void> {
+  private async saveLogEntry(newEntry: LogEntry): Promise<void> {
+    const existingEntries = await this.getLogEntries();
+    const updatedEntries = [newEntry, ...existingEntries].slice(0, this.maxEntries);
+    localStorage.setItem(this.storageKey, JSON.stringify(updatedEntries));
+  }
+
+  // Backward compatibility method
+  private async saveRoll(newRoll: DiceRoll): Promise<void> {
+    await this.saveLogEntry(newRoll);
+  }
+
+  async clearLogEntries(): Promise<void> {
     localStorage.removeItem(this.storageKey);
+  }
+
+  // Backward compatibility method
+  async clearRolls(): Promise<void> {
+    await this.clearLogEntries();
+  }
+
+  async addDamageEntry(amount: number, targetType: 'hp' | 'temp_hp' = 'hp'): Promise<DamageEntry> {
+    const entry: DamageEntry = {
+      id: crypto.randomUUID(),
+      timestamp: new Date(),
+      type: 'damage',
+      description: `Took ${amount} damage${targetType === 'temp_hp' ? ' (temporary HP)' : ''}`,
+      amount,
+      targetType,
+    };
+
+    await this.saveLogEntry(entry);
+    return entry;
+  }
+
+  async addHealingEntry(amount: number): Promise<HealingEntry> {
+    const entry: HealingEntry = {
+      id: crypto.randomUUID(),
+      timestamp: new Date(),
+      type: 'healing',
+      description: `Healed ${amount} HP`,
+      amount,
+    };
+
+    await this.saveLogEntry(entry);
+    return entry;
+  }
+
+  async addTempHPEntry(amount: number, previous?: number): Promise<TempHPEntry> {
+    const description = previous !== undefined 
+      ? `Gained ${amount} temporary HP (replaced ${previous})` 
+      : `Gained ${amount} temporary HP`;
+      
+    const entry: TempHPEntry = {
+      id: crypto.randomUUID(),
+      timestamp: new Date(),
+      type: 'temp_hp',
+      description,
+      amount,
+      previous,
+    };
+
+    await this.saveLogEntry(entry);
+    return entry;
+  }
+
+  async addInitiativeEntry(total: number, bonusActions: number = 0): Promise<InitiativeEntry> {
+    let actionsGranted: number;
+    
+    if (total < 10) {
+      actionsGranted = 1;
+    } else if (total < 20) {
+      actionsGranted = 2;
+    } else {
+      actionsGranted = 3;
+    }
+
+    actionsGranted += bonusActions;
+
+    const entry: InitiativeEntry = {
+      id: crypto.randomUUID(),
+      timestamp: new Date(),
+      type: 'initiative',
+      description: `Initiative ${total} - Combat started with ${actionsGranted} actions`,
+      total,
+      actionsGranted,
+    };
+
+    await this.saveLogEntry(entry);
+    return entry;
   }
 }
 

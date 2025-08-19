@@ -14,7 +14,24 @@ interface ArmorSectionProps {
 
 export function ArmorSection({ character, isOpen, onToggle }: ArmorSectionProps) {
   const equippedArmor = getEquippedArmor(character.inventory.items);
-  const totalArmorValue = equippedArmor.reduce((total, armor) => total + (armor.armor || 0), 0);
+  const dexterityBonus = character.attributes.dexterity;
+  
+  // Calculate armor value for each piece including dex bonus
+  const armorValues = equippedArmor.map(armor => {
+    const baseArmor = armor.armor || 0;
+    const maxDexBonus = armor.maxDexBonus ?? Infinity; // Default to no limit if not specified
+    const actualDexBonus = Math.min(dexterityBonus, maxDexBonus);
+    return {
+      armor,
+      baseArmor,
+      dexBonus: actualDexBonus,
+      totalValue: baseArmor + actualDexBonus
+    };
+  });
+  
+  const totalArmorValue = armorValues.reduce((total, armorValue) => total + armorValue.totalValue, 0);
+  const totalBaseArmor = armorValues.reduce((total, armorValue) => total + armorValue.baseArmor, 0);
+  const totalDexBonus = armorValues.reduce((total, armorValue) => total + armorValue.dexBonus, 0);
 
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>
@@ -45,7 +62,7 @@ export function ArmorSection({ character, isOpen, onToggle }: ArmorSectionProps)
               </div>
             ) : (
               <div className="space-y-2">
-                {equippedArmor.map((armor) => (
+                {armorValues.map(({ armor, baseArmor, dexBonus, totalValue }) => (
                   <div key={armor.id} className="flex items-center justify-between p-2 bg-muted rounded">
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4" />
@@ -55,15 +72,34 @@ export function ArmorSection({ character, isOpen, onToggle }: ArmorSectionProps)
                           ({armor.properties.join(', ')})
                         </span>
                       )}
+                      {armor.maxDexBonus !== undefined && armor.maxDexBonus < Infinity && (
+                        <span className="text-xs text-blue-600">
+                          (Max Dex: {armor.maxDexBonus})
+                        </span>
+                      )}
                     </div>
-                    <span className="font-bold">{armor.armor || 0}</span>
+                    <div className="text-right">
+                      <div className="font-bold">{totalValue}</div>
+                      {dexBonus > 0 && (
+                        <div className="text-xs text-muted-foreground">
+                          {baseArmor} + {dexBonus} dex
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
                 {equippedArmor.length > 1 && (
                   <div className="border-t pt-2 mt-2">
                     <div className="flex items-center justify-between font-bold">
                       <span>Total Armor Value:</span>
-                      <span>{totalArmorValue}</span>
+                      <div className="text-right">
+                        <div>{totalArmorValue}</div>
+                        {totalDexBonus > 0 && (
+                          <div className="text-xs text-muted-foreground font-normal">
+                            {totalBaseArmor} base + {totalDexBonus} dex
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
