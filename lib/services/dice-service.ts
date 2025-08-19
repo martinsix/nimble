@@ -100,8 +100,27 @@ export class DiceService {
     return { count, sides };
   }
 
+  rollBasicDice(count: number, sides: DiceType, advantageLevel: number = 0): { dice: SingleDie[], droppedDice: SingleDie[] } {
+    // Calculate total dice to roll (base count + advantage/disadvantage dice)
+    const totalDiceToRoll = count + Math.abs(advantageLevel);
+    const initialDice: SingleDie[] = [];
+    
+    // Roll initial dice (including advantage/disadvantage extra dice)
+    for (let i = 0; i < totalDiceToRoll; i++) {
+      initialDice.push({
+        type: sides,
+        result: this.rollSingleDie(sides),
+      });
+    }
+    
+    // Apply advantage/disadvantage to get final dice and dropped dice
+    const { finalDice, droppedDice } = this.applyAdvantageDisadvantage(initialDice, advantageLevel);
+    
+    return { dice: finalDice, droppedDice };
+  }
+
   async addRoll(diceType: DiceType, modifier: number, description: string, advantageLevel: number = 0): Promise<DiceRoll> {
-    const { dice, droppedDice } = this.rollDiceWithCriticals(1, diceType, advantageLevel);
+    const { dice, droppedDice } = this.rollBasicDice(1, diceType, advantageLevel);
     const diceTotal = dice.reduce((sum, die) => sum + die.result, 0);
     const total = diceTotal + modifier;
     

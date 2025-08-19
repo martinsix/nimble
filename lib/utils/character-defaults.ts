@@ -29,6 +29,7 @@ export const createDefaultHitPoints = () => {
   return {
     current: 10,
     max: 10,
+    temporary: 0,
   };
 };
 

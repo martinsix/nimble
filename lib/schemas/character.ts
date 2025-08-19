@@ -50,6 +50,7 @@ export const skillsSchema = z.object({
 export const hitPointsSchema = z.object({
   current: z.number().min(0),
   max: z.number().min(1),
+  temporary: z.number().min(0),
 });
 
 export const createCharacterSchema = z.object({

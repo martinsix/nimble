@@ -83,6 +83,16 @@ export default function Home() {
     }
   };
 
+  const handleRollSave = async (attributeName: AttributeName, value: number, advantageLevel: number) => {
+    try {
+      const attributeLabel = attributeName.charAt(0).toUpperCase() + attributeName.slice(1);
+      const roll = await diceService.addRoll(20, value, `${attributeLabel} save`, advantageLevel);
+      setRolls(prevRolls => [roll, ...prevRolls.slice(0, 99)]); // Keep only 100 rolls
+    } catch (error) {
+      console.error("Failed to roll save:", error);
+    }
+  };
+
   const handleRollSkill = async (skillName: SkillName, attributeValue: number, skillModifier: number, advantageLevel: number) => {
     try {
       const skill = character.skills[skillName];
@@ -137,6 +147,7 @@ export default function Home() {
           character={character} 
           onUpdate={handleCharacterUpdate} 
           onRollAttribute={handleRollAttribute}
+          onRollSave={handleRollSave}
           onRollSkill={handleRollSkill}
           onRollInitiative={handleRollInitiative}
           onAttack={handleAttack}

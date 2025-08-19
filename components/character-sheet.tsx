@@ -18,12 +18,13 @@ interface CharacterSheetProps {
   character: Character;
   onUpdate: (character: Character) => void;
   onRollAttribute: (attributeName: AttributeName, value: number, advantageLevel: number) => void;
+  onRollSave: (attributeName: AttributeName, value: number, advantageLevel: number) => void;
   onRollSkill: (skillName: SkillName, attributeValue: number, skillModifier: number, advantageLevel: number) => void;
   onRollInitiative: (totalModifier: number, advantageLevel: number) => void;
   onAttack: (weaponName: string, damage: string, attributeModifier: number, advantageLevel: number) => void;
 }
 
-export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSkill, onRollInitiative, onAttack }: CharacterSheetProps) {
+export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSave, onRollSkill, onRollInitiative, onAttack }: CharacterSheetProps) {
   const [localCharacter, setLocalCharacter] = useState(character);
   const [uiState, setUIState] = useState<UIState>({
     collapsibleSections: {
@@ -123,12 +124,13 @@ export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSki
     onUpdate(updated);
   };
 
-  const updateHitPoints = (current: number, max: number) => {
+  const updateHitPoints = (current: number, max: number, temporary: number) => {
     const updated = {
       ...localCharacter,
       hitPoints: {
         current,
         max,
+        temporary,
       },
     };
     setLocalCharacter(updated);
@@ -165,6 +167,7 @@ export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSki
       <HitPointsSection 
         currentHp={localCharacter.hitPoints.current}
         maxHp={localCharacter.hitPoints.max}
+        temporaryHp={localCharacter.hitPoints.temporary}
         isOpen={uiState.collapsibleSections.hitPoints}
         onToggle={(isOpen) => updateCollapsibleState('hitPoints', isOpen)}
         onHpChange={updateHitPoints}
@@ -195,6 +198,7 @@ export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSki
         onToggle={(isOpen) => updateCollapsibleState('attributes', isOpen)}
         onAttributeChange={handleAttributeChange}
         onRollAttribute={onRollAttribute}
+        onRollSave={onRollSave}
         advantageLevel={uiState.advantageLevel}
       />
 

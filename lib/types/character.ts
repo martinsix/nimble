@@ -20,6 +20,7 @@ export interface Character {
   hitPoints: {
     current: number;
     max: number;
+    temporary: number;
   };
   initiative: Skill;
   skills: {
@@ -50,6 +51,7 @@ export interface CreateCharacterData {
   hitPoints: {
     current: number;
     max: number;
+    temporary: number;
   };
   initiative: Skill;
   skills: {

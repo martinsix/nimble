@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { Character, AttributeName } from "@/lib/types/character";
-import { ChevronDown, ChevronRight, Dice6 } from "lucide-react";
+import { ChevronDown, ChevronRight, Dice6, Shield } from "lucide-react";
 
 interface AttributesSectionProps {
   character: Character;
@@ -13,6 +13,7 @@ interface AttributesSectionProps {
   onToggle: (isOpen: boolean) => void;
   onAttributeChange: (attributeName: AttributeName, value: string) => void;
   onRollAttribute: (attributeName: AttributeName, value: number, advantageLevel: number) => void;
+  onRollSave: (attributeName: AttributeName, value: number, advantageLevel: number) => void;
   advantageLevel: number;
 }
 
@@ -22,6 +23,7 @@ export function AttributesSection({
   onToggle, 
   onAttributeChange, 
   onRollAttribute, 
+  onRollSave,
   advantageLevel 
 }: AttributesSectionProps) {
   return (
@@ -56,6 +58,15 @@ export function AttributesSection({
                 <Dice6 className="w-4 h-4 mr-2" />
                 Roll
               </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => onRollSave("strength", character.attributes.strength, advantageLevel)}
+                className="w-full"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Save
+              </Button>
             </CardContent>
           </Card>
 
@@ -80,6 +91,15 @@ export function AttributesSection({
               >
                 <Dice6 className="w-4 h-4 mr-2" />
                 Roll
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => onRollSave("dexterity", character.attributes.dexterity, advantageLevel)}
+                className="w-full"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Save
               </Button>
             </CardContent>
           </Card>
@@ -106,6 +126,15 @@ export function AttributesSection({
                 <Dice6 className="w-4 h-4 mr-2" />
                 Roll
               </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => onRollSave("intelligence", character.attributes.intelligence, advantageLevel)}
+                className="w-full"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Save
+              </Button>
             </CardContent>
           </Card>
 
@@ -130,6 +159,15 @@ export function AttributesSection({
               >
                 <Dice6 className="w-4 h-4 mr-2" />
                 Roll
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => onRollSave("will", character.attributes.will, advantageLevel)}
+                className="w-full"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Save
               </Button>
             </CardContent>
           </Card>

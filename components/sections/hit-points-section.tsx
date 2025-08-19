@@ -12,46 +12,94 @@ import { Heart, Minus, Plus, Settings, ChevronDown, ChevronRight } from "lucide-
 interface HitPointsSectionProps {
   currentHp: number;
   maxHp: number;
+  temporaryHp: number;
   isOpen: boolean;
   onToggle: (isOpen: boolean) => void;
-  onHpChange: (current: number, max: number) => void;
+  onHpChange: (current: number, max: number, temporary: number) => void;
 }
 
-export function HitPointsSection({ currentHp, maxHp, isOpen, onToggle, onHpChange }: HitPointsSectionProps) {
+export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onToggle, onHpChange }: HitPointsSectionProps) {
   const [damageAmount, setDamageAmount] = useState<string>("1");
   const [healAmount, setHealAmount] = useState<string>("1");
+  const [tempHpAmount, setTempHpAmount] = useState<string>("1");
   const [newMaxHp, setNewMaxHp] = useState<string>(maxHp.toString());
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const handleDamage = () => {
     const damage = parseInt(damageAmount) || 0;
-    const newCurrent = Math.max(0, currentHp - damage);
-    onHpChange(newCurrent, maxHp);
+    let remainingDamage = damage;
+    let newTemporary = temporaryHp;
+    let newCurrent = currentHp;
+
+    // Temp HP absorbs damage first
+    if (temporaryHp > 0) {
+      if (remainingDamage >= temporaryHp) {
+        remainingDamage -= temporaryHp;
+        newTemporary = 0;
+      } else {
+        newTemporary = temporaryHp - remainingDamage;
+        remainingDamage = 0;
+      }
+    }
+
+    // Apply remaining damage to regular HP
+    if (remainingDamage > 0) {
+      newCurrent = Math.max(0, currentHp - remainingDamage);
+    }
+
+    onHpChange(newCurrent, maxHp, newTemporary);
     setDamageAmount("1");
   };
 
   const handleHeal = () => {
     const heal = parseInt(healAmount) || 0;
     const newCurrent = Math.min(maxHp, currentHp + heal);
-    onHpChange(newCurrent, maxHp);
+    onHpChange(newCurrent, maxHp, temporaryHp);
     setHealAmount("1");
+  };
+
+  const handleTempHp = () => {
+    const tempAmount = parseInt(tempHpAmount) || 0;
+    // Temp HP doesn't stack - take the higher value
+    const newTemporary = Math.max(temporaryHp, tempAmount);
+    onHpChange(currentHp, maxHp, newTemporary);
+    setTempHpAmount("1");
   };
 
   const handleMaxHpChange = () => {
     const newMax = parseInt(newMaxHp) || 1;
     const adjustedCurrent = Math.min(currentHp, newMax);
-    onHpChange(adjustedCurrent, newMax);
+    onHpChange(adjustedCurrent, newMax, temporaryHp);
     setIsSettingsOpen(false);
   };
 
   const handleQuickDamage = (amount: number) => {
-    const newCurrent = Math.max(0, currentHp - amount);
-    onHpChange(newCurrent, maxHp);
+    let remainingDamage = amount;
+    let newTemporary = temporaryHp;
+    let newCurrent = currentHp;
+
+    // Temp HP absorbs damage first
+    if (temporaryHp > 0) {
+      if (remainingDamage >= temporaryHp) {
+        remainingDamage -= temporaryHp;
+        newTemporary = 0;
+      } else {
+        newTemporary = temporaryHp - remainingDamage;
+        remainingDamage = 0;
+      }
+    }
+
+    // Apply remaining damage to regular HP
+    if (remainingDamage > 0) {
+      newCurrent = Math.max(0, currentHp - remainingDamage);
+    }
+
+    onHpChange(newCurrent, maxHp, newTemporary);
   };
 
   const handleQuickHeal = (amount: number) => {
     const newCurrent = Math.min(maxHp, currentHp + amount);
-    onHpChange(newCurrent, maxHp);
+    onHpChange(newCurrent, maxHp, temporaryHp);
   };
 
   const getHealthBarColor = () => {
@@ -121,6 +169,16 @@ export function HitPointsSection({ currentHp, maxHp, isOpen, onToggle, onHpChang
         <div className="text-center space-y-2">
           <div className="text-3xl font-bold">
             {currentHp} / {maxHp}
+            {currentHp === 0 && (
+              <span className="text-lg text-red-600 ml-2 font-semibold">
+                (Dying)
+              </span>
+            )}
+            {temporaryHp > 0 && (
+              <span className="text-lg text-blue-600 ml-2">
+                (+{temporaryHp} temp)
+              </span>
+            )}
           </div>
           <div className="w-full bg-gray-200 rounded-full h-3">
             <div 
@@ -128,6 +186,11 @@ export function HitPointsSection({ currentHp, maxHp, isOpen, onToggle, onHpChang
               style={{ width: `${healthPercentage}%` }}
             />
           </div>
+          {temporaryHp > 0 && (
+            <div className="text-sm text-blue-600 font-medium">
+              Total Effective HP: {currentHp + temporaryHp}
+            </div>
+          )}
         </div>
 
         {/* Quick Actions */}
@@ -197,7 +260,7 @@ export function HitPointsSection({ currentHp, maxHp, isOpen, onToggle, onHpChang
         </div>
 
         {/* Custom Amount Actions */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label htmlFor="damage-amount" className="text-sm">Custom Damage</Label>
             <div className="flex gap-2">
@@ -239,6 +302,29 @@ export function HitPointsSection({ currentHp, maxHp, isOpen, onToggle, onHpChang
                 onClick={handleHeal}
                 disabled={currentHp >= maxHp}
                 className="text-green-600 border-green-600 hover:bg-green-50"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="temp-hp-amount" className="text-sm">Temporary HP</Label>
+            <div className="flex gap-2">
+              <Input
+                id="temp-hp-amount"
+                type="number"
+                min="0"
+                value={tempHpAmount}
+                onChange={(e) => setTempHpAmount(e.target.value)}
+                className="flex-1"
+                placeholder="Amount"
+              />
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleTempHp}
+                className="text-blue-600 border-blue-600 hover:bg-blue-50"
               >
                 <Plus className="w-4 h-4" />
               </Button>
