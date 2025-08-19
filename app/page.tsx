@@ -432,11 +432,11 @@ export default function Home() {
       }
     };
 
-    window.addEventListener('createCharacter', handleCreateCharacter as EventListener);
+    window.addEventListener('createCharacter', handleCreateCharacter as unknown as EventListener);
     return () => {
-      window.removeEventListener('createCharacter', handleCreateCharacter as EventListener);
+      window.removeEventListener('createCharacter', handleCreateCharacter as unknown as EventListener);
     };
-  }, [settings, sampleCharacter]);
+  }, [settings, handleCharacterSwitch]);
 
   if (!isLoaded) {
     return (

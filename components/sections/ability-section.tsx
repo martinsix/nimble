@@ -348,6 +348,7 @@ export function AbilitySection({
                                 onChange={(e) => setNewAbility({
                                   ...newAbility,
                                   roll: {
+                                    dice: newAbility.roll?.dice || '',
                                     ...newAbility.roll,
                                     modifier: e.target.value ? parseInt(e.target.value) : undefined
                                   }
@@ -363,6 +364,7 @@ export function AbilitySection({
                                   setNewAbility({
                                     ...newAbility,
                                     roll: {
+                                      dice: newAbility.roll?.dice || '',
                                       ...newAbility.roll,
                                       attribute: value === 'none' ? undefined : value
                                     }

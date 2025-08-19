@@ -54,7 +54,7 @@ export interface InitiativeEntry extends BaseLogEntry {
 export interface AbilityUsageEntry extends BaseLogEntry {
   type: 'ability_usage';
   abilityName: string; // Name of the ability used
-  frequency: 'per_turn' | 'per_encounter'; // Frequency of the ability
+  frequency: 'per_turn' | 'per_encounter' | 'at_will'; // Frequency of the ability
   usesRemaining: number; // Uses remaining after this usage
   maxUses: number; // Maximum uses for this ability
 }
