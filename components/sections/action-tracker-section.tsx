@@ -6,22 +6,27 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { ActionTracker } from "@/lib/types/character";
+import { Abilities } from "@/lib/types/abilities";
 import { Swords, Plus, RotateCcw, Minus, ChevronDown, ChevronRight } from "lucide-react";
 
 interface ActionTrackerSectionProps {
   actionTracker: ActionTracker;
+  abilities: Abilities;
   isOpen: boolean;
   onToggle: (isOpen: boolean) => void;
   onUpdateActions: (actionTracker: ActionTracker) => void;
-  onInitiativeRolled?: (initiativeTotal: number) => void;
+  onUpdateAbilities: (abilities: Abilities) => void;
+  onEndTurn?: (actionTracker: ActionTracker, abilities: Abilities) => void;
 }
 
 export function ActionTrackerSection({ 
   actionTracker, 
+  abilities,
   isOpen, 
   onToggle, 
   onUpdateActions,
-  onInitiativeRolled 
+  onUpdateAbilities,
+  onEndTurn
 }: ActionTrackerSectionProps) {
   const totalActions = actionTracker.base + actionTracker.bonus;
   
@@ -43,11 +48,30 @@ export function ActionTrackerSection({
   };
 
   const endTurn = () => {
-    onUpdateActions({
+    // Reset per-turn abilities
+    const resetAbilities = {
+      abilities: abilities.abilities.map(ability => {
+        if (ability.type === 'action' && ability.frequency === 'per_turn') {
+          return { ...ability, currentUses: ability.maxUses };
+        }
+        return ability;
+      })
+    };
+
+    const resetActionTracker = {
       ...actionTracker,
       current: actionTracker.base, // Reset to base actions only
       bonus: 0, // Reset bonus actions to zero
-    });
+    };
+
+    if (onEndTurn) {
+      // Use the combined handler if available
+      onEndTurn(resetActionTracker, resetAbilities);
+    } else {
+      // Fallback to separate updates
+      onUpdateActions(resetActionTracker);
+      onUpdateAbilities(resetAbilities);
+    }
   };
 
 

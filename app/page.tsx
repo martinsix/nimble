@@ -5,9 +5,10 @@ import { CharacterSheet } from "@/components/character-sheet";
 import { ActivityLog } from "@/components/activity-log";
 import { Character, AttributeName, SkillName, ActionTracker } from "@/lib/types/character";
 import { LogEntry, DiceRoll } from "@/lib/types/dice";
+import { Abilities } from "@/lib/types/abilities";
 import { characterService } from "@/lib/services/character-service";
 import { diceService } from "@/lib/services/dice-service";
-import { createDefaultSkills, createDefaultInventory, createDefaultHitPoints, createDefaultInitiative, createDefaultActionTracker } from "@/lib/utils/character-defaults";
+import { createDefaultSkills, createDefaultInventory, createDefaultHitPoints, createDefaultInitiative, createDefaultActionTracker, createDefaultAbilities } from "@/lib/utils/character-defaults";
 
 const sampleCharacter: Character = {
   id: "default-character",
@@ -24,6 +25,7 @@ const sampleCharacter: Character = {
   inEncounter: false,
   skills: createDefaultSkills(),
   inventory: createDefaultInventory(),
+  abilities: createDefaultAbilities(),
   createdAt: new Date(),
   updatedAt: new Date(),
 };
@@ -50,6 +52,7 @@ export default function Home() {
             inEncounter: sampleCharacter.inEncounter,
             skills: sampleCharacter.skills,
             inventory: sampleCharacter.inventory,
+            abilities: sampleCharacter.abilities,
           }, "default-character");
           setCharacter(newCharacter);
         }
@@ -189,6 +192,16 @@ export default function Home() {
   };
 
   const handleEndEncounter = async () => {
+    // Reset per-encounter abilities
+    const resetAbilities = {
+      abilities: character.abilities.abilities.map(ability => {
+        if (ability.type === 'action' && ability.frequency === 'per_encounter') {
+          return { ...ability, currentUses: ability.maxUses };
+        }
+        return ability;
+      })
+    };
+
     const updatedCharacter = {
       ...character,
       inEncounter: false,
@@ -196,13 +209,34 @@ export default function Home() {
         ...character.actionTracker,
         current: character.actionTracker.base,
         bonus: 0
-      }
+      },
+      abilities: resetAbilities
     };
     setCharacter(updatedCharacter);
     try {
       await characterService.updateCharacter(updatedCharacter);
     } catch (error) {
       console.error("Failed to end encounter:", error);
+    }
+  };
+
+  const handleUpdateAbilities = async (abilities: Abilities) => {
+    const updatedCharacter = { ...character, abilities };
+    setCharacter(updatedCharacter);
+    try {
+      await characterService.updateCharacter(updatedCharacter);
+    } catch (error) {
+      console.error("Failed to update abilities:", error);
+    }
+  };
+
+  const handleEndTurn = async (actionTracker: ActionTracker, abilities: Abilities) => {
+    const updatedCharacter = { ...character, actionTracker, abilities };
+    setCharacter(updatedCharacter);
+    try {
+      await characterService.updateCharacter(updatedCharacter);
+    } catch (error) {
+      console.error("Failed to end turn:", error);
     }
   };
 
@@ -231,6 +265,8 @@ export default function Home() {
           onLogTempHP={handleLogTempHP}
           onUpdateActions={handleUpdateActions}
           onEndEncounter={handleEndEncounter}
+          onUpdateAbilities={handleUpdateAbilities}
+          onEndTurn={handleEndTurn}
         />
         <ActivityLog entries={logEntries} onClearRolls={handleClearRolls} />
       </div>

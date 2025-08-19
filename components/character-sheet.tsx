@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Character, AttributeName, SkillName, ActionTracker } from "@/lib/types/character";
 import { Inventory as InventoryType } from "@/lib/types/inventory";
+import { Abilities } from "@/lib/types/abilities";
 import { CharacterNameSection } from "./sections/character-name-section";
 import { AdvantageToggle } from "./advantage-toggle";
 import { HitPointsSection } from "./sections/hit-points-section";
@@ -12,6 +13,7 @@ import { AttributesSection } from "./sections/attributes-section";
 import { SkillsSection } from "./sections/skills-section";
 import { ActionsSection } from "./sections/actions-section";
 import { ArmorSection } from "./sections/armor-section";
+import { AbilitySection } from "./sections/ability-section";
 import { InventorySection } from "./sections/inventory-section";
 import { uiStateService, UIState } from "@/lib/services/ui-state-service";
 
@@ -28,9 +30,11 @@ interface CharacterSheetProps {
   onLogTempHP?: (amount: number, previous?: number) => void;
   onUpdateActions?: (actionTracker: ActionTracker) => void;
   onEndEncounter?: () => void;
+  onUpdateAbilities?: (abilities: Abilities) => void;
+  onEndTurn?: (actionTracker: ActionTracker, abilities: Abilities) => void;
 }
 
-export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSave, onRollSkill, onRollInitiative, onAttack, onLogDamage, onLogHealing, onLogTempHP, onUpdateActions, onEndEncounter }: CharacterSheetProps) {
+export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSave, onRollSkill, onRollInitiative, onAttack, onLogDamage, onLogHealing, onLogTempHP, onUpdateActions, onEndEncounter, onUpdateAbilities, onEndTurn }: CharacterSheetProps) {
   const [localCharacter, setLocalCharacter] = useState(character);
   const [uiState, setUIState] = useState<UIState>({
     collapsibleSections: {
@@ -40,8 +44,9 @@ export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSav
       attributes: true,
       skills: true,
       actions: true,
-      inventory: true,
       armor: true,
+      abilities: true,
+      inventory: true,
     },
     advantageLevel: 0,
   });
@@ -204,9 +209,12 @@ export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSav
       {character.inEncounter && (
         <ActionTrackerSection 
           actionTracker={character.actionTracker}
+          abilities={character.abilities}
           isOpen={uiState.collapsibleSections.actionTracker}
           onToggle={(isOpen) => updateCollapsibleState('actionTracker', isOpen)}
           onUpdateActions={onUpdateActions || (() => {})}
+          onUpdateAbilities={onUpdateAbilities || (() => {})}
+          onEndTurn={onEndTurn}
         />
       )}
 
@@ -245,6 +253,14 @@ export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSav
         onToggle={(isOpen) => updateCollapsibleState('actions', isOpen)}
         onAttack={onAttack}
         advantageLevel={uiState.advantageLevel}
+      />
+
+      {/* Ability Section */}
+      <AbilitySection 
+        abilities={character.abilities}
+        isOpen={uiState.collapsibleSections.abilities}
+        onToggle={(isOpen) => updateCollapsibleState('abilities', isOpen)}
+        onUpdateAbilities={onUpdateAbilities || (() => {})}
       />
 
       {/* Inventory Section */}

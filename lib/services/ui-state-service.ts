@@ -6,8 +6,9 @@ export interface UIState {
     attributes: boolean;
     skills: boolean;
     actions: boolean;
-    inventory: boolean;
     armor: boolean;
+    abilities: boolean;
+    inventory: boolean;
   };
   advantageLevel: number; // Positive for advantage, negative for disadvantage, 0 for normal
 }
@@ -41,8 +42,9 @@ export class UIStateService {
         attributes: true,
         skills: true,
         actions: true,
-        inventory: true,
         armor: true,
+        abilities: true,
+        inventory: true,
       },
       advantageLevel: 0,
     };

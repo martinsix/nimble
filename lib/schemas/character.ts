@@ -60,6 +60,28 @@ export const actionTrackerSchema = z.object({
   bonus: z.number().min(0),
 });
 
+export const abilitySchema = z.discriminatedUnion('type', [
+  z.object({
+    id: z.string(),
+    name: z.string().min(1),
+    description: z.string(),
+    type: z.literal('freeform'),
+  }),
+  z.object({
+    id: z.string(),
+    name: z.string().min(1),
+    description: z.string(),
+    type: z.literal('action'),
+    frequency: z.enum(['per_turn', 'per_encounter']),
+    maxUses: z.number().min(1),
+    currentUses: z.number().min(0),
+  }),
+]);
+
+export const abilitiesSchema = z.object({
+  abilities: z.array(abilitySchema),
+});
+
 export const createCharacterSchema = z.object({
   name: z.string().min(1).max(50),
   attributes: attributeSchema,
@@ -69,6 +91,7 @@ export const createCharacterSchema = z.object({
   inEncounter: z.boolean(),
   skills: skillsSchema,
   inventory: inventorySchema,
+  abilities: abilitiesSchema,
 });
 
 export const characterSchema = z.object({
@@ -81,6 +104,7 @@ export const characterSchema = z.object({
   inEncounter: z.boolean(),
   skills: skillsSchema,
   inventory: inventorySchema,
+  abilities: abilitiesSchema,
   createdAt: z.date(),
   updatedAt: z.date(),
 });

@@ -7,6 +7,7 @@ export interface Skill {
 }
 
 import { Inventory } from './inventory';
+import { Abilities } from './abilities';
 
 export interface ActionTracker {
   current: number; // Currently available actions
@@ -44,6 +45,7 @@ export interface Character {
     stealth: Skill;
   };
   inventory: Inventory;
+  abilities: Abilities;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -77,6 +79,7 @@ export interface CreateCharacterData {
     stealth: Skill;
   };
   inventory: Inventory;
+  abilities: Abilities;
 }
 
 export type SkillName = keyof Character['skills'];

@@ -1,5 +1,6 @@
 import { Skill, AttributeName } from '../types/character';
 import { Inventory } from '../types/inventory';
+import { Abilities } from '../types/abilities';
 
 export const createDefaultSkills = () => {
   const defaultSkills = {
@@ -65,5 +66,27 @@ export const createDefaultActionTracker = () => {
     current: 3,
     base: 3,
     bonus: 0,
+  };
+};
+
+export const createDefaultAbilities = (): Abilities => {
+  return {
+    abilities: [
+      {
+        id: 'sample-healing-potion',
+        name: 'Healing Potion',
+        description: 'Restore 1d8+2 hit points',
+        type: 'action',
+        frequency: 'per_encounter',
+        maxUses: 1,
+        currentUses: 1,
+      },
+      {
+        id: 'sample-backstory',
+        name: 'Character Background',
+        description: 'A brave adventurer with a mysterious past.',
+        type: 'freeform',
+      },
+    ],
   };
 };
