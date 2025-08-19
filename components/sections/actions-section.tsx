@@ -3,6 +3,8 @@
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { Character } from "@/lib/types/character";
+import { Abilities } from "@/lib/types/abilities";
+import { AbilityUsageEntry } from "@/lib/types/dice";
 import { Actions } from "../actions";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
@@ -11,6 +13,7 @@ interface ActionsSectionProps {
   isOpen: boolean;
   onToggle: (isOpen: boolean) => void;
   onAttack: (weaponName: string, damage: string, attributeModifier: number, advantageLevel: number) => void;
+  onUseAbility?: (abilityId: string) => void;
   advantageLevel: number;
 }
 
@@ -19,6 +22,7 @@ export function ActionsSection({
   isOpen, 
   onToggle, 
   onAttack, 
+  onUseAbility,
   advantageLevel 
 }: ActionsSectionProps) {
   return (
@@ -31,7 +35,12 @@ export function ActionsSection({
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="mt-4">
-          <Actions character={character} onAttack={onAttack} advantageLevel={advantageLevel} />
+          <Actions 
+            character={character} 
+            onAttack={onAttack} 
+            onUseAbility={onUseAbility}
+            advantageLevel={advantageLevel} 
+          />
         </div>
       </CollapsibleContent>
     </Collapsible>

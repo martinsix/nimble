@@ -17,6 +17,7 @@ interface AbilitySectionProps {
   isOpen: boolean;
   onToggle: (isOpen: boolean) => void;
   onUpdateAbilities: (abilities: Abilities) => void;
+  onUseAbility?: (abilityId: string) => void;
 }
 
 interface NewAbilityForm {
@@ -31,7 +32,8 @@ export function AbilitySection({
   abilities, 
   isOpen, 
   onToggle, 
-  onUpdateAbilities 
+  onUpdateAbilities,
+  onUseAbility 
 }: AbilitySectionProps) {
   const [isAddingAbility, setIsAddingAbility] = useState(false);
   const [editingAbility, setEditingAbility] = useState<string | null>(null);
@@ -43,17 +45,10 @@ export function AbilitySection({
     maxUses: 1,
   });
 
-  const useAbility = (abilityId: string) => {
-    const updatedAbilities = abilities.abilities.map(ability => {
-      if (ability.id === abilityId && ability.type === 'action') {
-        return {
-          ...ability,
-          currentUses: Math.max(0, ability.currentUses - 1),
-        };
-      }
-      return ability;
-    });
-    onUpdateAbilities({ abilities: updatedAbilities });
+  const handleUseAbility = (abilityId: string) => {
+    if (onUseAbility) {
+      onUseAbility(abilityId);
+    }
   };
 
   const addAbility = () => {
@@ -161,8 +156,8 @@ export function AbilitySection({
               <Button
                 variant={isUsed ? "outline" : "default"}
                 size="sm"
-                onClick={() => useAbility(ability.id)}
-                disabled={isUsed}
+                onClick={() => handleUseAbility(ability.id)}
+                disabled={isUsed || !onUseAbility}
               >
                 {isUsed ? "Used" : "Use Ability"}
               </Button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { LogEntry, DiceRoll, DamageEntry, HealingEntry, TempHPEntry, InitiativeEntry } from "@/lib/types/dice";
+import { LogEntry, DiceRoll, DamageEntry, HealingEntry, TempHPEntry, InitiativeEntry, AbilityUsageEntry } from "@/lib/types/dice";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
@@ -20,7 +20,7 @@ export function ActivityLog({ entries, onClearRolls }: ActivityLogProps) {
       <Card className="w-full">
         <CardHeader className="pb-3">
           <div className="flex justify-between items-center">
-            <CardTitle>Activity Log</CardTitle>
+            <CardTitle>Character Log</CardTitle>
             {entries.length > 0 && (
               <Button variant="outline" size="sm" onClick={onClearRolls}>
                 Clear
@@ -145,7 +145,7 @@ function RollEntryDisplay({ roll, formatTime }: { roll: DiceRoll, formatTime: (d
 }
 
 // Component for displaying non-roll entries
-function NonRollEntryDisplay({ entry, formatTime }: { entry: DamageEntry | HealingEntry | TempHPEntry | InitiativeEntry, formatTime: (date: Date) => string }) {
+function NonRollEntryDisplay({ entry, formatTime }: { entry: DamageEntry | HealingEntry | TempHPEntry | InitiativeEntry | AbilityUsageEntry, formatTime: (date: Date) => string }) {
   const getEntryIcon = () => {
     switch (entry.type) {
       case 'damage':
@@ -156,6 +156,8 @@ function NonRollEntryDisplay({ entry, formatTime }: { entry: DamageEntry | Heali
         return '🛡️';
       case 'initiative':
         return '⚡';
+      case 'ability_usage':
+        return '✨';
       default:
         return '📝';
     }
@@ -171,6 +173,8 @@ function NonRollEntryDisplay({ entry, formatTime }: { entry: DamageEntry | Heali
         return 'text-blue-600';
       case 'initiative':
         return 'text-yellow-600';
+      case 'ability_usage':
+        return 'text-purple-600';
       default:
         return 'text-muted-foreground';
     }
@@ -186,7 +190,8 @@ function NonRollEntryDisplay({ entry, formatTime }: { entry: DamageEntry | Heali
         <span className="text-muted-foreground">{formatTime(entry.timestamp)}</span>
         <span className={`font-bold text-lg min-w-[2rem] text-right ${getEntryColor()}`}>
           {entry.type === 'damage' ? `-${entry.amount}` : 
-           entry.type === 'initiative' ? `${(entry as InitiativeEntry).actionsGranted} acts` : 
+           entry.type === 'initiative' ? `${(entry as InitiativeEntry).actionsGranted} acts` :
+           entry.type === 'ability_usage' ? `${(entry as AbilityUsageEntry).usesRemaining}/${(entry as AbilityUsageEntry).maxUses}` :
            `+${entry.amount}`}
         </span>
       </div>

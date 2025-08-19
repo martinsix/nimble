@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import { CharacterSheet } from "@/components/character-sheet";
 import { ActivityLog } from "@/components/activity-log";
 import { Character, AttributeName, SkillName, ActionTracker } from "@/lib/types/character";
-import { LogEntry, DiceRoll } from "@/lib/types/dice";
+import { LogEntry, DiceRoll, AbilityUsageEntry } from "@/lib/types/dice";
 import { Abilities } from "@/lib/types/abilities";
 import { characterService } from "@/lib/services/character-service";
-import { diceService } from "@/lib/services/dice-service";
+import { diceService } from "@/lib/services/dice-service-clean";
+import { activityLogService } from "@/lib/services/activity-log-service";
+import { abilityService } from "@/lib/services/ability-service";
 import { createDefaultSkills, createDefaultInventory, createDefaultHitPoints, createDefaultInitiative, createDefaultActionTracker, createDefaultAbilities } from "@/lib/utils/character-defaults";
 
 const sampleCharacter: Character = {
@@ -58,7 +60,7 @@ export default function Home() {
         }
 
         // Load log entries
-        const existingEntries = await diceService.getLogEntries();
+        const existingEntries = await activityLogService.getLogEntries();
         setLogEntries(existingEntries);
       } catch (error) {
         console.error("Failed to load data:", error);
@@ -83,8 +85,17 @@ export default function Home() {
   const handleRollAttribute = async (attributeName: AttributeName, value: number, advantageLevel: number) => {
     try {
       const attributeLabel = attributeName.charAt(0).toUpperCase() + attributeName.slice(1);
-      const roll = await diceService.addRoll(20, value, `${attributeLabel} check`, advantageLevel);
-      setLogEntries(prevEntries => [roll, ...prevEntries.slice(0, 99)]); // Keep only 100 entries
+      const rollResult = diceService.rollAttributeCheck(value, advantageLevel);
+      const logEntry = activityLogService.createDiceRollEntry(
+        rollResult.dice,
+        rollResult.droppedDice,
+        value,
+        rollResult.total,
+        `${attributeLabel} check`,
+        advantageLevel
+      );
+      await activityLogService.addLogEntry(logEntry);
+      setLogEntries(prevEntries => [logEntry, ...prevEntries.slice(0, 99)]); // Keep only 100 entries
     } catch (error) {
       console.error("Failed to roll dice:", error);
     }
@@ -93,8 +104,17 @@ export default function Home() {
   const handleRollSave = async (attributeName: AttributeName, value: number, advantageLevel: number) => {
     try {
       const attributeLabel = attributeName.charAt(0).toUpperCase() + attributeName.slice(1);
-      const roll = await diceService.addRoll(20, value, `${attributeLabel} save`, advantageLevel);
-      setLogEntries(prevEntries => [roll, ...prevEntries.slice(0, 99)]); // Keep only 100 entries
+      const rollResult = diceService.rollAttributeCheck(value, advantageLevel);
+      const logEntry = activityLogService.createDiceRollEntry(
+        rollResult.dice,
+        rollResult.droppedDice,
+        value,
+        rollResult.total,
+        `${attributeLabel} save`,
+        advantageLevel
+      );
+      await activityLogService.addLogEntry(logEntry);
+      setLogEntries(prevEntries => [logEntry, ...prevEntries.slice(0, 99)]); // Keep only 100 entries
     } catch (error) {
       console.error("Failed to roll save:", error);
     }
@@ -104,8 +124,17 @@ export default function Home() {
     try {
       const skill = character.skills[skillName];
       const totalModifier = attributeValue + skillModifier;
-      const roll = await diceService.addRoll(20, totalModifier, skill.name, advantageLevel);
-      setLogEntries(prevEntries => [roll, ...prevEntries.slice(0, 99)]); // Keep only 100 entries
+      const rollResult = diceService.rollAttributeCheck(totalModifier, advantageLevel);
+      const logEntry = activityLogService.createDiceRollEntry(
+        rollResult.dice,
+        rollResult.droppedDice,
+        totalModifier,
+        rollResult.total,
+        skill.name,
+        advantageLevel
+      );
+      await activityLogService.addLogEntry(logEntry);
+      setLogEntries(prevEntries => [logEntry, ...prevEntries.slice(0, 99)]); // Keep only 100 entries
     } catch (error) {
       console.error("Failed to roll skill:", error);
     }
@@ -113,8 +142,19 @@ export default function Home() {
 
   const handleAttack = async (weaponName: string, damage: string, attributeModifier: number, advantageLevel: number) => {
     try {
-      const roll = await diceService.addAttackRoll(damage, attributeModifier, `${weaponName} attack`, advantageLevel);
-      setLogEntries(prevEntries => [roll, ...prevEntries.slice(0, 99)]); // Keep only 100 entries
+      const rollResult = diceService.rollAttack(damage, attributeModifier, advantageLevel);
+      const logEntry = activityLogService.createDiceRollEntry(
+        rollResult.dice,
+        rollResult.droppedDice,
+        attributeModifier,
+        rollResult.total,
+        `${weaponName} attack`,
+        advantageLevel,
+        rollResult.isMiss,
+        rollResult.criticalHits
+      );
+      await activityLogService.addLogEntry(logEntry);
+      setLogEntries(prevEntries => [logEntry, ...prevEntries.slice(0, 99)]); // Keep only 100 entries
     } catch (error) {
       console.error("Failed to roll attack:", error);
     }
@@ -122,19 +162,31 @@ export default function Home() {
 
   const handleRollInitiative = async (totalModifier: number, advantageLevel: number) => {
     try {
-      const roll = await diceService.addRoll(20, totalModifier, "Initiative", advantageLevel);
-      setLogEntries(prevEntries => [roll, ...prevEntries.slice(0, 99)]); // Keep only 100 entries
+      // Roll initiative
+      const rollResult = diceService.rollAttributeCheck(totalModifier, advantageLevel);
+      const rollLogEntry = activityLogService.createDiceRollEntry(
+        rollResult.dice,
+        rollResult.droppedDice,
+        totalModifier,
+        rollResult.total,
+        "Initiative",
+        advantageLevel
+      );
+      await activityLogService.addLogEntry(rollLogEntry);
+      setLogEntries(prevEntries => [rollLogEntry, ...prevEntries.slice(0, 99)]);
 
-      // Handle action tracker initialization from initiative
-      const initiativeEntry = await diceService.addInitiativeEntry(roll.total!, character.actionTracker.bonus);
-      setLogEntries(prevEntries => [initiativeEntry, ...prevEntries.slice(0, 99)]);
+      // Calculate actions granted and create initiative entry
+      const actionsGranted = abilityService.calculateInitiativeActions(rollResult.total, character.actionTracker.bonus);
+      const initiativeLogEntry = activityLogService.createInitiativeEntry(rollResult.total, actionsGranted);
+      await activityLogService.addLogEntry(initiativeLogEntry);
+      setLogEntries(prevEntries => [initiativeLogEntry, ...prevEntries.slice(0, 99)]);
       
       // Update character's action tracker and start encounter
       const updatedCharacter = {
         ...character,
         actionTracker: {
           ...character.actionTracker,
-          current: initiativeEntry.actionsGranted,
+          current: actionsGranted,
         },
         inEncounter: true
       };
@@ -147,7 +199,7 @@ export default function Home() {
 
   const handleClearRolls = async () => {
     try {
-      await diceService.clearLogEntries();
+      await activityLogService.clearLogEntries();
       setLogEntries([]);
     } catch (error) {
       console.error("Failed to clear log entries:", error);
@@ -156,7 +208,8 @@ export default function Home() {
 
   const handleLogDamage = async (amount: number, targetType: 'hp' | 'temp_hp') => {
     try {
-      const entry = await diceService.addDamageEntry(amount, targetType);
+      const entry = activityLogService.createDamageEntry(amount, targetType);
+      await activityLogService.addLogEntry(entry);
       setLogEntries(prevEntries => [entry, ...prevEntries.slice(0, 99)]);
     } catch (error) {
       console.error("Failed to log damage:", error);
@@ -165,7 +218,8 @@ export default function Home() {
 
   const handleLogHealing = async (amount: number) => {
     try {
-      const entry = await diceService.addHealingEntry(amount);
+      const entry = activityLogService.createHealingEntry(amount);
+      await activityLogService.addLogEntry(entry);
       setLogEntries(prevEntries => [entry, ...prevEntries.slice(0, 99)]);
     } catch (error) {
       console.error("Failed to log healing:", error);
@@ -174,7 +228,8 @@ export default function Home() {
 
   const handleLogTempHP = async (amount: number, previous?: number) => {
     try {
-      const entry = await diceService.addTempHPEntry(amount, previous);
+      const entry = activityLogService.createTempHPEntry(amount, previous);
+      await activityLogService.addLogEntry(entry);
       setLogEntries(prevEntries => [entry, ...prevEntries.slice(0, 99)]);
     } catch (error) {
       console.error("Failed to log temp HP:", error);
@@ -192,15 +247,9 @@ export default function Home() {
   };
 
   const handleEndEncounter = async () => {
-    // Reset per-encounter abilities
-    const resetAbilities = {
-      abilities: character.abilities.abilities.map(ability => {
-        if (ability.type === 'action' && ability.frequency === 'per_encounter') {
-          return { ...ability, currentUses: ability.maxUses };
-        }
-        return ability;
-      })
-    };
+    // Reset both per-encounter and per-turn abilities when encounter ends
+    let resetAbilities = abilityService.resetAbilities(character.abilities, 'per_encounter');
+    resetAbilities = abilityService.resetAbilities(resetAbilities, 'per_turn');
 
     const updatedCharacter = {
       ...character,
@@ -231,12 +280,51 @@ export default function Home() {
   };
 
   const handleEndTurn = async (actionTracker: ActionTracker, abilities: Abilities) => {
-    const updatedCharacter = { ...character, actionTracker, abilities };
+    // Reset per-turn abilities using ability service
+    const resetAbilities = abilityService.resetAbilities(abilities, 'per_turn');
+    
+    const updatedCharacter = { 
+      ...character, 
+      actionTracker: {
+        ...actionTracker,
+        current: actionTracker.base,
+        bonus: 0
+      }, 
+      abilities: resetAbilities 
+    };
     setCharacter(updatedCharacter);
     try {
       await characterService.updateCharacter(updatedCharacter);
     } catch (error) {
       console.error("Failed to end turn:", error);
+    }
+  };
+
+  const handleUseAbility = async (abilityId: string) => {
+    try {
+      const result = abilityService.useAbility(character.abilities, abilityId);
+      
+      if (!result.success || !result.usedAbility) {
+        console.error("Failed to use ability: ability not found or no uses remaining");
+        return;
+      }
+
+      // Update character with new abilities state
+      const updatedCharacter = { ...character, abilities: result.updatedAbilities };
+      setCharacter(updatedCharacter);
+      await characterService.updateCharacter(updatedCharacter);
+
+      // Log the ability usage
+      const logEntry = activityLogService.createAbilityUsageEntry(
+        result.usedAbility.name,
+        result.usedAbility.frequency,
+        result.usedAbility.currentUses,
+        result.usedAbility.maxUses
+      );
+      await activityLogService.addLogEntry(logEntry);
+      setLogEntries(prevEntries => [logEntry, ...prevEntries.slice(0, 99)]);
+    } catch (error) {
+      console.error("Failed to use ability:", error);
     }
   };
 
@@ -267,6 +355,7 @@ export default function Home() {
           onEndEncounter={handleEndEncounter}
           onUpdateAbilities={handleUpdateAbilities}
           onEndTurn={handleEndTurn}
+          onUseAbility={handleUseAbility}
         />
         <ActivityLog entries={logEntries} onClearRolls={handleClearRolls} />
       </div>

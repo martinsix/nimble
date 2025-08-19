@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Character, AttributeName, SkillName, ActionTracker } from "@/lib/types/character";
 import { Inventory as InventoryType } from "@/lib/types/inventory";
 import { Abilities } from "@/lib/types/abilities";
+import { AbilityUsageEntry } from "@/lib/types/dice";
 import { CharacterNameSection } from "./sections/character-name-section";
 import { AdvantageToggle } from "./advantage-toggle";
 import { HitPointsSection } from "./sections/hit-points-section";
@@ -32,9 +33,10 @@ interface CharacterSheetProps {
   onEndEncounter?: () => void;
   onUpdateAbilities?: (abilities: Abilities) => void;
   onEndTurn?: (actionTracker: ActionTracker, abilities: Abilities) => void;
+  onUseAbility?: (abilityId: string) => void;
 }
 
-export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSave, onRollSkill, onRollInitiative, onAttack, onLogDamage, onLogHealing, onLogTempHP, onUpdateActions, onEndEncounter, onUpdateAbilities, onEndTurn }: CharacterSheetProps) {
+export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSave, onRollSkill, onRollInitiative, onAttack, onLogDamage, onLogHealing, onLogTempHP, onUpdateActions, onEndEncounter, onUpdateAbilities, onEndTurn, onUseAbility }: CharacterSheetProps) {
   const [localCharacter, setLocalCharacter] = useState(character);
   const [uiState, setUIState] = useState<UIState>({
     collapsibleSections: {
@@ -252,6 +254,7 @@ export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSav
         isOpen={uiState.collapsibleSections.actions}
         onToggle={(isOpen) => updateCollapsibleState('actions', isOpen)}
         onAttack={onAttack}
+        onUseAbility={onUseAbility}
         advantageLevel={uiState.advantageLevel}
       />
 
@@ -261,6 +264,7 @@ export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSav
         isOpen={uiState.collapsibleSections.abilities}
         onToggle={(isOpen) => updateCollapsibleState('abilities', isOpen)}
         onUpdateAbilities={onUpdateAbilities || (() => {})}
+        onUseAbility={onUseAbility}
       />
 
       {/* Inventory Section */}

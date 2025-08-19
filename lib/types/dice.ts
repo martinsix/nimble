@@ -50,8 +50,17 @@ export interface InitiativeEntry extends BaseLogEntry {
   actionsGranted: number; // Number of actions granted by this roll
 }
 
+// Ability usage entry
+export interface AbilityUsageEntry extends BaseLogEntry {
+  type: 'ability_usage';
+  abilityName: string; // Name of the ability used
+  frequency: 'per_turn' | 'per_encounter'; // Frequency of the ability
+  usesRemaining: number; // Uses remaining after this usage
+  maxUses: number; // Maximum uses for this ability
+}
+
 // Union type for all log entries
-export type LogEntry = DiceRoll | DamageEntry | HealingEntry | TempHPEntry | InitiativeEntry;
+export type LogEntry = DiceRoll | DamageEntry | HealingEntry | TempHPEntry | InitiativeEntry | AbilityUsageEntry;
 
 export type DiceType = 4 | 6 | 8 | 10 | 12 | 20 | 100;
 
