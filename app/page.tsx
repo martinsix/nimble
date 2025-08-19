@@ -32,7 +32,7 @@ const sampleCharacter: Character = {
   actionTracker: createDefaultActionTracker(),
   inEncounter: false,
   skills: createDefaultSkills(),
-  inventory: createDefaultInventory(),
+  inventory: createDefaultInventory(2), // Pass the strength value
   abilities: createDefaultAbilities(),
   createdAt: new Date(),
   updatedAt: new Date(),

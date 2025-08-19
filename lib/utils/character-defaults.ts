@@ -19,9 +19,9 @@ export const createDefaultSkills = () => {
   return defaultSkills;
 };
 
-export const createDefaultInventory = (): Inventory => {
+export const createDefaultInventory = (strength: number = 0): Inventory => {
   return {
-    maxSize: 10,
+    maxSize: 10 + strength,
     items: [
       {
         id: 'sample-leather-armor',

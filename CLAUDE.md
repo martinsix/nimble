@@ -152,7 +152,8 @@ app/page.tsx (main orchestrator)
 
 11. **Inventory Management**
     - Three item types: weapons, armor, freeform
-    - Size-based capacity system with visual indicators
+    - Size-based capacity system with visual indicators (10 + Strength attribute)
+    - Automatic inventory size adjustment when Strength changes
     - Type-specific properties (damage, armor value, description)
     - Equipment state tracking and validation
 

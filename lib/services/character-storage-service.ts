@@ -65,7 +65,7 @@ export class CharacterStorageService {
         perception: { name: 'Perception', associatedAttribute: 'will', modifier: 0 },
         stealth: { name: 'Stealth', associatedAttribute: 'will', modifier: 0 },
       },
-      inventory: { maxSize: 10, items: [] },
+      inventory: { maxSize: 10 + 0, items: [] }, // 10 + strength (0 for new characters)
       abilities: { abilities: [] },
     }, characterId);
 
