@@ -27,9 +27,10 @@ interface CharacterSheetProps {
   onLogHealing?: (amount: number) => void;
   onLogTempHP?: (amount: number, previous?: number) => void;
   onUpdateActions?: (actionTracker: ActionTracker) => void;
+  onEndEncounter?: () => void;
 }
 
-export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSave, onRollSkill, onRollInitiative, onAttack, onLogDamage, onLogHealing, onLogTempHP, onUpdateActions }: CharacterSheetProps) {
+export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSave, onRollSkill, onRollInitiative, onAttack, onLogDamage, onLogHealing, onLogTempHP, onUpdateActions, onEndEncounter }: CharacterSheetProps) {
   const [localCharacter, setLocalCharacter] = useState(character);
   const [uiState, setUIState] = useState<UIState>({
     collapsibleSections: {
@@ -191,19 +192,23 @@ export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSav
         initiative={localCharacter.initiative}
         dexterityValue={localCharacter.attributes.dexterity}
         isOpen={uiState.collapsibleSections.initiative}
+        inEncounter={character.inEncounter}
         onToggle={(isOpen) => updateCollapsibleState('initiative', isOpen)}
         onInitiativeChange={updateInitiative}
         onRollInitiative={onRollInitiative}
+        onEndEncounter={onEndEncounter}
         advantageLevel={uiState.advantageLevel}
       />
 
-      {/* Action Tracker Section */}
-      <ActionTrackerSection 
-        actionTracker={character.actionTracker}
-        isOpen={uiState.collapsibleSections.actionTracker}
-        onToggle={(isOpen) => updateCollapsibleState('actionTracker', isOpen)}
-        onUpdateActions={onUpdateActions || (() => {})}
-      />
+      {/* Action Tracker Section - Only show during encounters */}
+      {character.inEncounter && (
+        <ActionTrackerSection 
+          actionTracker={character.actionTracker}
+          isOpen={uiState.collapsibleSections.actionTracker}
+          onToggle={(isOpen) => updateCollapsibleState('actionTracker', isOpen)}
+          onUpdateActions={onUpdateActions || (() => {})}
+        />
+      )}
 
       {/* Armor Section */}
       <ArmorSection 

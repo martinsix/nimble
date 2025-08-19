@@ -66,6 +66,7 @@ export const createCharacterSchema = z.object({
   hitPoints: hitPointsSchema,
   initiative: skillSchema,
   actionTracker: actionTrackerSchema,
+  inEncounter: z.boolean(),
   skills: skillsSchema,
   inventory: inventorySchema,
 });
@@ -77,6 +78,7 @@ export const characterSchema = z.object({
   hitPoints: hitPointsSchema,
   initiative: skillSchema,
   actionTracker: actionTrackerSchema,
+  inEncounter: z.boolean(),
   skills: skillsSchema,
   inventory: inventorySchema,
   createdAt: z.date(),

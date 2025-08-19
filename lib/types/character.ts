@@ -30,6 +30,7 @@ export interface Character {
   };
   initiative: Skill;
   actionTracker: ActionTracker;
+  inEncounter: boolean; // Whether currently in an encounter/combat
   skills: {
     arcana: Skill;
     examination: Skill;
@@ -62,6 +63,7 @@ export interface CreateCharacterData {
   };
   initiative: Skill;
   actionTracker: ActionTracker;
+  inEncounter: boolean;
   skills: {
     arcana: Skill;
     examination: Skill;

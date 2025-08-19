@@ -21,6 +21,7 @@ const sampleCharacter: Character = {
   hitPoints: createDefaultHitPoints(),
   initiative: createDefaultInitiative(),
   actionTracker: createDefaultActionTracker(),
+  inEncounter: false,
   skills: createDefaultSkills(),
   inventory: createDefaultInventory(),
   createdAt: new Date(),
@@ -46,6 +47,7 @@ export default function Home() {
             hitPoints: sampleCharacter.hitPoints,
             initiative: sampleCharacter.initiative,
             actionTracker: sampleCharacter.actionTracker,
+            inEncounter: sampleCharacter.inEncounter,
             skills: sampleCharacter.skills,
             inventory: sampleCharacter.inventory,
           }, "default-character");
@@ -124,13 +126,14 @@ export default function Home() {
       const initiativeEntry = await diceService.addInitiativeEntry(roll.total!, character.actionTracker.bonus);
       setLogEntries(prevEntries => [initiativeEntry, ...prevEntries.slice(0, 99)]);
       
-      // Update character's action tracker
+      // Update character's action tracker and start encounter
       const updatedCharacter = {
         ...character,
         actionTracker: {
           ...character.actionTracker,
           current: initiativeEntry.actionsGranted,
-        }
+        },
+        inEncounter: true
       };
       setCharacter(updatedCharacter);
       await characterService.updateCharacter(updatedCharacter);
@@ -185,6 +188,24 @@ export default function Home() {
     }
   };
 
+  const handleEndEncounter = async () => {
+    const updatedCharacter = {
+      ...character,
+      inEncounter: false,
+      actionTracker: {
+        ...character.actionTracker,
+        current: character.actionTracker.base,
+        bonus: 0
+      }
+    };
+    setCharacter(updatedCharacter);
+    try {
+      await characterService.updateCharacter(updatedCharacter);
+    } catch (error) {
+      console.error("Failed to end encounter:", error);
+    }
+  };
+
   if (!isLoaded) {
     return (
       <main className="min-h-screen bg-background flex items-center justify-center">
@@ -209,6 +230,7 @@ export default function Home() {
           onLogHealing={handleLogHealing}
           onLogTempHP={handleLogTempHP}
           onUpdateActions={handleUpdateActions}
+          onEndEncounter={handleEndEncounter}
         />
         <ActivityLog entries={logEntries} onClearRolls={handleClearRolls} />
       </div>
