@@ -10,6 +10,8 @@ import { characterService } from "@/lib/services/character-service";
 import { diceService } from "@/lib/services/dice-service-clean";
 import { activityLogService } from "@/lib/services/activity-log-service";
 import { abilityService } from "@/lib/services/ability-service";
+import { settingsService, AppSettings } from "@/lib/services/settings-service";
+import { AppMenu } from "@/components/app-menu";
 import { createDefaultSkills, createDefaultInventory, createDefaultHitPoints, createDefaultInitiative, createDefaultActionTracker, createDefaultAbilities } from "@/lib/utils/character-defaults";
 
 const sampleCharacter: Character = {
@@ -35,16 +37,27 @@ const sampleCharacter: Character = {
 export default function Home() {
   const [character, setCharacter] = useState<Character>(sampleCharacter);
   const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
+  const [settings, setSettings] = useState<AppSettings>({ mode: 'full', activeCharacterId: 'default-character' });
+  const [characters, setCharacters] = useState<Character[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Load character
-        const existingCharacter = await characterService.getCharacter("default-character");
+        // Load settings
+        const loadedSettings = await settingsService.getSettings();
+        setSettings(loadedSettings);
+
+        // Load character list
+        const characterList = await characterService.getAllCharacters();
+        setCharacters(characterList);
+
+        // Load active character
+        const existingCharacter = await characterService.getCharacter(loadedSettings.activeCharacterId);
         if (existingCharacter) {
           setCharacter(existingCharacter);
         } else {
+          // Create default character if none exists
           const newCharacter = await characterService.createCharacter({
             name: sampleCharacter.name,
             attributes: sampleCharacter.attributes,
@@ -55,8 +68,12 @@ export default function Home() {
             skills: sampleCharacter.skills,
             inventory: sampleCharacter.inventory,
             abilities: sampleCharacter.abilities,
-          }, "default-character");
+          }, loadedSettings.activeCharacterId);
           setCharacter(newCharacter);
+          
+          // Character list will be updated automatically when we reload
+          const updatedCharacterList = await characterService.getAllCharacters();
+          setCharacters(updatedCharacterList);
         }
 
         // Load log entries
@@ -328,6 +345,76 @@ export default function Home() {
     }
   };
 
+  const handleSettingsChange = async (newSettings: AppSettings) => {
+    setSettings(newSettings);
+    await settingsService.saveSettings(newSettings);
+  };
+
+  const handleCharacterSwitch = async (characterId: string) => {
+    try {
+      const newCharacter = await characterService.getCharacter(characterId);
+      if (newCharacter) {
+        setCharacter(newCharacter);
+        
+        // Update settings with new active character
+        const newSettings = { ...settings, activeCharacterId: characterId };
+        setSettings(newSettings);
+        await settingsService.saveSettings(newSettings);
+        
+        // Update last played timestamp
+        await characterService.updateLastPlayed(characterId);
+        const updatedCharacterList = await characterService.getAllCharacters();
+        setCharacters(updatedCharacterList);
+        
+        // Load log entries for new character (if we want per-character logs)
+        const existingEntries = await activityLogService.getLogEntries();
+        setLogEntries(existingEntries);
+      }
+    } catch (error) {
+      console.error("Failed to switch character:", error);
+    }
+  };
+
+  const handleCharacterDelete = async (characterId: string) => {
+    try {
+      await characterService.deleteCharacter(characterId);
+      
+      const updatedCharacterList = await characterService.getAllCharacters();
+      setCharacters(updatedCharacterList);
+      
+      // If we deleted the active character, switch to another one
+      if (characterId === settings.activeCharacterId && updatedCharacterList.length > 0) {
+        const newActiveCharacter = updatedCharacterList[0];
+        await handleCharacterSwitch(newActiveCharacter.id);
+      }
+    } catch (error) {
+      console.error("Failed to delete character:", error);
+    }
+  };
+
+  // Listen for character creation events from the character selector
+  useEffect(() => {
+    const handleCreateCharacter = async (event: CustomEvent<string>) => {
+      try {
+        const characterName = event.detail;
+        const newCharacter = await characterService.createCharacterWithDefaults(characterName);
+        
+        const updatedCharacterList = await characterService.getAllCharacters();
+        setCharacters(updatedCharacterList);
+        
+        // Switch to the new character
+        await handleCharacterSwitch(newCharacter.id);
+      } catch (error) {
+        console.error("Failed to create character:", error);
+      }
+    };
+
+    window.addEventListener('createCharacter', handleCreateCharacter as EventListener);
+    return () => {
+      window.removeEventListener('createCharacter', handleCreateCharacter as EventListener);
+    };
+  }, [settings, sampleCharacter]);
+
   if (!isLoaded) {
     return (
       <main className="min-h-screen bg-background flex items-center justify-center">
@@ -339,9 +426,19 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-background">
       <div className="container mx-auto py-8 space-y-8">
-        <h1 className="text-3xl font-bold text-center">Nimble Navigator</h1>
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">Nimble Navigator</h1>
+          <AppMenu 
+            settings={settings}
+            characters={characters}
+            onSettingsChange={handleSettingsChange}
+            onCharacterSwitch={handleCharacterSwitch}
+            onCharacterDelete={handleCharacterDelete}
+          />
+        </div>
         <CharacterSheet 
-          character={character} 
+          character={character}
+          mode={settings.mode}
           onUpdate={handleCharacterUpdate} 
           onRollAttribute={handleRollAttribute}
           onRollSave={handleRollSave}

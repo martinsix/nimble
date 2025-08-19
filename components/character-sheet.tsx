@@ -5,6 +5,7 @@ import { Character, AttributeName, SkillName, ActionTracker } from "@/lib/types/
 import { Inventory as InventoryType } from "@/lib/types/inventory";
 import { Abilities } from "@/lib/types/abilities";
 import { AbilityUsageEntry } from "@/lib/types/dice";
+import { AppMode } from "@/lib/services/settings-service";
 import { CharacterNameSection } from "./sections/character-name-section";
 import { AdvantageToggle } from "./advantage-toggle";
 import { HitPointsSection } from "./sections/hit-points-section";
@@ -20,6 +21,7 @@ import { uiStateService, UIState } from "@/lib/services/ui-state-service";
 
 interface CharacterSheetProps {
   character: Character;
+  mode: AppMode;
   onUpdate: (character: Character) => void;
   onRollAttribute: (attributeName: AttributeName, value: number, advantageLevel: number) => void;
   onRollSave: (attributeName: AttributeName, value: number, advantageLevel: number) => void;
@@ -36,7 +38,7 @@ interface CharacterSheetProps {
   onUseAbility?: (abilityId: string) => void;
 }
 
-export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSave, onRollSkill, onRollInitiative, onAttack, onLogDamage, onLogHealing, onLogTempHP, onUpdateActions, onEndEncounter, onUpdateAbilities, onEndTurn, onUseAbility }: CharacterSheetProps) {
+export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onRollSave, onRollSkill, onRollInitiative, onAttack, onLogDamage, onLogHealing, onLogTempHP, onUpdateActions, onEndEncounter, onUpdateAbilities, onEndTurn, onUseAbility }: CharacterSheetProps) {
   const [localCharacter, setLocalCharacter] = useState(character);
   const [uiState, setUIState] = useState<UIState>({
     collapsibleSections: {
@@ -220,13 +222,6 @@ export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSav
         />
       )}
 
-      {/* Armor Section */}
-      <ArmorSection 
-        character={localCharacter}
-        isOpen={uiState.collapsibleSections.armor}
-        onToggle={(isOpen: boolean) => updateCollapsibleState('armor', isOpen)}
-      />
-
       {/* Attributes Section */}
       <AttributesSection 
         character={localCharacter}
@@ -248,32 +243,44 @@ export function CharacterSheet({ character, onUpdate, onRollAttribute, onRollSav
         advantageLevel={uiState.advantageLevel}
       />
 
-      {/* Actions Section */}
-      <ActionsSection 
-        character={localCharacter}
-        isOpen={uiState.collapsibleSections.actions}
-        onToggle={(isOpen) => updateCollapsibleState('actions', isOpen)}
-        onAttack={onAttack}
-        onUseAbility={onUseAbility}
-        advantageLevel={uiState.advantageLevel}
-      />
+      {/* Full Mode Only Sections */}
+      {mode === 'full' && (
+        <>
+          {/* Armor Section */}
+          <ArmorSection 
+            character={localCharacter}
+            isOpen={uiState.collapsibleSections.armor}
+            onToggle={(isOpen: boolean) => updateCollapsibleState('armor', isOpen)}
+          />
 
-      {/* Ability Section */}
-      <AbilitySection 
-        abilities={character.abilities}
-        isOpen={uiState.collapsibleSections.abilities}
-        onToggle={(isOpen) => updateCollapsibleState('abilities', isOpen)}
-        onUpdateAbilities={onUpdateAbilities || (() => {})}
-        onUseAbility={onUseAbility}
-      />
+          {/* Actions Section */}
+          <ActionsSection 
+            character={localCharacter}
+            isOpen={uiState.collapsibleSections.actions}
+            onToggle={(isOpen) => updateCollapsibleState('actions', isOpen)}
+            onAttack={onAttack}
+            onUseAbility={onUseAbility}
+            advantageLevel={uiState.advantageLevel}
+          />
 
-      {/* Inventory Section */}
-      <InventorySection 
-        inventory={localCharacter.inventory}
-        isOpen={uiState.collapsibleSections.inventory}
-        onToggle={(isOpen) => updateCollapsibleState('inventory', isOpen)}
-        onUpdateInventory={updateInventory}
-      />
+          {/* Ability Section */}
+          <AbilitySection 
+            abilities={character.abilities}
+            isOpen={uiState.collapsibleSections.abilities}
+            onToggle={(isOpen) => updateCollapsibleState('abilities', isOpen)}
+            onUpdateAbilities={onUpdateAbilities || (() => {})}
+            onUseAbility={onUseAbility}
+          />
+
+          {/* Inventory Section */}
+          <InventorySection 
+            inventory={localCharacter.inventory}
+            isOpen={uiState.collapsibleSections.inventory}
+            onToggle={(isOpen) => updateCollapsibleState('inventory', isOpen)}
+            onUpdateInventory={updateInventory}
+          />
+        </>
+      )}
     </div>
   );
 }
