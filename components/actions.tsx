@@ -7,7 +7,7 @@ import { WeaponItem } from "@/lib/types/inventory";
 import { ActionAbility, Abilities, AbilityFrequency } from "@/lib/types/abilities";
 import { Action, WeaponAction, AbilityAction } from "@/lib/types/actions";
 import { abilityService } from "@/lib/services/ability-service";
-import { AbilityUsageEntry } from "@/lib/types/dice";
+import { AbilityUsageEntry } from "@/lib/types/log-entries";
 import { getEquippedWeapons } from "@/lib/utils/equipment";
 import { Sword, Zap } from "lucide-react";
 import { Badge } from "./ui/badge";
@@ -53,11 +53,13 @@ export function Actions({ character, onAttack, onUseAbility, advantageLevel }: A
     const colors = {
       per_turn: 'bg-green-100 text-green-800',
       per_encounter: 'bg-blue-100 text-blue-800',
+      per_safe_rest: 'bg-orange-100 text-orange-800',
       at_will: 'bg-purple-100 text-purple-800',
     };
     const labels = {
       per_turn: 'Per Turn',
       per_encounter: 'Per Encounter',
+      per_safe_rest: 'Per Safe Rest',
       at_will: 'At Will',
     };
     

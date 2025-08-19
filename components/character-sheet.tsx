@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Character, AttributeName, SkillName, ActionTracker } from "@/lib/types/character";
 import { Inventory as InventoryType } from "@/lib/types/inventory";
 import { Abilities } from "@/lib/types/abilities";
-import { AbilityUsageEntry } from "@/lib/types/dice";
+import { AbilityUsageEntry } from "@/lib/types/log-entries";
 import { AppMode } from "@/lib/services/settings-service";
 import { CharacterNameSection } from "./sections/character-name-section";
 import { AdvantageToggle } from "./advantage-toggle";
@@ -39,9 +39,10 @@ interface CharacterSheetProps {
   onUseAbility?: (abilityId: string) => void;
   onCatchBreath?: () => void;
   onMakeCamp?: () => void;
+  onSafeRest?: () => void;
 }
 
-export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onRollSave, onRollSkill, onRollInitiative, onAttack, onLogDamage, onLogHealing, onLogTempHP, onUpdateActions, onEndEncounter, onUpdateAbilities, onEndTurn, onUseAbility, onCatchBreath, onMakeCamp }: CharacterSheetProps) {
+export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onRollSave, onRollSkill, onRollInitiative, onAttack, onLogDamage, onLogHealing, onLogTempHP, onUpdateActions, onEndEncounter, onUpdateAbilities, onEndTurn, onUseAbility, onCatchBreath, onMakeCamp, onSafeRest }: CharacterSheetProps) {
   const [localCharacter, setLocalCharacter] = useState(character);
   const [uiState, setUIState] = useState<UIState>({
     collapsibleSections: {
@@ -213,6 +214,7 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
         onUpdate={updateCharacter}
         onCatchBreath={onCatchBreath}
         onMakeCamp={onMakeCamp}
+        onSafeRest={onSafeRest}
       />
 
       {/* Initiative Section */}

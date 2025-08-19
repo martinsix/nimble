@@ -1,6 +1,6 @@
 "use client";
 
-import { LogEntry, DiceRoll, DamageEntry, HealingEntry, TempHPEntry, InitiativeEntry, AbilityUsageEntry } from "@/lib/types/dice";
+import { LogEntry, DiceRollEntry, DamageEntry, HealingEntry, TempHPEntry, InitiativeEntry, AbilityUsageEntry, SafeRestEntry } from "@/lib/types/log-entries";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
@@ -54,8 +54,8 @@ export function ActivityLog({ entries, onClearRolls }: ActivityLogProps) {
 }
 
 // Component for displaying roll entries
-function RollEntryDisplay({ roll, formatTime }: { roll: DiceRoll, formatTime: (date: Date) => string }) {
-  const formatRoll = (roll: DiceRoll) => {
+function RollEntryDisplay({ roll, formatTime }: { roll: DiceRollEntry, formatTime: (date: Date) => string }) {
+  const formatRoll = (roll: DiceRollEntry) => {
     const diceStr = roll.dice.length === 1 
       ? `d${roll.dice[0].type}`
       : `${roll.dice.length}d${roll.dice[0].type}`;
@@ -145,7 +145,7 @@ function RollEntryDisplay({ roll, formatTime }: { roll: DiceRoll, formatTime: (d
 }
 
 // Component for displaying non-roll entries
-function NonRollEntryDisplay({ entry, formatTime }: { entry: DamageEntry | HealingEntry | TempHPEntry | InitiativeEntry | AbilityUsageEntry, formatTime: (date: Date) => string }) {
+function NonRollEntryDisplay({ entry, formatTime }: { entry: DamageEntry | HealingEntry | TempHPEntry | InitiativeEntry | AbilityUsageEntry | SafeRestEntry, formatTime: (date: Date) => string }) {
   const getEntryIcon = () => {
     switch (entry.type) {
       case 'damage':
@@ -158,6 +158,8 @@ function NonRollEntryDisplay({ entry, formatTime }: { entry: DamageEntry | Heali
         return '⚡';
       case 'ability_usage':
         return '✨';
+      case 'safe_rest':
+        return '🏠';
       default:
         return '📝';
     }
@@ -175,6 +177,8 @@ function NonRollEntryDisplay({ entry, formatTime }: { entry: DamageEntry | Heali
         return 'text-yellow-600';
       case 'ability_usage':
         return 'text-purple-600';
+      case 'safe_rest':
+        return 'text-green-700';
       default:
         return 'text-muted-foreground';
     }
@@ -192,6 +196,7 @@ function NonRollEntryDisplay({ entry, formatTime }: { entry: DamageEntry | Heali
           {entry.type === 'damage' ? `-${entry.amount}` : 
            entry.type === 'initiative' ? `${(entry as InitiativeEntry).actionsGranted} acts` :
            entry.type === 'ability_usage' ? `${(entry as AbilityUsageEntry).usesRemaining}/${(entry as AbilityUsageEntry).maxUses}` :
+           entry.type === 'safe_rest' ? 'REST' :
            `+${entry.amount}`}
         </span>
       </div>

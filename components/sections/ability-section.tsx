@@ -107,11 +107,13 @@ export function AbilitySection({
     const colors = {
       per_turn: 'bg-green-100 text-green-800',
       per_encounter: 'bg-blue-100 text-blue-800',
+      per_safe_rest: 'bg-orange-100 text-orange-800',
       at_will: 'bg-purple-100 text-purple-800',
     };
     const labels = {
       per_turn: 'Per Turn',
       per_encounter: 'Per Encounter',
+      per_safe_rest: 'Per Safe Rest',
       at_will: 'At Will',
     };
     
@@ -295,6 +297,7 @@ export function AbilitySection({
                           <SelectContent>
                             <SelectItem value="per_turn">Per Turn</SelectItem>
                             <SelectItem value="per_encounter">Per Encounter</SelectItem>
+                            <SelectItem value="per_safe_rest">Per Safe Rest</SelectItem>
                             <SelectItem value="at_will">At Will</SelectItem>
                           </SelectContent>
                         </Select>

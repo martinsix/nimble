@@ -1,4 +1,5 @@
-import { LogEntry, DiceRoll, DamageEntry, HealingEntry, TempHPEntry, InitiativeEntry, AbilityUsageEntry } from '../types/dice';
+import { LogEntry, DiceRollEntry, DamageEntry, HealingEntry, TempHPEntry, InitiativeEntry, AbilityUsageEntry, SafeRestEntry } from '../types/log-entries';
+import { logEntrySchema } from '../schemas/dice';
 import { gameConfig } from '../config/game-config';
 
 export class ActivityLogService {
@@ -11,16 +12,35 @@ export class ActivityLogService {
     
     try {
       const parsed = JSON.parse(stored);
-      return parsed.map((entry: any) => ({
+      const entries = parsed.map((entry: any) => ({
         ...entry,
         timestamp: new Date(entry.timestamp),
       }));
+      
+      // Validate each entry and filter out invalid ones
+      return entries.filter((entry: any) => {
+        try {
+          logEntrySchema.parse(entry);
+          return true;
+        } catch {
+          console.warn('Invalid log entry found and removed:', entry);
+          return false;
+        }
+      });
     } catch {
       return [];
     }
   }
 
   async addLogEntry(newEntry: LogEntry): Promise<void> {
+    // Validate the new entry before adding
+    try {
+      logEntrySchema.parse(newEntry);
+    } catch (error) {
+      console.error('Invalid log entry provided:', newEntry, error);
+      throw new Error('Invalid log entry format');
+    }
+    
     const existingEntries = await this.getLogEntries();
     const updatedEntries = [newEntry, ...existingEntries].slice(0, this.maxEntries);
     localStorage.setItem(this.storageKey, JSON.stringify(updatedEntries));
@@ -40,7 +60,7 @@ export class ActivityLogService {
     advantageLevel?: number,
     isMiss?: boolean,
     criticalHits?: number
-  ): DiceRoll {
+  ): DiceRollEntry {
     return {
       id: crypto.randomUUID(),
       timestamp: new Date(),
@@ -105,12 +125,13 @@ export class ActivityLogService {
 
   createAbilityUsageEntry(
     abilityName: string, 
-    frequency: 'per_turn' | 'per_encounter' | 'at_will', 
+    frequency: 'per_turn' | 'per_encounter' | 'per_safe_rest' | 'at_will', 
     usesRemaining: number, 
     maxUses: number
   ): AbilityUsageEntry {
     const frequencyText = frequency === 'per_turn' ? 'per turn' : 
-                         frequency === 'per_encounter' ? 'per encounter' : 'at will';
+                         frequency === 'per_encounter' ? 'per encounter' : 
+                         frequency === 'per_safe_rest' ? 'per safe rest' : 'at will';
     const usageText = frequency === 'at_will' ? 
       `Used ${abilityName} (${frequencyText})` :
       `Used ${abilityName} (${frequencyText}) - ${usesRemaining}/${maxUses} remaining`;
@@ -124,6 +145,31 @@ export class ActivityLogService {
       frequency,
       usesRemaining,
       maxUses,
+    };
+  }
+
+  createSafeRestEntry(
+    healingAmount: number,
+    hitDiceRestored: number,
+    abilitiesReset: number
+  ): SafeRestEntry {
+    const parts: string[] = [];
+    if (healingAmount > 0) parts.push(`restored ${healingAmount} HP`);
+    if (hitDiceRestored > 0) parts.push(`restored ${hitDiceRestored} hit dice`);
+    if (abilitiesReset > 0) parts.push(`reset ${abilitiesReset} abilities`);
+    
+    const description = parts.length > 0 
+      ? `Safe Rest completed - ${parts.join(', ')}`
+      : 'Safe Rest completed';
+    
+    return {
+      id: crypto.randomUUID(),
+      timestamp: new Date(),
+      type: 'safe_rest',
+      description,
+      healingAmount,
+      hitDiceRestored,
+      abilitiesReset,
     };
   }
 }

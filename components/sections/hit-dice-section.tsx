@@ -8,7 +8,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Character, HitDice, HitDieSize } from "@/lib/types/character";
-import { ChevronDown, ChevronRight, Heart, Dices } from "lucide-react";
+import { ChevronDown, ChevronRight, Heart, Dices, Shield } from "lucide-react";
 
 interface HitDiceSectionProps {
   character: Character;
@@ -17,6 +17,7 @@ interface HitDiceSectionProps {
   onUpdate: (character: Character) => void;
   onCatchBreath?: () => void;
   onMakeCamp?: () => void;
+  onSafeRest?: () => void;
 }
 
 export function HitDiceSection({ 
@@ -25,7 +26,8 @@ export function HitDiceSection({
   onToggle, 
   onUpdate,
   onCatchBreath,
-  onMakeCamp 
+  onMakeCamp,
+  onSafeRest 
 }: HitDiceSectionProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValues, setEditValues] = useState({
@@ -211,9 +213,25 @@ export function HitDiceSection({
                   
                   {!canRollHitDie && (
                     <div className="text-center text-sm text-muted-foreground">
-                      No hit dice available
+                      No hit dice available for field rest
                     </div>
                   )}
+                  
+                  <div className="border-t pt-3">
+                    <div className="text-center text-sm font-medium text-muted-foreground mb-2">
+                      Safe Rest
+                    </div>
+                    <Button
+                      variant="default"
+                      onClick={onSafeRest}
+                      disabled={!onSafeRest}
+                      className="w-full bg-green-600 hover:bg-green-700"
+                    >
+                      <Shield className="w-4 h-4 mr-2" />
+                      Safe Rest
+                      <div className="text-xs ml-2">(Full Recovery)</div>
+                    </Button>
+                  </div>
                   
                   <Button variant="outline" onClick={() => setIsEditing(true)} className="w-full">
                     Edit Level & Hit Dice

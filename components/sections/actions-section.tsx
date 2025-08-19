@@ -4,7 +4,7 @@ import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { Character } from "@/lib/types/character";
 import { Abilities } from "@/lib/types/abilities";
-import { AbilityUsageEntry } from "@/lib/types/dice";
+import { AbilityUsageEntry } from "@/lib/types/log-entries";
 import { Actions } from "../actions";
 import { ChevronDown, ChevronRight } from "lucide-react";
 

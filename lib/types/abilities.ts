@@ -1,6 +1,6 @@
 import { AttributeName } from './character';
 
-export type AbilityFrequency = 'per_turn' | 'per_encounter' | 'at_will';
+export type AbilityFrequency = 'per_turn' | 'per_encounter' | 'per_safe_rest' | 'at_will';
 
 export interface AbilityRoll {
   dice: string; // e.g., "2d4", "1d6"

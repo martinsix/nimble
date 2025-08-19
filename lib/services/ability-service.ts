@@ -43,7 +43,7 @@ export class AbilityService {
   /**
    * Reset abilities based on frequency
    */
-  resetAbilities(abilities: Abilities, frequency: 'per_turn' | 'per_encounter'): Abilities {
+  resetAbilities(abilities: Abilities, frequency: 'per_turn' | 'per_encounter' | 'per_safe_rest'): Abilities {
     return {
       abilities: abilities.abilities.map(ability => {
         if (ability.type === 'action' && ability.frequency === frequency && ability.maxUses) {

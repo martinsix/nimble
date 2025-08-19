@@ -4,10 +4,10 @@ import { useState, useEffect, useCallback } from "react";
 import { CharacterSheet } from "@/components/character-sheet";
 import { ActivityLog } from "@/components/activity-log";
 import { Character, AttributeName, SkillName, ActionTracker } from "@/lib/types/character";
-import { LogEntry, DiceRoll, AbilityUsageEntry } from "@/lib/types/dice";
+import { LogEntry, DiceRollEntry, AbilityUsageEntry } from "@/lib/types/log-entries";
 import { Abilities } from "@/lib/types/abilities";
 import { characterService } from "@/lib/services/character-service";
-import { diceService } from "@/lib/services/dice-service-clean";
+import { diceService } from "@/lib/services/dice-service";
 import { activityLogService } from "@/lib/services/activity-log-service";
 import { abilityService } from "@/lib/services/ability-service";
 import { settingsService, AppSettings } from "@/lib/services/settings-service";
@@ -484,6 +484,60 @@ export default function Home() {
     }
   };
 
+  const handleSafeRest = async () => {
+    try {
+      // Reset all abilities (safe rest resets everything)
+      let resetAbilities = abilityService.resetAbilities(character.abilities, 'per_turn');
+      resetAbilities = abilityService.resetAbilities(resetAbilities, 'per_encounter');
+      resetAbilities = abilityService.resetAbilities(resetAbilities, 'per_safe_rest');
+      // Note: At-will abilities don't need resetting as they have unlimited uses
+
+      // Create updated character with full restoration
+      const updatedCharacter = {
+        ...character,
+        hitPoints: {
+          ...character.hitPoints,
+          current: character.hitPoints.max, // Full HP restoration
+          temporary: 0, // Clear temporary HP
+        },
+        hitDice: {
+          ...character.hitDice,
+          current: character.hitDice.max, // Restore all hit dice
+        },
+        abilities: resetAbilities,
+        inEncounter: false, // Safe rest ends any encounter
+        actionTracker: {
+          ...character.actionTracker,
+          current: character.actionTracker.base,
+          bonus: 0,
+        },
+      };
+
+      setCharacter(updatedCharacter);
+      await characterService.updateCharacter(updatedCharacter);
+
+      // Calculate what was restored for logging
+      const healingAmount = character.hitPoints.max - character.hitPoints.current;
+      const hitDiceRestored = character.hitDice.max - character.hitDice.current;
+      const abilitiesReset = character.abilities.abilities.filter(ability => 
+        ability.type === 'action' && 
+        ability.frequency !== 'at_will' && 
+        ability.currentUses !== ability.maxUses
+      ).length;
+
+      // Log the safe rest with proper entry type
+      const restLogEntry = activityLogService.createSafeRestEntry(
+        healingAmount,
+        hitDiceRestored,
+        abilitiesReset
+      );
+      await activityLogService.addLogEntry(restLogEntry);
+      setLogEntries(prevEntries => [restLogEntry, ...prevEntries.slice(0, 99)]);
+    } catch (error) {
+      console.error("Failed to perform safe rest:", error);
+    }
+  };
+
   const handleSettingsChange = async (newSettings: AppSettings) => {
     setSettings(newSettings);
     await settingsService.saveSettings(newSettings);
@@ -594,6 +648,7 @@ export default function Home() {
           onUseAbility={handleUseAbility}
           onCatchBreath={handleCatchBreath}
           onMakeCamp={handleMakeCamp}
+          onSafeRest={handleSafeRest}
         />
         <ActivityLog entries={logEntries} onClearRolls={handleClearRolls} />
       </div>
