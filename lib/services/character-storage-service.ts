@@ -1,6 +1,7 @@
 import { Character, CreateCharacterData } from '../types/character';
 import { ICharacterRepository, LocalStorageCharacterRepository } from '../storage/character-repository';
 import { createCharacterSchema, characterSchema } from '../schemas/character';
+import { createDefaultCharacterConfiguration } from '../utils/character-defaults';
 
 export class CharacterStorageService {
   private readonly characterListStorageKey = 'nimble-navigator-character-list';
@@ -43,13 +44,15 @@ export class CharacterStorageService {
 
   async createCharacterWithDefaults(name: string): Promise<Character> {
     const characterId = `character-${Date.now()}`;
+    const config = createDefaultCharacterConfiguration();
     const character = await this.createCharacter({
       name,
       level: 1,
       attributes: { strength: 0, dexterity: 0, intelligence: 0, will: 0 },
-      hitPoints: { current: 10, max: 10, temporary: 0 },
+      hitPoints: { current: config.maxHP, max: config.maxHP, temporary: 0 },
       hitDice: { size: 8, current: 1, max: 1 },
-      wounds: { current: 0, max: 6 },
+      wounds: { current: 0, max: config.maxWounds },
+      config,
       initiative: { name: 'Initiative', associatedAttribute: 'dexterity', modifier: 0 },
       actionTracker: { current: 3, base: 3, bonus: 0 },
       inEncounter: false,
@@ -65,7 +68,7 @@ export class CharacterStorageService {
         perception: { name: 'Perception', associatedAttribute: 'will', modifier: 0 },
         stealth: { name: 'Stealth', associatedAttribute: 'will', modifier: 0 },
       },
-      inventory: { maxSize: 10 + 0, items: [] }, // 10 + strength (0 for new characters)
+      inventory: { maxSize: config.maxInventorySize + 0, items: [] }, // config.maxInventorySize + strength (0 for new characters)
       abilities: { abilities: [] },
     }, characterId);
 

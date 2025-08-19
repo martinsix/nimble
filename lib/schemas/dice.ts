@@ -71,6 +71,15 @@ export const safeRestEntrySchema = z.object({
   abilitiesReset: z.number().min(0),
 }).merge(baseLogEntrySchema);
 
+// Mana log entry schema
+export const manaEntrySchema = z.object({
+  type: z.literal('mana'),
+  amount: z.number().positive(),
+  action: z.enum(['spent', 'restored']),
+  currentMana: z.number().min(0),
+  maxMana: z.number().min(0),
+}).merge(baseLogEntrySchema);
+
 // Union schema for all log entries
 export const logEntrySchema = z.discriminatedUnion('type', [
   diceRollEntrySchema,
@@ -80,6 +89,7 @@ export const logEntrySchema = z.discriminatedUnion('type', [
   initiativeEntrySchema,
   abilityUsageEntrySchema,
   safeRestEntrySchema,
+  manaEntrySchema,
 ]);
 
 export type ValidatedLogEntry = z.infer<typeof logEntrySchema>;

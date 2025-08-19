@@ -1,4 +1,4 @@
-import { Skill, AttributeName, HitDice, Wounds } from '../types/character';
+import { Skill, AttributeName, HitDice, Wounds, CharacterConfiguration, Mana } from '../types/character';
 import { Inventory } from '../types/inventory';
 import { Abilities } from '../types/abilities';
 
@@ -81,6 +81,26 @@ export const createDefaultWounds = (maxWounds: number = 6): Wounds => {
   return {
     current: 0, // Start with no wounds
     max: maxWounds, // Default to 6 max wounds before death
+  };
+};
+
+export const createDefaultCharacterConfiguration = (): CharacterConfiguration => {
+  return {
+    maxWounds: 6, // Default to 6 max wounds before death
+    maxHP: 10, // Default to 10 max hit points
+    maxInventorySize: 10, // Default to 10 base inventory slots (before strength bonus)
+    mana: {
+      enabled: false, // Mana disabled by default
+      attribute: 'intelligence', // Default to intelligence if enabled
+    },
+  };
+};
+
+export const createDefaultMana = (attribute: number, level: number): Mana => {
+  const maxMana = 3 * attribute + level;
+  return {
+    current: maxMana, // Start with full mana
+    max: maxMana, // 3 * mana attribute + level
   };
 };
 

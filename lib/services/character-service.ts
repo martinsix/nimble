@@ -1,8 +1,9 @@
-import { Character, ActionTracker } from '../types/character';
+import { Character, ActionTracker, CharacterConfiguration, Mana } from '../types/character';
 import { Abilities } from '../types/abilities';
 import { characterStorageService } from './character-storage-service';
 import { activityLogService } from './activity-log-service';
 import { abilityService } from './ability-service';
+import { createDefaultMana } from '../utils/character-defaults';
 
 export class CharacterService {
   private character: Character | null = null;
@@ -232,6 +233,97 @@ export class CharacterService {
       ...this.character,
       abilities,
     };
+
+    await this.saveCharacter();
+    this.notifyCharacterChanged();
+  }
+
+  /**
+   * Spend mana points
+   */
+  async spendMana(amount: number): Promise<void> {
+    if (!this.character?.mana) return;
+
+    const newCurrent = Math.max(0, this.character.mana.current - amount);
+
+    this.character = {
+      ...this.character,
+      mana: {
+        ...this.character.mana,
+        current: newCurrent,
+      },
+    };
+
+    await this.saveCharacter();
+    this.notifyCharacterChanged();
+
+    // Log mana usage
+    await this.logService.addLogEntry(
+      this.logService.createManaEntry(amount, 'spent', newCurrent, this.character.mana?.max || 0)
+    );
+  }
+
+  /**
+   * Restore mana points
+   */
+  async restoreMana(amount: number): Promise<void> {
+    if (!this.character?.mana) return;
+
+    const newCurrent = Math.min(this.character.mana.max, this.character.mana.current + amount);
+
+    this.character = {
+      ...this.character,
+      mana: {
+        ...this.character.mana,
+        current: newCurrent,
+      },
+    };
+
+    await this.saveCharacter();
+    this.notifyCharacterChanged();
+
+    // Log mana restoration
+    await this.logService.addLogEntry(
+      this.logService.createManaEntry(amount, 'restored', newCurrent, this.character.mana?.max || 0)
+    );
+  }
+
+  /**
+   * Update character configuration (wounds, mana settings, etc.)
+   */
+  async updateCharacterConfiguration(config: CharacterConfiguration): Promise<void> {
+    if (!this.character) return;
+
+    let updatedCharacter = {
+      ...this.character,
+      config,
+      wounds: {
+        ...this.character.wounds,
+        max: config.maxWounds, // Update wounds max based on config
+      },
+    };
+
+    // Handle mana configuration changes
+    if (config.mana.enabled) {
+      const manaAttributeValue = this.character.attributes[config.mana.attribute];
+      const newMaxMana = 3 * manaAttributeValue + this.character.level;
+      
+      if (!this.character.mana) {
+        // Create new mana pool if enabling for first time
+        updatedCharacter.mana = createDefaultMana(manaAttributeValue, this.character.level);
+      } else {
+        // Update existing mana pool
+        updatedCharacter.mana = {
+          current: Math.min(this.character.mana.current, newMaxMana), // Don't exceed new max
+          max: newMaxMana,
+        };
+      }
+    } else {
+      // Remove mana if disabled
+      updatedCharacter.mana = undefined;
+    }
+
+    this.character = updatedCharacter;
 
     await this.saveCharacter();
     this.notifyCharacterChanged();

@@ -28,6 +28,23 @@ export interface Wounds {
   max: number; // Maximum wounds before death (default 6)
 }
 
+export interface ManaConfiguration {
+  enabled: boolean; // Whether this character uses mana
+  attribute: AttributeName; // Which attribute determines mana pool size
+}
+
+export interface Mana {
+  current: number; // Current mana available
+  max: number; // Maximum mana (3 * mana attribute + level)
+}
+
+export interface CharacterConfiguration {
+  maxWounds: number; // Maximum wounds before death (default 6)
+  maxHP: number; // Maximum hit points (default 10)
+  maxInventorySize: number; // Base inventory size before strength bonus (default 10)
+  mana: ManaConfiguration; // Mana system configuration
+}
+
 export interface Character {
   id: string;
   name: string;
@@ -45,6 +62,8 @@ export interface Character {
   };
   hitDice: HitDice; // Hit dice for healing and recovery
   wounds: Wounds; // Wounds sustained from reaching 0 HP
+  mana?: Mana; // Mana pool (optional - only if enabled in config)
+  config: CharacterConfiguration; // Character configuration settings
   initiative: Skill;
   actionTracker: ActionTracker;
   inEncounter: boolean; // Whether currently in an encounter/combat
@@ -82,6 +101,8 @@ export interface CreateCharacterData {
   };
   hitDice: HitDice;
   wounds: Wounds;
+  mana?: Mana;
+  config: CharacterConfiguration;
   initiative: Skill;
   actionTracker: ActionTracker;
   inEncounter: boolean;

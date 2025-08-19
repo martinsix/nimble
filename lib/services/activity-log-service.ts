@@ -1,4 +1,4 @@
-import { LogEntry, DiceRollEntry, DamageEntry, HealingEntry, TempHPEntry, InitiativeEntry, AbilityUsageEntry, SafeRestEntry } from '../types/log-entries';
+import { LogEntry, DiceRollEntry, DamageEntry, HealingEntry, TempHPEntry, InitiativeEntry, AbilityUsageEntry, SafeRestEntry, ManaEntry } from '../types/log-entries';
 import { logEntrySchema } from '../schemas/dice';
 import { gameConfig } from '../config/game-config';
 
@@ -173,6 +173,28 @@ export class ActivityLogService {
       hitDiceRestored,
       woundsRemoved,
       abilitiesReset,
+    };
+  }
+
+  createManaEntry(
+    amount: number,
+    action: 'spent' | 'restored',
+    currentMana: number,
+    maxMana: number
+  ): ManaEntry {
+    const description = action === 'spent' 
+      ? `Spent ${amount} mana (${currentMana}/${maxMana} remaining)`
+      : `Restored ${amount} mana (${currentMana}/${maxMana} current)`;
+    
+    return {
+      id: crypto.randomUUID(),
+      timestamp: new Date(),
+      type: 'mana',
+      description,
+      amount,
+      action,
+      currentMana,
+      maxMana,
     };
   }
 }

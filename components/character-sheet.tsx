@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Character, AttributeName, SkillName, ActionTracker } from "@/lib/types/character";
+import { Character, AttributeName, SkillName, ActionTracker, CharacterConfiguration } from "@/lib/types/character";
 import { Inventory as InventoryType } from "@/lib/types/inventory";
 import { Abilities } from "@/lib/types/abilities";
 import { AbilityUsageEntry } from "@/lib/types/log-entries";
@@ -11,6 +11,7 @@ import { AdvantageToggle } from "./advantage-toggle";
 import { HitPointsSection } from "./sections/hit-points-section";
 import { HitDiceSection } from "./sections/hit-dice-section";
 import { WoundsSection } from "./sections/wounds-section";
+import { ManaSection } from "./sections/mana-section";
 import { InitiativeSection } from "./sections/initiative-section";
 import { ActionTrackerSection } from "./sections/action-tracker-section";
 import { AttributesSection } from "./sections/attributes-section";
@@ -19,7 +20,9 @@ import { ActionsSection } from "./sections/actions-section";
 import { ArmorSection } from "./sections/armor-section";
 import { AbilitySection } from "./sections/ability-section";
 import { InventorySection } from "./sections/inventory-section";
+import { CharacterConfigDialog } from "./character-config-dialog";
 import { uiStateService, UIState } from "@/lib/services/ui-state-service";
+import { characterService } from "@/lib/services/character-service";
 
 interface CharacterSheetProps {
   character: Character;
@@ -42,11 +45,13 @@ interface CharacterSheetProps {
 
 export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onRollSave, onRollSkill, onRollInitiative, onAttack, onUpdateActions, onEndEncounter, onUpdateAbilities, onEndTurn, onUseAbility, onCatchBreath, onMakeCamp, onSafeRest }: CharacterSheetProps) {
   const [localCharacter, setLocalCharacter] = useState(character);
+  const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
   const [uiState, setUIState] = useState<UIState>({
     collapsibleSections: {
       hitPoints: true,
       hitDice: true,
       wounds: true,
+      mana: true,
       initiative: true,
       actionTracker: true,
       attributes: true,
@@ -166,6 +171,13 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
     onUpdate(updated);
   };
 
+  const handleOpenConfig = () => {
+    setIsConfigDialogOpen(true);
+  };
+
+  const handleConfigSave = async (config: CharacterConfiguration) => {
+    await characterService.updateCharacterConfiguration(config);
+  };
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
@@ -173,6 +185,7 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
       <CharacterNameSection 
         name={localCharacter.name}
         onNameChange={updateName}
+        onOpenConfig={handleOpenConfig}
       />
 
       {/* Advantage/Disadvantage Toggle */}
@@ -208,6 +221,17 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
         onToggle={(isOpen) => updateCollapsibleState('wounds', isOpen)}
         onUpdate={updateCharacter}
       />
+
+      {/* Mana Section - Only show if mana is enabled */}
+      {localCharacter.config?.mana?.enabled && localCharacter.mana && (
+        <ManaSection
+          currentMana={localCharacter.mana.current}
+          maxMana={localCharacter.mana.max}
+          manaAttribute={localCharacter.config.mana.attribute}
+          isOpen={uiState.collapsibleSections.mana}
+          onToggle={(isOpen) => updateCollapsibleState('mana', isOpen)}
+        />
+      )}
 
       {/* Initiative Section */}
       <InitiativeSection 
@@ -296,6 +320,14 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
           />
         </>
       )}
+
+      {/* Character Configuration Dialog */}
+      <CharacterConfigDialog
+        character={localCharacter}
+        isOpen={isConfigDialogOpen}
+        onClose={() => setIsConfigDialogOpen(false)}
+        onSave={handleConfigSave}
+      />
     </div>
   );
 }

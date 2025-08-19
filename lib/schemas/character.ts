@@ -71,6 +71,23 @@ export const woundsSchema = z.object({
   max: z.number().min(1),
 });
 
+export const manaSchema = z.object({
+  current: z.number().min(0),
+  max: z.number().min(0),
+});
+
+export const manaConfigurationSchema = z.object({
+  enabled: z.boolean(),
+  attribute: attributeNameSchema,
+});
+
+export const characterConfigurationSchema = z.object({
+  maxWounds: z.number().min(1),
+  maxHP: z.number().min(1),
+  maxInventorySize: z.number().min(1),
+  mana: manaConfigurationSchema,
+});
+
 const abilityRollSchema = z.object({
   dice: z.string(),
   modifier: z.number().optional(),
@@ -107,6 +124,8 @@ export const createCharacterSchema = z.object({
   hitPoints: hitPointsSchema,
   hitDice: hitDiceSchema,
   wounds: woundsSchema,
+  mana: manaSchema.optional(),
+  config: characterConfigurationSchema,
   initiative: skillSchema,
   actionTracker: actionTrackerSchema,
   inEncounter: z.boolean(),
@@ -123,6 +142,8 @@ export const characterSchema = z.object({
   hitPoints: hitPointsSchema,
   hitDice: hitDiceSchema,
   wounds: woundsSchema,
+  mana: manaSchema.optional(),
+  config: characterConfigurationSchema,
   initiative: skillSchema,
   actionTracker: actionTrackerSchema,
   inEncounter: z.boolean(),

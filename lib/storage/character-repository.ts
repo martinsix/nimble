@@ -1,4 +1,5 @@
 import { Character, CreateCharacterData } from '../types/character';
+import { createDefaultCharacterConfiguration } from '../utils/character-defaults';
 
 export interface ICharacterRepository {
   save(character: Character): Promise<void>;
@@ -41,6 +42,8 @@ export class LocalStorageCharacterRepository implements ICharacterRepository {
         ...char,
         createdAt: new Date(char.createdAt),
         updatedAt: new Date(char.updatedAt),
+        // Migrate characters missing config field
+        config: char.config || createDefaultCharacterConfiguration(),
       }));
     } catch {
       return [];

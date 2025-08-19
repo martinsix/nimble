@@ -3,6 +3,7 @@ export interface UIState {
     hitPoints: boolean;
     hitDice: boolean;
     wounds: boolean;
+    mana: boolean;
     initiative: boolean;
     actionTracker: boolean;
     attributes: boolean;
@@ -41,6 +42,7 @@ export class UIStateService {
         hitPoints: true,
         hitDice: true,
         wounds: true,
+        mana: true,
         initiative: true,
         actionTracker: true,
         attributes: true,
