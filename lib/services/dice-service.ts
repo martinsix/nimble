@@ -2,7 +2,7 @@ import { DiceRoll, DiceType, DiceExpression, SingleDie } from '../types/dice';
 import { gameConfig } from '../config/game-config';
 
 export class DiceService {
-  private readonly storageKey = 'nimble-dice-rolls';
+  private readonly storageKey = 'nimble-navigator-dice-rolls';
   private readonly maxRolls = gameConfig.storage.maxRollHistory;
 
   rollSingleDie(sides: DiceType): number {

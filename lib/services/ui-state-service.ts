@@ -12,7 +12,7 @@ export interface UIState {
 }
 
 export class UIStateService {
-  private readonly storageKey = 'nimble-ui-state';
+  private readonly storageKey = 'nimble-navigator-ui-state';
 
   async getUIState(): Promise<UIState> {
     const stored = localStorage.getItem(this.storageKey);

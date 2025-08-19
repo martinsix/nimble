@@ -1,8 +1,8 @@
-# Nimble Character Sheet - Application Design
+# Nimble Navigator - Application Design
 
 ## Overview
 
-A digital character sheet application for the Nimble RPG system, built as a web application with offline-first architecture and local storage persistence. The app provides a clean, mobile-responsive interface for managing characters, rolling dice, and tracking game data.
+Nimble Navigator: A comprehensive digital character sheet application for the Nimble RPG system, built as a web application with offline-first architecture and local storage persistence. The app provides a clean, mobile-responsive interface for managing characters, rolling dice, tracking equipment, and managing combat encounters with full support for temporary HP, saving throws, and equipment management.
 
 ## Technology Stack
 
@@ -28,6 +28,8 @@ interface Character {
   id: string
   name: string
   attributes: { strength, dexterity, intelligence, will }
+  hitPoints: { current, max, temporary }
+  initiative: Skill
   skills: { [skillName]: Skill }
   inventory: Inventory
   timestamps: { createdAt, updatedAt }
@@ -51,9 +53,15 @@ interface Character {
 ```
 app/page.tsx (main orchestrator)
 ├── CharacterSheet (main form component)
-│   ├── Attributes section (collapsible)
-│   ├── Skills section (collapsible)
-│   └── Inventory section (collapsible)
+│   ├── CharacterNameSection
+│   ├── AdvantageToggle (global advantage/disadvantage)
+│   ├── HitPointsSection (with temporary HP support)
+│   ├── InitiativeSection (collapsible)
+│   ├── ArmorSection (collapsible, shows total armor)
+│   ├── AttributesSection (collapsible, with saves)
+│   ├── SkillsSection (collapsible)
+│   ├── ActionsSection (collapsible, equipped weapons only)
+│   └── InventorySection (collapsible, equipment management)
 └── RollLog (dice results display)
 ```
 
@@ -66,44 +74,69 @@ app/page.tsx (main orchestrator)
 ### Features
 
 #### Core Functionality
+
 1. **Character Management**
    - Editable name and attributes (-2 to 10 range)
    - Auto-saving to local storage
    - Validation with Zod schemas
+   - Hit points with current/max/temporary tracking
+   - Dying status indicator at 0 HP
 
-2. **Skills System**
+2. **Combat & Health System**
+   - Hit points with temporary HP (D&D 5e rules)
+   - Temporary HP absorbs damage first, doesn't stack
+   - Quick damage/heal buttons (1, 5, 10) and custom amounts
+   - Health bar with color-coded status
+   - Dying indicator when at 0 HP
+
+3. **Initiative System**
+   - Dexterity-based with skill modifier
+   - d20 + dexterity + modifier rolling
+   - Collapsible section with persistent state
+
+4. **Attribute & Saving Throws**
+   - Four core attributes (Strength, Dexterity, Intelligence, Will)
+   - Separate roll buttons for attribute checks and saving throws
+   - Different roll mechanics: checks/saves vs attacks
+   - Visual distinction with different icons
+
+5. **Skills System**
    - 10 predefined skills with attribute associations
    - Base attribute + skill modifier calculation
    - Editable skill-specific bonuses (0-20 range)
+   - Individual skill rolling with breakdown
 
-3. **Dice Rolling**
-   - d20 + modifier for attributes and skills
-   - Roll log with last 100 results
-   - Hover tooltips showing roll breakdown
-   - Persistent across sessions
+6. **Equipment System**
+   - Equipment flags for weapons and armor
+   - Size-based weapon limits (configurable, default: 2)
+   - Equip/unequip toggles with validation
+   - Equipped items don't count toward inventory size
+   - Only equipped weapons appear in actions
 
-4. **Inventory Management**
-   - Three item types: weapons, armor, freeform
-   - Size-based capacity system
-   - Type-specific properties (damage, AC, description)
-   - Visual capacity indicators
+7. **Armor System**
+   - Dedicated armor section showing total protection
+   - Sum of all equipped armor pieces
+   - Multiple armor pieces can be equipped
+   - Visual armor breakdown with individual pieces
 
-5. **Combat System**
-   - Weapon attack actions auto-generated from inventory
-   - Critical hit mechanics (max roll triggers additional dice)
-   - Miss mechanics (first die = 1 results in miss)
-   - Chaining critical hits up to configurable limit
-
-6. **Advanced Dice Rolling**
+8. **Dice Rolling & Combat**
+   - **Attack Rolls**: Exploding crits, miss on natural 1
+   - **Checks/Saves**: Standard d20 + modifier (no crits/misses)
+   - Advantage/disadvantage system with global toggle
    - Multi-die expressions (2d6, 3d4, etc.)
-   - Individual die tracking with breakdown tooltips
-   - Critical hit visual indicators
-   - Miss detection and display
+   - Roll log with last 100 results and detailed breakdowns
 
-7. **UI State Persistence**
-   - Collapsible section preferences
-   - Mobile-responsive design
-   - Consistent visual feedback
+9. **Inventory Management**
+   - Three item types: weapons, armor, freeform
+   - Size-based capacity system with visual indicators
+   - Type-specific properties (damage, armor value, description)
+   - Equipment state tracking and validation
+
+10. **Advanced UI Features**
+    - Collapsible sections with persistent preferences
+    - Mobile-responsive design with adaptive grids
+    - Consistent visual feedback and state indicators
+    - Advantage/disadvantage visual indicators in rolls
 
 ## Key Design Decisions
 
@@ -159,9 +192,17 @@ lib/
 
 components/
 ├── ui/              # shadcn/ui components
+├── sections/        # Character sheet sections
+│   ├── attributes-section.tsx
+│   ├── skills-section.tsx
+│   ├── actions-section.tsx
+│   ├── armor-section.tsx
+│   ├── hit-points-section.tsx
+│   ├── initiative-section.tsx
+│   ├── inventory-section.tsx
+│   └── character-name-section.tsx
 ├── character-sheet.tsx
-├── inventory.tsx
-├── actions.tsx
+├── advantage-toggle.tsx
 └── roll-log.tsx
 
 app/
@@ -206,9 +247,9 @@ npm run lint     # Run ESLint checks
 
 ## Local Storage Keys
 
-- `nimble-characters`: Character data array
-- `nimble-dice-rolls`: Dice roll history (last 100)
-- `nimble-ui-state`: UI preferences (collapsible sections)
+- `nimble-navigator-characters`: Character data array
+- `nimble-navigator-dice-rolls`: Dice roll history (last 100)
+- `nimble-navigator-ui-state`: UI preferences (collapsible sections)
 
 ## Game Configuration
 

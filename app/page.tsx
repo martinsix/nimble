@@ -142,7 +142,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-background">
       <div className="container mx-auto py-8 space-y-8">
-        <h1 className="text-3xl font-bold text-center">Nimble Character Sheet</h1>
+        <h1 className="text-3xl font-bold text-center">Nimble Navigator</h1>
         <CharacterSheet 
           character={character} 
           onUpdate={handleCharacterUpdate} 

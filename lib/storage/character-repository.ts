@@ -9,7 +9,7 @@ export interface ICharacterRepository {
 }
 
 export class LocalStorageCharacterRepository implements ICharacterRepository {
-  private readonly storageKey = 'nimble-characters';
+  private readonly storageKey = 'nimble-navigator-characters';
 
   async save(character: Character): Promise<void> {
     const characters = await this.list();

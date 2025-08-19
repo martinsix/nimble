@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Nimble Character Sheet",
-  description: "A digital character sheet for Nimble RPG",
+  title: "Nimble Navigator",
+  description: "Navigate your adventures with ease - A digital character sheet for Nimble RPG",
 };
 
 export default function RootLayout({
