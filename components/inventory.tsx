@@ -8,15 +8,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Inventory as InventoryType, Item, ItemType, CreateItemData, WeaponItem, ArmorItem } from "@/lib/types/inventory";
-import { canEquipWeapon, canEquipArmor, getEquipmentValidationMessage } from "@/lib/utils/equipment";
-import { Plus, Trash2, Package, Sword, Shield } from "lucide-react";
+import { canEquipWeapon, canEquipArmor, getEquipmentValidationMessage, equipMainArmorWithReplacement } from "@/lib/utils/equipment";
+import { Plus, Trash2, Package, Sword, Shield, Shirt, Crown } from "lucide-react";
 
 interface InventoryProps {
   inventory: InventoryType;
+  characterDexterity: number;
   onUpdateInventory: (inventory: InventoryType) => void;
 }
 
-export function Inventory({ inventory, onUpdateInventory }: InventoryProps) {
+export function Inventory({ inventory, characterDexterity, onUpdateInventory }: InventoryProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newItem, setNewItem] = useState<CreateItemData>({
     name: "",
@@ -49,7 +50,7 @@ export function Inventory({ inventory, onUpdateInventory }: InventoryProps) {
       size: newItem.size,
       type: newItem.type,
       ...(newItem.type === 'weapon' && { attribute: newItem.attribute, damage: newItem.damage, properties: newItem.properties }),
-      ...(newItem.type === 'armor' && { armor: newItem.armor, maxDexBonus: newItem.maxDexBonus, properties: newItem.properties }),
+      ...(newItem.type === 'armor' && { armor: newItem.armor, maxDexBonus: newItem.maxDexBonus, isMainArmor: newItem.isMainArmor, properties: newItem.properties }),
       ...(newItem.type === 'freeform' && { description: newItem.description }),
     };
 
@@ -70,23 +71,43 @@ export function Inventory({ inventory, onUpdateInventory }: InventoryProps) {
   };
 
   const toggleEquipped = (itemId: string) => {
-    const updatedItems = inventory.items.map(item => {
-      if (item.id === itemId && (item.type === 'weapon' || item.type === 'armor')) {
-        const newEquippedState = !item.equipped;
-        
-        // If trying to equip, check validation
-        if (newEquippedState) {
-          const validationMessage = getEquipmentValidationMessage(inventory.items, item);
-          if (validationMessage) {
-            alert(validationMessage);
-            return item; // Don't change the item
+    const item = inventory.items.find(item => item.id === itemId);
+    if (!item || (item.type !== 'weapon' && item.type !== 'armor')) {
+      return;
+    }
+    
+    const newEquippedState = !item.equipped;
+    
+    // If trying to equip, check validation
+    if (newEquippedState) {
+      const validationMessage = getEquipmentValidationMessage(inventory.items, item);
+      if (validationMessage) {
+        // For main armor replacement, ask for confirmation
+        if (item.type === 'armor' && (item as ArmorItem).isMainArmor) {
+          if (!confirm(validationMessage + ". Continue?")) {
+            return; // User cancelled
           }
+        } else {
+          alert(validationMessage);
+          return; // Don't change the item
         }
-        
-        return { ...item, equipped: newEquippedState };
       }
-      return item;
-    });
+    }
+    
+    let updatedItems: Item[];
+    
+    // Handle main armor replacement
+    if (newEquippedState && item.type === 'armor' && (item as ArmorItem).isMainArmor) {
+      updatedItems = equipMainArmorWithReplacement(inventory.items, item as ArmorItem);
+    } else {
+      // Standard equip/unequip
+      updatedItems = inventory.items.map(inventoryItem => {
+        if (inventoryItem.id === itemId) {
+          return { ...inventoryItem, equipped: newEquippedState };
+        }
+        return inventoryItem;
+      });
+    }
     
     onUpdateInventory({
       ...inventory,
@@ -94,10 +115,12 @@ export function Inventory({ inventory, onUpdateInventory }: InventoryProps) {
     });
   };
 
-  const getItemIcon = (type: ItemType) => {
-    switch (type) {
+  const getItemIcon = (item: Item) => {
+    switch (item.type) {
       case 'weapon': return <Sword className="w-4 h-4" />;
-      case 'armor': return <Shield className="w-4 h-4" />;
+      case 'armor': 
+        const armor = item as ArmorItem;
+        return armor.isMainArmor ? <Shirt className="w-4 h-4" /> : <Shield className="w-4 h-4" />;
       default: return <Package className="w-4 h-4" />;
     }
   };
@@ -115,11 +138,33 @@ export function Inventory({ inventory, onUpdateInventory }: InventoryProps) {
           </div>
         );
       case 'armor':
+        const armor = item as ArmorItem;
+        const baseArmor = armor.armor || 0;
+        const maxDexBonus = armor.maxDexBonus ?? Infinity;
+        const actualDexBonus = Math.min(characterDexterity, maxDexBonus);
+        const totalArmorValue = baseArmor + actualDexBonus;
+        
         return (
-          <div className="text-xs text-muted-foreground mt-1">
-            {item.armor && <div>Armor: {item.armor}</div>}
-            {item.properties && item.properties.length > 0 && (
-              <div>Properties: {item.properties.join(', ')}</div>
+          <div className="text-xs text-muted-foreground mt-1 space-y-1">
+            {armor.isMainArmor && (
+              <div className="flex items-center gap-1 text-primary">
+                <Shirt className="w-3 h-3" />
+                <span className="font-medium">Main Armor</span>
+              </div>
+            )}
+            <div>
+              Armor: {baseArmor}
+              {characterDexterity > 0 && maxDexBonus > 0 && (
+                <span className="text-green-600">
+                  {" "}+ {actualDexBonus} dex = {totalArmorValue}
+                </span>
+              )}
+              {maxDexBonus < Infinity && (
+                <span className="text-blue-600 ml-1">(max dex: {maxDexBonus})</span>
+              )}
+            </div>
+            {armor.properties && armor.properties.length > 0 && (
+              <div>Properties: {armor.properties.join(', ')}</div>
             )}
           </div>
         );
@@ -256,6 +301,18 @@ export function Inventory({ inventory, onUpdateInventory }: InventoryProps) {
                       />
                     </div>
                   </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      id="is-main-armor"
+                      type="checkbox"
+                      checked={newItem.isMainArmor || false}
+                      onChange={(e) => setNewItem({ ...newItem, isMainArmor: e.target.checked })}
+                      className="rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <Label htmlFor="is-main-armor" className="text-sm">
+                      Main Armor (suits of armor, not helmets or shields)
+                    </Label>
+                  </div>
                 </>
               )}
 
@@ -323,7 +380,7 @@ export function Inventory({ inventory, onUpdateInventory }: InventoryProps) {
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0 mt-1">
-                      {getItemIcon(item.type)}
+                      {getItemIcon(item)}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">

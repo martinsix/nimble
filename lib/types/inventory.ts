@@ -22,6 +22,7 @@ export interface ArmorItem extends BaseItem {
   equipped?: boolean;
   armor?: number;
   maxDexBonus?: number; // Maximum dexterity bonus this armor allows
+  isMainArmor?: boolean; // True for primary armor pieces (plate mail, chain mail, etc.), false for supplements (helmets, shields)
   properties?: string[];
 }
 
@@ -46,6 +47,7 @@ export interface CreateItemData {
   damage?: string;
   armor?: number;
   maxDexBonus?: number;
+  isMainArmor?: boolean;
   properties?: string[];
   description?: string;
 }

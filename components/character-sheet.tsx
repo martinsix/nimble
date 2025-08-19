@@ -275,6 +275,7 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
           {/* Inventory Section */}
           <InventorySection 
             inventory={localCharacter.inventory}
+            characterDexterity={localCharacter.attributes.dexterity}
             isOpen={uiState.collapsibleSections.inventory}
             onToggle={(isOpen) => updateCollapsibleState('inventory', isOpen)}
             onUpdateInventory={updateInventory}
