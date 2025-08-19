@@ -30,9 +30,6 @@ interface CharacterSheetProps {
   onRollSkill: (skillName: SkillName, attributeValue: number, skillModifier: number, advantageLevel: number) => void;
   onRollInitiative: (totalModifier: number, advantageLevel: number) => void;
   onAttack: (weaponName: string, damage: string, attributeModifier: number, advantageLevel: number) => void;
-  onLogDamage?: (amount: number, targetType: 'hp' | 'temp_hp') => void;
-  onLogHealing?: (amount: number) => void;
-  onLogTempHP?: (amount: number, previous?: number) => void;
   onUpdateActions?: (actionTracker: ActionTracker) => void;
   onEndEncounter?: () => void;
   onUpdateAbilities?: (abilities: Abilities) => void;
@@ -43,7 +40,7 @@ interface CharacterSheetProps {
   onSafeRest?: () => void;
 }
 
-export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onRollSave, onRollSkill, onRollInitiative, onAttack, onLogDamage, onLogHealing, onLogTempHP, onUpdateActions, onEndEncounter, onUpdateAbilities, onEndTurn, onUseAbility, onCatchBreath, onMakeCamp, onSafeRest }: CharacterSheetProps) {
+export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onRollSave, onRollSkill, onRollInitiative, onAttack, onUpdateActions, onEndEncounter, onUpdateAbilities, onEndTurn, onUseAbility, onCatchBreath, onMakeCamp, onSafeRest }: CharacterSheetProps) {
   const [localCharacter, setLocalCharacter] = useState(character);
   const [uiState, setUIState] = useState<UIState>({
     collapsibleSections: {
@@ -156,30 +153,6 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
     onUpdate(updated);
   };
 
-  const updateHitPoints = (current: number, max: number, temporary: number, shouldGainWound?: boolean) => {
-    let updated = {
-      ...localCharacter,
-      hitPoints: {
-        current,
-        max,
-        temporary,
-      },
-    };
-
-    // Handle wound gain if needed
-    if (shouldGainWound && localCharacter.wounds.current < localCharacter.wounds.max) {
-      updated = {
-        ...updated,
-        wounds: {
-          ...updated.wounds,
-          current: updated.wounds.current + 1,
-        },
-      };
-    }
-
-    setLocalCharacter(updated);
-    onUpdate(updated);
-  };
 
   const updateInitiative = (modifier: number) => {
     const updated = {
@@ -215,10 +188,6 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
         temporaryHp={localCharacter.hitPoints.temporary}
         isOpen={uiState.collapsibleSections.hitPoints}
         onToggle={(isOpen) => updateCollapsibleState('hitPoints', isOpen)}
-        onHpChange={updateHitPoints}
-        onLogDamage={onLogDamage}
-        onLogHealing={onLogHealing}
-        onLogTempHP={onLogTempHP}
       />
 
       {/* Hit Dice Section */}

@@ -7,6 +7,7 @@ import { Character, AttributeName, SkillName, ActionTracker } from "@/lib/types/
 import { LogEntry, DiceRollEntry, AbilityUsageEntry } from "@/lib/types/log-entries";
 import { Abilities } from "@/lib/types/abilities";
 import { characterStorageService } from "@/lib/services/character-storage-service";
+import { characterService } from "@/lib/services/character-service";
 import { diceService } from "@/lib/services/dice-service";
 import { activityLogService } from "@/lib/services/activity-log-service";
 import { abilityService } from "@/lib/services/ability-service";
@@ -55,11 +56,9 @@ export default function Home() {
         const characterList = await characterStorageService.getAllCharacters();
         setCharacters(characterList);
 
-        // Load active character
-        const existingCharacter = await characterStorageService.getCharacter(loadedSettings.activeCharacterId);
-        if (existingCharacter) {
-          setCharacter(existingCharacter);
-        } else {
+        // Load active character through CharacterService
+        let activeCharacter = await characterService.loadCharacter(loadedSettings.activeCharacterId);
+        if (!activeCharacter) {
           // Create default character if none exists
           const newCharacter = await characterStorageService.createCharacter({
             name: sampleCharacter.name,
@@ -75,7 +74,9 @@ export default function Home() {
             inventory: sampleCharacter.inventory,
             abilities: sampleCharacter.abilities,
           }, loadedSettings.activeCharacterId);
-          setCharacter(newCharacter);
+          
+          // Load the new character through the service
+          activeCharacter = await characterService.loadCharacter(newCharacter.id);
           
           // Character list will be updated automatically when we reload
           const updatedCharacterList = await characterStorageService.getAllCharacters();
@@ -96,16 +97,43 @@ export default function Home() {
     loadData();
   }, []);
 
+  // Subscribe to character updates from the service
+  useEffect(() => {
+    const unsubscribe = characterService.subscribeToCharacter((updatedCharacter) => {
+      setCharacter(updatedCharacter);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // Subscribe to activity log updates
+  useEffect(() => {
+    const refreshLogs = async () => {
+      try {
+        const entries = await activityLogService.getLogEntries();
+        setLogEntries(entries);
+      } catch (error) {
+        console.error("Failed to refresh log entries:", error);
+      }
+    };
+
+    // Initial load and periodic refresh (simple polling)
+    refreshLogs();
+    const interval = setInterval(refreshLogs, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const handleCharacterUpdate = async (updatedCharacter: Character) => {
-    setCharacter(updatedCharacter);
+    // Update through the service, which will trigger the subscription
+    await characterService.updateCharacter(updatedCharacter);
+    
     try {
-      await characterStorageService.updateCharacter(updatedCharacter);
-      
       // Refresh the character list to reflect name changes
       const updatedCharacterList = await characterStorageService.getAllCharacters();
       setCharacters(updatedCharacterList);
     } catch (error) {
-      console.error("Failed to save character:", error);
+      console.error("Failed to refresh character list:", error);
     }
   };
 
@@ -233,35 +261,6 @@ export default function Home() {
     }
   };
 
-  const handleLogDamage = async (amount: number, targetType: 'hp' | 'temp_hp') => {
-    try {
-      const entry = activityLogService.createDamageEntry(amount, targetType);
-      await activityLogService.addLogEntry(entry);
-      setLogEntries(prevEntries => [entry, ...prevEntries.slice(0, 99)]);
-    } catch (error) {
-      console.error("Failed to log damage:", error);
-    }
-  };
-
-  const handleLogHealing = async (amount: number) => {
-    try {
-      const entry = activityLogService.createHealingEntry(amount);
-      await activityLogService.addLogEntry(entry);
-      setLogEntries(prevEntries => [entry, ...prevEntries.slice(0, 99)]);
-    } catch (error) {
-      console.error("Failed to log healing:", error);
-    }
-  };
-
-  const handleLogTempHP = async (amount: number, previous?: number) => {
-    try {
-      const entry = activityLogService.createTempHPEntry(amount, previous);
-      await activityLogService.addLogEntry(entry);
-      setLogEntries(prevEntries => [entry, ...prevEntries.slice(0, 99)]);
-    } catch (error) {
-      console.error("Failed to log temp HP:", error);
-    }
-  };
 
   const handleUpdateActions = async (actionTracker: ActionTracker) => {
     const updatedCharacter = { ...character, actionTracker };
@@ -553,9 +552,8 @@ export default function Home() {
 
   const handleCharacterSwitch = useCallback(async (characterId: string) => {
     try {
-      const newCharacter = await characterStorageService.getCharacter(characterId);
+      const newCharacter = await characterService.loadCharacter(characterId);
       if (newCharacter) {
-        setCharacter(newCharacter);
         
         // Update settings with new active character
         const newSettings = { ...settings, activeCharacterId: characterId };
@@ -646,9 +644,6 @@ export default function Home() {
           onRollSkill={handleRollSkill}
           onRollInitiative={handleRollInitiative}
           onAttack={handleAttack}
-          onLogDamage={handleLogDamage}
-          onLogHealing={handleLogHealing}
-          onLogTempHP={handleLogTempHP}
           onUpdateActions={handleUpdateActions}
           onEndEncounter={handleEndEncounter}
           onUpdateAbilities={handleUpdateAbilities}

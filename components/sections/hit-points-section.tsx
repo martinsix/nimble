@@ -9,63 +9,25 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/colla
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
 import { Heart, Minus, Plus, Settings, ChevronDown, ChevronRight } from "lucide-react";
 
+import { characterService } from "@/lib/services/character-service";
+
 interface HitPointsSectionProps {
   currentHp: number;
   maxHp: number;
   temporaryHp: number;
   isOpen: boolean;
   onToggle: (isOpen: boolean) => void;
-  onHpChange: (current: number, max: number, temporary: number, shouldGainWound?: boolean) => void;
-  onLogDamage?: (amount: number, targetType: 'hp' | 'temp_hp') => void;
-  onLogHealing?: (amount: number) => void;
-  onLogTempHP?: (amount: number, previous?: number) => void;
 }
 
-export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onToggle, onHpChange, onLogDamage, onLogHealing, onLogTempHP }: HitPointsSectionProps) {
+export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onToggle }: HitPointsSectionProps) {
   const [damageAmount, setDamageAmount] = useState<string>("1");
   const [healAmount, setHealAmount] = useState<string>("1");
   const [tempHpAmount, setTempHpAmount] = useState<string>("1");
   const [newMaxHp, setNewMaxHp] = useState<string>(maxHp.toString());
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  const applyDamage = (amount: number, resetInput: boolean = false) => {
-    let remainingDamage = amount;
-    let newTemporary = temporaryHp;
-    let newCurrent = currentHp;
-    let tempHpDamaged = false;
-
-    // Temp HP absorbs damage first
-    if (temporaryHp > 0) {
-      if (remainingDamage >= temporaryHp) {
-        remainingDamage -= temporaryHp;
-        newTemporary = 0;
-        tempHpDamaged = true;
-      } else {
-        newTemporary = temporaryHp - remainingDamage;
-        remainingDamage = 0;
-        tempHpDamaged = true;
-      }
-    }
-
-    // Apply remaining damage to regular HP
-    if (remainingDamage > 0) {
-      newCurrent = Math.max(0, currentHp - remainingDamage);
-    }
-
-    // Check if character reached 0 HP and will gain a wound
-    const shouldGainWound = currentHp > 0 && newCurrent === 0;
-
-    // Update HP and pass wound information together
-    onHpChange(newCurrent, maxHp, newTemporary, shouldGainWound);
-    
-    // Log the damage
-    if (tempHpDamaged && remainingDamage === 0) {
-      onLogDamage?.(amount, 'temp_hp');
-    } else if (tempHpDamaged && remainingDamage > 0) {
-      onLogDamage?.(amount, 'hp'); // Mixed damage but log as regular damage
-    } else {
-      onLogDamage?.(amount, 'hp');
-    }
+  const applyDamage = async (amount: number, resetInput: boolean = false) => {
+    await characterService.applyDamage(amount);
     
     if (resetInput) {
       setDamageAmount("1");
@@ -77,12 +39,8 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
     applyDamage(damage, true);
   };
 
-  const applyHealing = (amount: number, resetInput: boolean = false) => {
-    const newCurrent = Math.min(maxHp, currentHp + amount);
-    onHpChange(newCurrent, maxHp, temporaryHp);
-    
-    // Log the healing
-    onLogHealing?.(amount);
+  const applyHealing = async (amount: number, resetInput: boolean = false) => {
+    await characterService.applyHealing(amount);
     
     if (resetInput) {
       setHealAmount("1");
@@ -94,24 +52,16 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
     applyHealing(heal, true);
   };
 
-  const handleTempHp = () => {
+  const handleTempHp = async () => {
     const tempAmount = parseInt(tempHpAmount) || 0;
-    // Temp HP doesn't stack - take the higher value
-    const newTemporary = Math.max(temporaryHp, tempAmount);
-    const previousTempHp = temporaryHp > 0 ? temporaryHp : undefined;
-    
-    onHpChange(currentHp, maxHp, newTemporary);
-    
-    // Log the temp HP gain
-    onLogTempHP?.(tempAmount, previousTempHp);
-    
+    await characterService.applyTemporaryHP(tempAmount);
     setTempHpAmount("1");
   };
 
-  const handleMaxHpChange = () => {
+  const handleMaxHpChange = async () => {
     const newMax = parseInt(newMaxHp) || 1;
     const adjustedCurrent = Math.min(currentHp, newMax);
-    onHpChange(adjustedCurrent, newMax, temporaryHp);
+    await characterService.updateHitPoints(adjustedCurrent, newMax, temporaryHp);
     setIsSettingsOpen(false);
   };
 
