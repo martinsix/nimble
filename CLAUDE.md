@@ -30,39 +30,48 @@ interface Character {
   attributes: { strength, dexterity, intelligence, will }
   hitPoints: { current, max, temporary }
   initiative: Skill
+  actionTracker: { current, base, bonus }
+  inEncounter: boolean
   skills: { [skillName]: Skill }
   inventory: Inventory
+  abilities: Abilities
   timestamps: { createdAt, updatedAt }
 }
 ```
 
-#### Storage Abstraction
-- **ICharacterRepository** interface enables future server migration
-- **LocalStorageCharacterRepository** handles JSON serialization/deserialization
-- **CharacterService** combines repository with Zod validation
-- **Singleton pattern** for easy dependency injection
+#### Service Architecture
+- **CharacterService** handles character CRUD operations with validation
+- **DiceService** manages all dice rolling mechanics
+- **ActivityLogService** tracks character actions and dice rolls
+- **AbilityService** handles ability usage, cooldowns, and roll calculations
+- **SettingsService** manages app settings and character selection
+- **Singleton pattern** for easy dependency injection and state management
 
-#### UI State Management
-- **UIStateService** persists collapsible section preferences
-- **Separate from character data** for clean separation of concerns
-- **Type-safe** with dedicated UIState interface
+#### Storage & State
+- **Local Storage** with JSON serialization for persistence
+- **Character activity logging** with type-safe log entries
+- **App settings** with mode switching (basic/full) and character selection
+- **Type-safe** operations with Zod validation
 
 ### Component Architecture
 
 #### Main Structure
 ```
 app/page.tsx (main orchestrator)
-├── CharacterSheet (main form component)
+├── AppMenu (settings, character selector)
+├── CharacterSheet (main form component, mode-aware)
 │   ├── CharacterNameSection
 │   ├── AdvantageToggle (global advantage/disadvantage)
 │   ├── HitPointsSection (with temporary HP support)
+│   ├── ActionTrackerSection (encounter actions)
 │   ├── InitiativeSection (collapsible)
-│   ├── ArmorSection (collapsible, shows total armor)
+│   ├── ArmorSection (collapsible, main vs supplementary armor)
 │   ├── AttributesSection (collapsible, with saves)
 │   ├── SkillsSection (collapsible)
-│   ├── ActionsSection (collapsible, equipped weapons only)
-│   └── InventorySection (collapsible, equipment management)
-└── RollLog (dice results display)
+│   ├── ActionsSection (collapsible, equipped weapons and abilities)
+│   ├── AbilitySection (collapsible, ability management) [full mode only]
+│   └── InventorySection (collapsible, equipment management) [full mode only]
+└── ActivityLog (character activity and dice results)
 ```
 
 #### Modular Design
@@ -106,37 +115,59 @@ app/page.tsx (main orchestrator)
    - Editable skill-specific bonuses (0-20 range)
    - Individual skill rolling with breakdown
 
-6. **Equipment System**
+6. **Action Tracker & Encounter System**
+   - Combat action tracking with current/base/bonus actions
+   - Initiative rolls that set action count for encounters
+   - End turn/encounter functionality with ability resets
+   - Encounter state management affecting UI and abilities
+
+7. **Equipment System**
    - Equipment flags for weapons and armor
    - Size-based weapon limits (configurable, default: 2)
    - Equip/unequip toggles with validation
    - Equipped items don't count toward inventory size
    - Only equipped weapons appear in actions
 
-7. **Armor System**
-   - Dedicated armor section showing total protection
-   - Sum of all equipped armor pieces
-   - Multiple armor pieces can be equipped
-   - Visual armor breakdown with individual pieces
+8. **Armor System**
+   - Main armor vs supplementary armor distinction
+   - Only one main armor can be equipped at a time
+   - Automatic replacement when equipping new main armor
+   - Dexterity bonus calculations with armor limits
+   - Visual indicators for armor types and effective bonuses
 
-8. **Dice Rolling & Combat**
-   - **Attack Rolls**: Exploding crits, miss on natural 1
-   - **Checks/Saves**: Standard d20 + modifier (no crits/misses)
-   - Advantage/disadvantage system with global toggle
-   - Multi-die expressions (2d6, 3d4, etc.)
-   - Roll log with last 100 results and detailed breakdowns
+9. **Ability System**
+   - Freeform abilities (text-only descriptions)
+   - Action abilities with frequency-based usage (per-turn, per-encounter, at-will)
+   - Integrated roll mechanics with dice, modifiers, and attribute bonuses
+   - Automatic ability resets on turn/encounter end
+   - Visual usage tracking and roll descriptions
 
-9. **Inventory Management**
-   - Three item types: weapons, armor, freeform
-   - Size-based capacity system with visual indicators
-   - Type-specific properties (damage, armor value, description)
-   - Equipment state tracking and validation
+10. **Dice Rolling & Combat**
+    - **Attack Rolls**: Exploding crits, miss on natural 1
+    - **Checks/Saves**: Standard d20 + modifier (no crits/misses)
+    - **Ability Rolls**: Custom dice with modifiers and attribute bonuses
+    - Advantage/disadvantage system with global toggle
+    - Multi-die expressions (2d6, 3d4, etc.)
+    - Activity log with comprehensive action tracking
 
-10. **Advanced UI Features**
+11. **Inventory Management**
+    - Three item types: weapons, armor, freeform
+    - Size-based capacity system with visual indicators
+    - Type-specific properties (damage, armor value, description)
+    - Equipment state tracking and validation
+
+12. **App Modes & Character Management**
+    - Basic mode: simplified interface (HP, actions, saves, attributes, skills)
+    - Full mode: complete character sheet with inventory and abilities
+    - Multiple character support with switching and creation
+    - Global settings panel with mode selection
+    - Character selector with creation and deletion
+
+13. **Advanced UI Features**
     - Collapsible sections with persistent preferences
     - Mobile-responsive design with adaptive grids
     - Consistent visual feedback and state indicators
-    - Advantage/disadvantage visual indicators in rolls
+    - Mode-aware component rendering
 
 ## Key Design Decisions
 
@@ -178,17 +209,20 @@ lib/
 ├── types/           # TypeScript interfaces
 │   ├── character.ts
 │   ├── inventory.ts
+│   ├── abilities.ts
+│   ├── actions.ts
 │   └── dice.ts
 ├── schemas/         # Zod validation schemas
 │   └── character.ts
 ├── services/        # Business logic layer
 │   ├── character-service.ts
-│   ├── dice-service.ts
-│   └── ui-state-service.ts
-├── storage/         # Data persistence layer
-│   └── character-repository.ts
+│   ├── dice-service-clean.ts
+│   ├── activity-log-service.ts
+│   ├── ability-service.ts
+│   └── settings-service.ts
 └── utils/           # Helper functions
-    └── character-defaults.ts
+    ├── character-defaults.ts
+    └── equipment.ts
 
 components/
 ├── ui/              # shadcn/ui components
@@ -196,6 +230,8 @@ components/
 │   ├── attributes-section.tsx
 │   ├── skills-section.tsx
 │   ├── actions-section.tsx
+│   ├── action-tracker-section.tsx
+│   ├── ability-section.tsx
 │   ├── armor-section.tsx
 │   ├── hit-points-section.tsx
 │   ├── initiative-section.tsx
@@ -203,7 +239,11 @@ components/
 │   └── character-name-section.tsx
 ├── character-sheet.tsx
 ├── advantage-toggle.tsx
-└── roll-log.tsx
+├── activity-log.tsx
+├── actions.tsx
+├── app-menu.tsx
+├── settings-panel.tsx
+└── character-selector.tsx
 
 app/
 └── page.tsx         # Main application entry
@@ -248,8 +288,8 @@ npm run lint     # Run ESLint checks
 ## Local Storage Keys
 
 - `nimble-navigator-characters`: Character data array
-- `nimble-navigator-dice-rolls`: Dice roll history (last 100)
-- `nimble-navigator-ui-state`: UI preferences (collapsible sections)
+- `nimble-navigator-activity-log`: Activity log entries (character actions and dice rolls)
+- `nimble-navigator-settings`: App settings (mode, active character)
 
 ## Game Configuration
 

@@ -10,26 +10,39 @@ A comprehensive digital character sheet application for the Nimble RPG system. N
 ## ✨ Features
 
 ### Core Character Management
+- **Multiple Characters**: Create, switch between, and manage multiple characters
+- **App Modes**: Basic mode (simplified) or Full mode (complete character sheet)
 - **Attributes**: Strength, Dexterity, Intelligence, Will (range: -2 to 10)
 - **Hit Points**: Current/Max HP with temporary HP support (D&D 5e rules)
-- **Initiative**: Dexterity-based with skill modifiers
+- **Action Tracker**: Combat action management with encounter tracking
 - **Skills**: 10 predefined skills with attribute associations and custom modifiers
 
 ### Combat & Rolling
 - **Dice System**: Advanced d20 mechanics with advantage/disadvantage
 - **Attack Rolls**: Exploding criticals, miss on natural 1
+- **Ability Rolls**: Custom dice expressions with attribute modifiers
 - **Saving Throws**: Separate buttons for each attribute
-- **Roll History**: Last 100 rolls with detailed breakdowns
+- **Activity Log**: Comprehensive action and dice roll tracking
+
+### Abilities & Actions
+- **Ability System**: Freeform and action abilities with usage tracking
+- **Frequency Types**: Per-turn, per-encounter, and at-will abilities
+- **Roll Integration**: Abilities can trigger custom dice rolls
+- **Smart Resets**: Automatic ability resets on turn/encounter end
+- **Actions Panel**: Quick access to equipped weapons and usable abilities
 
 ### Equipment & Inventory
 - **Equipment Management**: Weapons, armor, and freeform items
+- **Armor Types**: Main armor vs supplementary armor with automatic replacement
 - **Size-Based Limits**: Configurable weapon size restrictions
-- **Armor System**: Total armor calculation from equipped pieces
 - **Smart Inventory**: Equipped items don't count toward size limits
+- **Dex Bonus Calculation**: Armor-aware dexterity bonus with visual indicators
 
 ### Advanced Features
 - **Temporary HP**: D&D 5e compliant damage absorption
-- **Dying Status**: Clear indicator when at 0 HP
+- **Encounter Management**: Turn-based mechanics with action tracking
+- **Settings Panel**: Global app configuration and mode switching
+- **Character Selector**: Easy character creation and switching
 - **Responsive Design**: Mobile-first with collapsible sections
 - **Offline-First**: No server required, works completely offline
 - **Auto-Save**: All data persists to local storage automatically
@@ -68,23 +81,39 @@ npm start
 
 ## 🎮 How to Use
 
-### Character Creation
+### Getting Started
+1. **App Menu**: Click the gear icon to access settings and character selection
+2. **Mode Selection**: Choose Basic mode (simplified) or Full mode (complete)
+3. **Character Creation**: Use the character selector to create new characters
+4. **Character Switching**: Easily switch between existing characters
+
+### Character Setup
 1. **Name**: Click the character name to edit
 2. **Attributes**: Use the number inputs to set attribute values (-2 to 10)
 3. **Hit Points**: Set max HP and track current/temporary HP
 4. **Skills**: Adjust skill modifiers (0-20) for each of the 10 skills
+5. **Abilities**: Add custom abilities with usage frequencies and roll mechanics
 
 ### Combat & Rolling
 1. **Advantage/Disadvantage**: Use the global toggle at the top
 2. **Attribute Rolls**: Click "Roll" for checks or "Save" for saving throws
 3. **Skill Rolls**: Roll individual skills with automatic attribute bonuses
 4. **Attack Rolls**: Equip weapons to see attack actions with damage
+5. **Ability Rolls**: Use abilities that automatically trigger custom dice rolls
+6. **Initiative**: Roll initiative to start encounters and set action counts
+
+### Action Management
+1. **Action Tracker**: Monitor current actions during encounters
+2. **End Turn**: Reset actions and per-turn abilities
+3. **End Encounter**: Exit combat and reset all abilities
+4. **Actions Panel**: Quick access to weapons and abilities
 
 ### Equipment Management
-1. **Add Items**: Use the "Add Item" button in inventory
+1. **Add Items**: Use the "Add Item" button in inventory (Full mode)
 2. **Equip Gear**: Toggle equip/unequip for weapons and armor
-3. **Size Limits**: Weapons have a total size limit (default: 2)
-4. **Armor Display**: View total armor value in the dedicated armor section
+3. **Main Armor**: Only one main armor piece can be equipped at a time
+4. **Size Limits**: Weapons have a total size limit (default: 2)
+5. **Armor Display**: View total armor value with dexterity bonus calculations
 
 ### Health Management
 1. **Damage**: Use quick buttons (-1, -5, -10) or custom amounts
@@ -112,13 +141,16 @@ nimble-navigator/
 │   ├── ui/               # shadcn/ui components
 │   ├── character-sheet.tsx
 │   ├── advantage-toggle.tsx
-│   └── roll-log.tsx
+│   ├── activity-log.tsx
+│   ├── actions.tsx
+│   ├── app-menu.tsx
+│   ├── settings-panel.tsx
+│   └── character-selector.tsx
 ├── lib/                   # Core application logic
 │   ├── config/           # Game configuration
 │   ├── types/            # TypeScript interfaces
 │   ├── schemas/          # Zod validation schemas
-│   ├── services/         # Business logic
-│   ├── storage/          # Data persistence
+│   ├── services/         # Business logic services
 │   └── utils/            # Helper functions
 └── public/               # Static assets
 ```
@@ -128,15 +160,30 @@ nimble-navigator/
 ### Dice Rolling
 - **Basic Rolls**: d20 + modifier (attributes, skills, saves)
 - **Attack Rolls**: Multi-die expressions with exploding crits
+- **Ability Rolls**: Custom dice with modifiers and attribute bonuses
 - **Advantage/Disadvantage**: Roll extra dice, keep best/worst
 - **Critical Hits**: Max roll triggers additional dice (attacks only)
 - **Misses**: Natural 1 on first die = miss (attacks only)
 
+### Ability System
+- **Frequencies**: Per-turn, per-encounter, and at-will usage
+- **Roll Integration**: Abilities can trigger automatic dice rolls
+- **Smart Resets**: Per-turn abilities reset on turn end, per-encounter on encounter end
+- **Usage Tracking**: Visual indicators for remaining uses
+
+### Combat & Actions
+- **Action Tracker**: Current/base/bonus action management
+- **Initiative System**: d20 + dex + modifier determines starting actions
+- **Turn Management**: End turn resets actions and per-turn abilities
+- **Encounter Management**: Start/end encounters with automatic ability resets
+
 ### Equipment Rules
 - **Weapon Limits**: Total equipped weapon size ≤ 2 (configurable)
-- **Armor Stacking**: Multiple armor pieces can be equipped
+- **Main Armor**: Only one main armor piece can be equipped
+- **Supplementary Armor**: Helmets, shields, etc. can stack with main armor
+- **Dex Bonus**: Automatic calculation based on armor restrictions
 - **Inventory Size**: Equipped items don't count toward capacity
-- **Actions**: Only equipped weapons appear in combat actions
+- **Actions**: Only equipped weapons and usable abilities appear in actions
 
 ### Health System
 - **Regular HP**: Standard current/maximum tracking
@@ -172,9 +219,9 @@ export const gameConfig = {
 ## 💾 Data Storage
 
 The app uses local storage with the following keys:
-- `nimble-characters`: Character data
-- `nimble-dice-rolls`: Roll history (last 100)
-- `nimble-ui-state`: UI preferences (collapsible sections)
+- `nimble-navigator-characters`: Character data array
+- `nimble-navigator-activity-log`: Activity log entries (character actions and dice rolls)
+- `nimble-navigator-settings`: App settings (mode, active character)
 
 ## 🔧 Development
 

@@ -339,11 +339,30 @@ export default function Home() {
       const logEntry = activityLogService.createAbilityUsageEntry(
         result.usedAbility.name,
         result.usedAbility.frequency,
-        result.usedAbility.currentUses,
-        result.usedAbility.maxUses
+        result.usedAbility.currentUses || 0,
+        result.usedAbility.maxUses || 0
       );
       await activityLogService.addLogEntry(logEntry);
       setLogEntries(prevEntries => [logEntry, ...prevEntries.slice(0, 99)]);
+
+      // Handle ability roll if it has one
+      if (result.usedAbility.roll) {
+        const roll = result.usedAbility.roll;
+        const totalModifier = abilityService.calculateAbilityRollModifier(roll, character);
+        
+        // Use the dice service to perform the roll
+        const rollResult = diceService.rollAttack(roll.dice, totalModifier, 0);
+        const rollLogEntry = activityLogService.createDiceRollEntry(
+          rollResult.dice,
+          rollResult.droppedDice,
+          totalModifier,
+          rollResult.total,
+          `${result.usedAbility.name} ability roll`,
+          0 // No advantage for ability rolls by default
+        );
+        await activityLogService.addLogEntry(rollLogEntry);
+        setLogEntries(prevEntries => [rollLogEntry, ...prevEntries.slice(0, 99)]);
+      }
     } catch (error) {
       console.error("Failed to use ability:", error);
     }

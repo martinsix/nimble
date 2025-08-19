@@ -60,6 +60,12 @@ export const actionTrackerSchema = z.object({
   bonus: z.number().min(0),
 });
 
+const abilityRollSchema = z.object({
+  dice: z.string(),
+  modifier: z.number().optional(),
+  attribute: attributeNameSchema.optional(),
+});
+
 export const abilitySchema = z.discriminatedUnion('type', [
   z.object({
     id: z.string(),
@@ -72,9 +78,10 @@ export const abilitySchema = z.discriminatedUnion('type', [
     name: z.string().min(1),
     description: z.string(),
     type: z.literal('action'),
-    frequency: z.enum(['per_turn', 'per_encounter']),
-    maxUses: z.number().min(1),
-    currentUses: z.number().min(0),
+    frequency: z.enum(['per_turn', 'per_encounter', 'at_will']),
+    maxUses: z.number().min(1).optional(),
+    currentUses: z.number().min(0).optional(),
+    roll: abilityRollSchema.optional(),
   }),
 ]);
 

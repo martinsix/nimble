@@ -105,16 +105,21 @@ export class ActivityLogService {
 
   createAbilityUsageEntry(
     abilityName: string, 
-    frequency: 'per_turn' | 'per_encounter', 
+    frequency: 'per_turn' | 'per_encounter' | 'at_will', 
     usesRemaining: number, 
     maxUses: number
   ): AbilityUsageEntry {
-    const frequencyText = frequency === 'per_turn' ? 'per turn' : 'per encounter';
+    const frequencyText = frequency === 'per_turn' ? 'per turn' : 
+                         frequency === 'per_encounter' ? 'per encounter' : 'at will';
+    const usageText = frequency === 'at_will' ? 
+      `Used ${abilityName} (${frequencyText})` :
+      `Used ${abilityName} (${frequencyText}) - ${usesRemaining}/${maxUses} remaining`;
+    
     return {
       id: crypto.randomUUID(),
       timestamp: new Date(),
       type: 'ability_usage',
-      description: `Used ${abilityName} (${frequencyText}) - ${usesRemaining}/${maxUses} remaining`,
+      description: usageText,
       abilityName,
       frequency,
       usesRemaining,

@@ -266,6 +266,7 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
           {/* Ability Section */}
           <AbilitySection 
             abilities={character.abilities}
+            character={character}
             isOpen={uiState.collapsibleSections.abilities}
             onToggle={(isOpen) => updateCollapsibleState('abilities', isOpen)}
             onUpdateAbilities={onUpdateAbilities || (() => {})}

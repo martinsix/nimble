@@ -4,8 +4,9 @@ import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Character, AttributeName } from "@/lib/types/character";
 import { WeaponItem } from "@/lib/types/inventory";
-import { ActionAbility, Abilities } from "@/lib/types/abilities";
+import { ActionAbility, Abilities, AbilityFrequency } from "@/lib/types/abilities";
 import { Action, WeaponAction, AbilityAction } from "@/lib/types/actions";
+import { abilityService } from "@/lib/services/ability-service";
 import { AbilityUsageEntry } from "@/lib/types/dice";
 import { getEquippedWeapons } from "@/lib/utils/equipment";
 import { Sword, Zap } from "lucide-react";
@@ -37,18 +38,27 @@ export function Actions({ character, onAttack, onUseAbility, advantageLevel }: A
   };
 
   const handleUseAbility = (ability: ActionAbility) => {
-    if (!onUseAbility || ability.currentUses <= 0) return;
+    if (!onUseAbility) return;
+    
+    // For at-will abilities, allow usage regardless of currentUses
+    // For other abilities, check if they have remaining uses
+    if (ability.frequency !== 'at_will' && (ability.currentUses === undefined || ability.currentUses <= 0)) {
+      return;
+    }
+    
     onUseAbility(ability.id);
   };
 
-  const getFrequencyBadge = (frequency: 'per_turn' | 'per_encounter') => {
+  const getFrequencyBadge = (frequency: AbilityFrequency) => {
     const colors = {
       per_turn: 'bg-green-100 text-green-800',
       per_encounter: 'bg-blue-100 text-blue-800',
+      at_will: 'bg-purple-100 text-purple-800',
     };
     const labels = {
       per_turn: 'Per Turn',
       per_encounter: 'Per Encounter',
+      at_will: 'At Will',
     };
     
     return (
@@ -132,7 +142,7 @@ export function Actions({ character, onAttack, onUseAbility, advantageLevel }: A
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {actionAbilities.map((ability) => {
-              const isUsed = ability.currentUses === 0;
+              const isUsed = ability.frequency !== 'at_will' && (ability.currentUses === undefined || ability.currentUses === 0);
               
               return (
                 <Card key={ability.id} className={isUsed ? 'opacity-50' : ''}>
@@ -147,11 +157,20 @@ export function Actions({ character, onAttack, onUseAbility, advantageLevel }: A
                       <div className="text-muted-foreground mb-2">
                         {ability.description}
                       </div>
+                      
+                      {ability.roll && (
+                        <div className="mb-2 p-2 bg-muted/50 rounded text-sm">
+                          <strong>Roll:</strong> {abilityService.getAbilityRollDescription(ability.roll, character)}
+                        </div>
+                      )}
+                      
                       <div className="flex justify-center gap-2 mb-2">
                         {getFrequencyBadge(ability.frequency)}
-                        <Badge variant="secondary">
-                          {ability.currentUses}/{ability.maxUses} uses
-                        </Badge>
+                        {ability.frequency !== 'at_will' && ability.maxUses && (
+                          <Badge variant="secondary">
+                            {ability.currentUses}/{ability.maxUses} uses
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     

@@ -1,4 +1,5 @@
-import { Abilities, Ability, ActionAbility } from '../types/abilities';
+import { Abilities, Ability, ActionAbility, AbilityRoll } from '../types/abilities';
+import { Character } from '../types/character';
 
 export class AbilityService {
   
@@ -16,19 +17,25 @@ export class AbilityService {
       return { updatedAbilities: abilities, usedAbility: null, success: false };
     }
 
-    if (ability.currentUses <= 0) {
+    // At-will abilities can always be used
+    if (ability.frequency === 'at_will') {
+      return { updatedAbilities: abilities, usedAbility: ability, success: true };
+    }
+
+    // For limited-use abilities, check uses remaining
+    if (!ability.currentUses || ability.currentUses <= 0) {
       return { updatedAbilities: abilities, usedAbility: null, success: false };
     }
 
     const updatedAbilities: Abilities = {
       abilities: abilities.abilities.map(a => 
         a.id === abilityId && a.type === 'action'
-          ? { ...a, currentUses: a.currentUses - 1 }
+          ? { ...a, currentUses: (a.currentUses || 1) - 1 }
           : a
       )
     };
 
-    const usedAbility = { ...ability, currentUses: ability.currentUses - 1 };
+    const usedAbility = { ...ability, currentUses: (ability.currentUses || 1) - 1 };
 
     return { updatedAbilities, usedAbility, success: true };
   }
@@ -39,7 +46,7 @@ export class AbilityService {
   resetAbilities(abilities: Abilities, frequency: 'per_turn' | 'per_encounter'): Abilities {
     return {
       abilities: abilities.abilities.map(ability => {
-        if (ability.type === 'action' && ability.frequency === frequency) {
+        if (ability.type === 'action' && ability.frequency === frequency && ability.maxUses) {
           return { ...ability, currentUses: ability.maxUses };
         }
         return ability;
@@ -83,6 +90,38 @@ export class AbilityService {
     return abilities.abilities.filter(
       (ability): ability is ActionAbility => ability.type === 'action'
     );
+  }
+
+  /**
+   * Calculate the total modifier for an ability roll
+   */
+  calculateAbilityRollModifier(abilityRoll: AbilityRoll, character: Character): number {
+    let totalModifier = abilityRoll.modifier || 0;
+    
+    if (abilityRoll.attribute) {
+      totalModifier += character.attributes[abilityRoll.attribute];
+    }
+    
+    return totalModifier;
+  }
+
+  /**
+   * Get ability roll description for display
+   */
+  getAbilityRollDescription(abilityRoll: AbilityRoll, character: Character): string {
+    const parts: string[] = [abilityRoll.dice];
+    
+    if (abilityRoll.modifier) {
+      parts.push(abilityRoll.modifier > 0 ? `+${abilityRoll.modifier}` : `${abilityRoll.modifier}`);
+    }
+    
+    if (abilityRoll.attribute) {
+      const attributeValue = character.attributes[abilityRoll.attribute];
+      const attributeName = abilityRoll.attribute.charAt(0).toUpperCase() + abilityRoll.attribute.slice(1, 3);
+      parts.push(attributeValue >= 0 ? `+${attributeValue} ${attributeName}` : `${attributeValue} ${attributeName}`);
+    }
+    
+    return parts.join(' ');
   }
 
   /**
