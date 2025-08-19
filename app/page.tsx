@@ -94,6 +94,10 @@ export default function Home() {
     setCharacter(updatedCharacter);
     try {
       await characterService.updateCharacter(updatedCharacter);
+      
+      // Refresh the character list to reflect name changes
+      const updatedCharacterList = await characterService.getAllCharacters();
+      setCharacters(updatedCharacterList);
     } catch (error) {
       console.error("Failed to save character:", error);
     }

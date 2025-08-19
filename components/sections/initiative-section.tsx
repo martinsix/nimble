@@ -96,7 +96,7 @@ export function InitiativeSection({
             className="w-full"
           >
             <Dice6 className="w-5 h-5 mr-2" />
-            Roll Initiative (d20{totalModifier > 0 ? '+' : ''}{totalModifier})
+            Roll Initiative (d20{totalModifier > 0 ? '+' + totalModifier : ''})
           </Button>
         ) : (
           <div className="space-y-2">
