@@ -66,6 +66,11 @@ export const hitDiceSchema = z.object({
   max: z.number().min(1),
 });
 
+export const woundsSchema = z.object({
+  current: z.number().min(0),
+  max: z.number().min(1),
+});
+
 const abilityRollSchema = z.object({
   dice: z.string(),
   modifier: z.number().optional(),
@@ -101,6 +106,7 @@ export const createCharacterSchema = z.object({
   attributes: attributeSchema,
   hitPoints: hitPointsSchema,
   hitDice: hitDiceSchema,
+  wounds: woundsSchema,
   initiative: skillSchema,
   actionTracker: actionTrackerSchema,
   inEncounter: z.boolean(),
@@ -116,6 +122,7 @@ export const characterSchema = z.object({
   attributes: attributeSchema,
   hitPoints: hitPointsSchema,
   hitDice: hitDiceSchema,
+  wounds: woundsSchema,
   initiative: skillSchema,
   actionTracker: actionTrackerSchema,
   inEncounter: z.boolean(),

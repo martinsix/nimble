@@ -49,6 +49,7 @@ export class CharacterService {
       attributes: { strength: 0, dexterity: 0, intelligence: 0, will: 0 },
       hitPoints: { current: 10, max: 10, temporary: 0 },
       hitDice: { size: 8, current: 1, max: 1 },
+      wounds: { current: 0, max: 6 },
       initiative: { name: 'Initiative', associatedAttribute: 'dexterity', modifier: 0 },
       actionTracker: { current: 3, base: 3, bonus: 0 },
       inEncounter: false,

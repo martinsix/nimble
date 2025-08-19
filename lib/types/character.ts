@@ -23,6 +23,11 @@ export interface HitDice {
   max: number; // Maximum hit dice (equals level)
 }
 
+export interface Wounds {
+  current: number; // Current wounds sustained
+  max: number; // Maximum wounds before death (default 6)
+}
+
 export interface Character {
   id: string;
   name: string;
@@ -39,6 +44,7 @@ export interface Character {
     temporary: number;
   };
   hitDice: HitDice; // Hit dice for healing and recovery
+  wounds: Wounds; // Wounds sustained from reaching 0 HP
   initiative: Skill;
   actionTracker: ActionTracker;
   inEncounter: boolean; // Whether currently in an encounter/combat
@@ -75,6 +81,7 @@ export interface CreateCharacterData {
     temporary: number;
   };
   hitDice: HitDice;
+  wounds: Wounds;
   initiative: Skill;
   actionTracker: ActionTracker;
   inEncounter: boolean;

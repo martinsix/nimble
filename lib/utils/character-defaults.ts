@@ -1,4 +1,4 @@
-import { Skill, AttributeName, HitDice } from '../types/character';
+import { Skill, AttributeName, HitDice, Wounds } from '../types/character';
 import { Inventory } from '../types/inventory';
 import { Abilities } from '../types/abilities';
 
@@ -74,6 +74,13 @@ export const createDefaultHitDice = (level: number = 1): HitDice => {
     size: 8, // Default to d8 hit dice
     current: level,
     max: level,
+  };
+};
+
+export const createDefaultWounds = (maxWounds: number = 6): Wounds => {
+  return {
+    current: 0, // Start with no wounds
+    max: maxWounds, // Default to 6 max wounds before death
   };
 };
 

@@ -10,6 +10,7 @@ import { CharacterNameSection } from "./sections/character-name-section";
 import { AdvantageToggle } from "./advantage-toggle";
 import { HitPointsSection } from "./sections/hit-points-section";
 import { HitDiceSection } from "./sections/hit-dice-section";
+import { WoundsSection } from "./sections/wounds-section";
 import { InitiativeSection } from "./sections/initiative-section";
 import { ActionTrackerSection } from "./sections/action-tracker-section";
 import { AttributesSection } from "./sections/attributes-section";
@@ -48,6 +49,7 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
     collapsibleSections: {
       hitPoints: true,
       hitDice: true,
+      wounds: true,
       initiative: true,
       actionTracker: true,
       attributes: true,
@@ -179,6 +181,20 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
     onUpdate(updated);
   };
 
+  const handleWoundGained = () => {
+    if (localCharacter.wounds.current < localCharacter.wounds.max) {
+      const updated = {
+        ...localCharacter,
+        wounds: {
+          ...localCharacter.wounds,
+          current: localCharacter.wounds.current + 1,
+        },
+      };
+      setLocalCharacter(updated);
+      onUpdate(updated);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       {/* Character Name */}
@@ -204,6 +220,7 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
         onLogDamage={onLogDamage}
         onLogHealing={onLogHealing}
         onLogTempHP={onLogTempHP}
+        onWoundGained={handleWoundGained}
       />
 
       {/* Hit Dice Section */}
@@ -215,6 +232,14 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
         onCatchBreath={onCatchBreath}
         onMakeCamp={onMakeCamp}
         onSafeRest={onSafeRest}
+      />
+
+      {/* Wounds Section */}
+      <WoundsSection
+        character={localCharacter}
+        isOpen={uiState.collapsibleSections.wounds}
+        onToggle={(isOpen) => updateCollapsibleState('wounds', isOpen)}
+        onUpdate={updateCharacter}
       />
 
       {/* Initiative Section */}

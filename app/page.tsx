@@ -12,7 +12,7 @@ import { activityLogService } from "@/lib/services/activity-log-service";
 import { abilityService } from "@/lib/services/ability-service";
 import { settingsService, AppSettings } from "@/lib/services/settings-service";
 import { AppMenu } from "@/components/app-menu";
-import { createDefaultSkills, createDefaultInventory, createDefaultHitPoints, createDefaultInitiative, createDefaultActionTracker, createDefaultAbilities, createDefaultHitDice } from "@/lib/utils/character-defaults";
+import { createDefaultSkills, createDefaultInventory, createDefaultHitPoints, createDefaultInitiative, createDefaultActionTracker, createDefaultAbilities, createDefaultHitDice, createDefaultWounds } from "@/lib/utils/character-defaults";
 
 const sampleCharacter: Character = {
   id: "default-character",
@@ -26,6 +26,7 @@ const sampleCharacter: Character = {
   },
   hitPoints: createDefaultHitPoints(),
   hitDice: createDefaultHitDice(1),
+  wounds: createDefaultWounds(),
   initiative: createDefaultInitiative(),
   actionTracker: createDefaultActionTracker(),
   inEncounter: false,
@@ -66,6 +67,7 @@ export default function Home() {
             attributes: sampleCharacter.attributes,
             hitPoints: sampleCharacter.hitPoints,
             hitDice: sampleCharacter.hitDice,
+            wounds: sampleCharacter.wounds,
             initiative: sampleCharacter.initiative,
             actionTracker: sampleCharacter.actionTracker,
             inEncounter: sampleCharacter.inEncounter,

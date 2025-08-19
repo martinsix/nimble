@@ -19,9 +19,10 @@ interface HitPointsSectionProps {
   onLogDamage?: (amount: number, targetType: 'hp' | 'temp_hp') => void;
   onLogHealing?: (amount: number) => void;
   onLogTempHP?: (amount: number, previous?: number) => void;
+  onWoundGained?: () => void;
 }
 
-export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onToggle, onHpChange, onLogDamage, onLogHealing, onLogTempHP }: HitPointsSectionProps) {
+export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onToggle, onHpChange, onLogDamage, onLogHealing, onLogTempHP, onWoundGained }: HitPointsSectionProps) {
   const [damageAmount, setDamageAmount] = useState<string>("1");
   const [healAmount, setHealAmount] = useState<string>("1");
   const [tempHpAmount, setTempHpAmount] = useState<string>("1");
@@ -54,6 +55,11 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
     }
 
     onHpChange(newCurrent, maxHp, newTemporary);
+    
+    // Check if character reached 0 HP and gained a wound
+    if (currentHp > 0 && newCurrent === 0) {
+      onWoundGained?.();
+    }
     
     // Log the damage
     if (tempHpDamaged && remainingDamage === 0) {
