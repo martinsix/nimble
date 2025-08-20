@@ -7,6 +7,7 @@ import {
   getCharacterCreation, 
   getSettingsService 
 } from '@/lib/services/service-factory';
+import { useToast } from '@/lib/contexts/toast-context';
 
 export interface UseCharacterManagementReturn {
   character: Character | null;
@@ -36,6 +37,9 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
   const characterService = useMemo(() => getCharacterService(), []);
   const characterCreation = useMemo(() => getCharacterCreation(), []);
   const settingsService = useMemo(() => getSettingsService(), []);
+  
+  // Get toast notifications
+  const { showError, showSuccess } = useToast();
 
   // Initial data loading
   useEffect(() => {
@@ -79,6 +83,7 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
         }
       } catch (error) {
         console.error("Failed to load data:", error);
+        showError("Failed to load application", "Unable to load character data. Please try again or create a new character.");
         setShowCharacterSelection(true);
         setLoadError("Failed to load application data. Please try selecting or creating a character.");
       } finally {
@@ -87,7 +92,7 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
     };
 
     loadData();
-  }, [settingsService, characterStorage, characterCreation]);
+  }, [settingsService, characterStorage, characterCreation, showError]);
 
   // Subscribe to character updates from the service
   useEffect(() => {
@@ -202,6 +207,7 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
       setLoadError(null);
     } catch (error) {
       console.error("Failed to create character:", error);
+      showError("Failed to create character", "Unable to create the character. Please try again.");
       setLoadError("Failed to create character. Please try again.");
     }
   };

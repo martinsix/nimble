@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Character, AttributeName, SkillName, ActionTracker, CharacterConfiguration } from "@/lib/types/character";
 import { Inventory as InventoryType } from "@/lib/types/inventory";
 import { Abilities } from "@/lib/types/abilities";
@@ -23,7 +23,6 @@ import { ArmorSection } from "./sections/armor-section";
 import { AbilitySection } from "./sections/ability-section";
 import { InventorySection } from "./sections/inventory-section";
 import { CharacterConfigDialog } from "./character-config-dialog";
-import { getCharacterService } from "@/lib/services/service-factory";
 import { useCharacterActions } from "@/lib/contexts/character-actions-context";
 import { useUIState } from "@/lib/contexts/ui-state-context";
 
@@ -35,12 +34,10 @@ interface CharacterSheetProps {
 export function CharacterSheet({ character, mode }: CharacterSheetProps) {
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
 
-  // Get character service from factory
-  const characterService = useMemo(() => getCharacterService(), []);
-
   // Get context values
   const {
     onCharacterUpdate,
+    onUpdateCharacterConfiguration,
     onRollAttribute,
     onRollSave,
     onRollSkill,
@@ -132,7 +129,7 @@ export function CharacterSheet({ character, mode }: CharacterSheetProps) {
   };
 
   const handleConfigSave = async (config: CharacterConfiguration) => {
-    await characterService.updateCharacterConfiguration(config);
+    await onUpdateCharacterConfiguration(config);
   };
 
   return (

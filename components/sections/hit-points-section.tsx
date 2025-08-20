@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { Heart, Minus, Plus, ChevronDown, ChevronRight } from "lucide-react";
-
-import { getCharacterService } from "@/lib/services/service-factory";
+import { useCharacterActions } from "@/lib/contexts/character-actions-context";
 
 interface HitPointsSectionProps {
   currentHp: number;
@@ -23,11 +22,11 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
   const [healAmount, setHealAmount] = useState<string>("1");
   const [tempHpAmount, setTempHpAmount] = useState<string>("1");
 
-  // Get character service from factory
-  const characterService = useMemo(() => getCharacterService(), []);
+  // Get actions from context
+  const { onApplyDamage, onApplyHealing, onApplyTemporaryHP } = useCharacterActions();
 
   const applyDamage = async (amount: number, resetInput: boolean = false) => {
-    await characterService.applyDamage(amount);
+    await onApplyDamage(amount);
     
     if (resetInput) {
       setDamageAmount("1");
@@ -40,7 +39,7 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
   };
 
   const applyHealing = async (amount: number, resetInput: boolean = false) => {
-    await characterService.applyHealing(amount);
+    await onApplyHealing(amount);
     
     if (resetInput) {
       setHealAmount("1");
@@ -54,7 +53,7 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
 
   const handleTempHp = async () => {
     const tempAmount = parseInt(tempHpAmount) || 0;
-    await characterService.applyTemporaryHP(tempAmount);
+    await onApplyTemporaryHP(tempAmount);
     setTempHpAmount("1");
   };
 

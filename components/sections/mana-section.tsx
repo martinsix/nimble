@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { Sparkles, Minus, Plus, ChevronDown, ChevronRight } from "lucide-react";
-import { getCharacterService } from "@/lib/services/service-factory";
+import { useCharacterActions } from "@/lib/contexts/character-actions-context";
 
 interface ManaSectionProps {
   currentMana: number;
@@ -21,11 +21,13 @@ export function ManaSection({ currentMana, maxMana, manaAttribute, isOpen, onTog
   const [spendAmount, setSpendAmount] = useState<string>("1");
   const [restoreAmount, setRestoreAmount] = useState<string>("1");
 
-  // Get character service from factory
-  const characterService = useMemo(() => getCharacterService(), []);
+  // Get actions from context
+  const { onSpendMana, onRestoreMana } = useCharacterActions();
 
   const applyManaSpend = async (amount: number, resetInput: boolean = false) => {
-    await characterService.spendMana(amount);
+    if (onSpendMana) {
+      await onSpendMana(amount);
+    }
     
     if (resetInput) {
       setSpendAmount("1");
@@ -33,7 +35,9 @@ export function ManaSection({ currentMana, maxMana, manaAttribute, isOpen, onTog
   };
 
   const applyManaRestore = async (amount: number, resetInput: boolean = false) => {
-    await characterService.restoreMana(amount);
+    if (onRestoreMana) {
+      await onRestoreMana(amount);
+    }
     
     if (resetInput) {
       setRestoreAmount("1");
