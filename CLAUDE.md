@@ -27,14 +27,19 @@ Nimble Navigator: A comprehensive digital character sheet application for the Ni
 interface Character {
   id: string
   name: string
+  level: number
+  classId: string
+  subclassId?: string
   attributes: { strength, dexterity, intelligence, will }
   hitPoints: { current, max, temporary }
+  hitDice: { size, current, max }
   initiative: Skill
   actionTracker: { current, base, bonus }
   inEncounter: boolean
   skills: { [skillName]: Skill }
   inventory: Inventory
   abilities: Abilities
+  grantedFeatures: string[]
   timestamps: { createdAt, updatedAt }
 }
 ```
@@ -45,6 +50,7 @@ interface Character {
 - **ActivityLogService** tracks character actions and dice rolls
 - **AbilityService** handles ability usage, cooldowns, and roll calculations
 - **SettingsService** manages app settings and character selection
+- **ClassService** handles class definitions, subclass management, and feature progression
 - **Singleton pattern** for easy dependency injection and state management
 
 #### Storage & State
@@ -86,6 +92,8 @@ app/page.tsx (main orchestrator)
 
 1. **Character Management**
    - Editable name and attributes (-2 to 10 range)
+   - Class and subclass system with automatic feature progression
+   - Level-based character advancement with hit dice tracking
    - Auto-saving to local storage
    - Validation with Zod schemas
    - Hit points with current/max/temporary tracking
@@ -164,7 +172,14 @@ app/page.tsx (main orchestrator)
     - Global settings panel with mode selection
     - Character selector with creation and deletion
 
-13. **Advanced UI Features**
+13. **Class and Subclass System**
+    - Four core classes: Fighter, Wizard, Cleric, Rogue
+    - Subclass selection at appropriate levels with automatic feature grants
+    - Level-based feature progression with validation
+    - Automatic feature synchronization when gaining levels or choosing subclasses
+    - Feature tracking with unique identifiers and grant history
+
+14. **Advanced UI Features**
     - Collapsible sections with persistent preferences
     - Mobile-responsive design with adaptive grids
     - Consistent visual feedback and state indicators
@@ -207,8 +222,12 @@ app/page.tsx (main orchestrator)
 lib/
 ├── config/          # Game configuration
 │   └── game-config.ts
+├── data/            # Game data definitions
+│   ├── classes/     # Class definitions (fighter, wizard, cleric, rogue)
+│   └── subclasses/  # Subclass definitions with parent class associations
 ├── types/           # TypeScript interfaces
 │   ├── character.ts
+│   ├── class.ts
 │   ├── inventory.ts
 │   ├── abilities.ts
 │   ├── actions.ts
@@ -217,6 +236,8 @@ lib/
 │   └── character.ts
 ├── services/        # Business logic layer
 │   ├── character-storage-service.ts
+│   ├── character-service.ts
+│   ├── class-service.ts
 │   ├── dice-service-clean.ts
 │   ├── activity-log-service.ts
 │   ├── ability-service.ts

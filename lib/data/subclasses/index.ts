@@ -8,17 +8,15 @@ export { wizardEvocation } from './wizard-evocation';
 // Rogue subclasses
 export { rogueAssassin } from './rogue-assassin';
 
-// Exotic subclasses
-export { voidwalkerNihilist } from './voidwalker-nihilist';
-export { memehazardVirulent } from './memehazard-virulent';
+// Cleric subclasses
+export { clericLife } from './cleric-life';
 
 // Import all subclass definitions for the main subclasses object
 import { fighterChampion } from './fighter-champion';
 import { fighterBattleMaster } from './fighter-battlemaster';
 import { wizardEvocation } from './wizard-evocation';
 import { rogueAssassin } from './rogue-assassin';
-import { voidwalkerNihilist } from './voidwalker-nihilist';
-import { memehazardVirulent } from './memehazard-virulent';
+import { clericLife } from './cleric-life';
 
 import { SubclassDefinition } from '../../types/class';
 
@@ -28,8 +26,7 @@ export const subclassDefinitions: Record<string, SubclassDefinition> = {
   'fighter-battlemaster': fighterBattleMaster,
   'wizard-evocation': wizardEvocation,
   'rogue-assassin': rogueAssassin,
-  'voidwalker-nihilist': voidwalkerNihilist,
-  'memehazard-virulent': memehazardVirulent
+  'cleric-life': clericLife
 };
 
 // Helper function to get a subclass definition by ID

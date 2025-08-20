@@ -12,6 +12,9 @@ A comprehensive digital character sheet application for the Nimble RPG system. N
 ### Core Character Management
 - **Multiple Characters**: Create, switch between, and manage multiple characters
 - **App Modes**: Basic mode (simplified) or Full mode (complete character sheet)
+- **Class System**: Four core classes (Fighter, Wizard, Cleric, Rogue) with level progression
+- **Subclass System**: Specialized subclasses unlock at appropriate levels with unique features
+- **Level Progression**: Automatic feature grants and hit dice advancement
 - **Attributes**: Strength, Dexterity, Intelligence, Will (range: -2 to 10)
 - **Hit Points**: Current/Max HP with temporary HP support (D&D 5e rules)
 - **Action Tracker**: Combat action management with encounter tracking
@@ -39,6 +42,9 @@ A comprehensive digital character sheet application for the Nimble RPG system. N
 - **Dex Bonus Calculation**: Armor-aware dexterity bonus with visual indicators
 
 ### Advanced Features
+- **Class Progression**: Automatic feature grants based on class and level
+- **Subclass Selection**: Choose specializations that provide unique abilities
+- **Feature Tracking**: Complete history of granted features with validation
 - **Temporary HP**: D&D 5e compliant damage absorption
 - **Encounter Management**: Turn-based mechanics with action tracking
 - **Settings Panel**: Global app configuration and mode switching
@@ -89,10 +95,13 @@ npm start
 
 ### Character Setup
 1. **Name**: Click the character name to edit
-2. **Attributes**: Use the number inputs to set attribute values (-2 to 10)
-3. **Hit Points**: Set max HP and track current/temporary HP
-4. **Skills**: Adjust skill modifiers (0-20) for each of the 10 skills
-5. **Abilities**: Add custom abilities with usage frequencies and roll mechanics
+2. **Class Selection**: Choose from Fighter, Wizard, Cleric, or Rogue
+3. **Level Progression**: Set character level to automatically grant class features
+4. **Subclass Choice**: Select subclass specializations when they become available
+5. **Attributes**: Use the number inputs to set attribute values (-2 to 10)
+6. **Hit Points**: Set max HP and track current/temporary HP with hit dice
+7. **Skills**: Adjust skill modifiers (0-20) for each of the 10 skills
+8. **Abilities**: Add custom abilities with usage frequencies and roll mechanics
 
 ### Combat & Rolling
 1. **Advantage/Disadvantage**: Use the global toggle at the top
@@ -148,6 +157,7 @@ nimble-navigator/
 │   └── character-selector.tsx
 ├── lib/                   # Core application logic
 │   ├── config/           # Game configuration
+│   ├── data/             # Game data (classes, subclasses)
 │   ├── types/            # TypeScript interfaces
 │   ├── schemas/          # Zod validation schemas
 │   ├── services/         # Business logic services
