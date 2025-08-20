@@ -16,7 +16,7 @@ import { ToastProvider } from "@/lib/contexts/toast-context";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { getCharacterService } from "@/lib/services/service-factory";
 
-export default function Home() {
+function HomeContent() {
   // Character and settings management
   const {
     character,
@@ -142,31 +142,37 @@ export default function Home() {
   };
 
   return (
+    <CharacterActionsProvider value={characterActionsValue}>
+      <UIStateProvider>
+        <main className="min-h-screen bg-background">
+          <div className="container mx-auto py-8 space-y-8">
+            <div className="flex justify-between items-center">
+              <h1 className="text-3xl font-bold">Nimble Navigator</h1>
+              <AppMenu 
+                settings={settings}
+                characters={characters}
+                onSettingsChange={handleSettingsChange}
+                onCharacterSwitch={handleCharacterSwitch}
+                onCharacterDelete={handleCharacterDelete}
+              />
+            </div>
+            <CharacterSheet 
+              character={character}
+              mode={settings.mode}
+            />
+            <ActivityLog entries={logEntries} onClearRolls={handleClearRolls} />
+          </div>
+        </main>
+      </UIStateProvider>
+    </CharacterActionsProvider>
+  );
+}
+
+export default function Home() {
+  return (
     <ErrorBoundary>
       <ToastProvider>
-        <CharacterActionsProvider value={characterActionsValue}>
-          <UIStateProvider>
-            <main className="min-h-screen bg-background">
-              <div className="container mx-auto py-8 space-y-8">
-                <div className="flex justify-between items-center">
-                  <h1 className="text-3xl font-bold">Nimble Navigator</h1>
-                  <AppMenu 
-                    settings={settings}
-                    characters={characters}
-                    onSettingsChange={handleSettingsChange}
-                    onCharacterSwitch={handleCharacterSwitch}
-                    onCharacterDelete={handleCharacterDelete}
-                  />
-                </div>
-                <CharacterSheet 
-                  character={character}
-                  mode={settings.mode}
-                />
-                <ActivityLog entries={logEntries} onClearRolls={handleClearRolls} />
-              </div>
-            </main>
-          </UIStateProvider>
-        </CharacterActionsProvider>
+        <HomeContent />
       </ToastProvider>
     </ErrorBoundary>
   );
