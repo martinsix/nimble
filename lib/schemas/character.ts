@@ -117,9 +117,32 @@ export const abilitiesSchema = z.object({
   abilities: z.array(abilitySchema),
 });
 
+const armorProficiencySchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('cloth') }),
+  z.object({ type: z.literal('leather') }),
+  z.object({ type: z.literal('mail') }),
+  z.object({ type: z.literal('plate') }),
+  z.object({ type: z.literal('shields') }),
+  z.object({ type: z.literal('freeform'), name: z.string().min(1) }),
+]);
+
+const weaponProficiencySchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('strength_weapons') }),
+  z.object({ type: z.literal('dexterity_weapons') }),
+  z.object({ type: z.literal('freeform'), name: z.string().min(1) }),
+]);
+
+export const proficienciesSchema = z.object({
+  armor: z.array(armorProficiencySchema),
+  weapons: z.array(weaponProficiencySchema),
+});
+
 export const createCharacterSchema = z.object({
   name: z.string().min(1).max(50),
   level: z.number().min(1).max(20),
+  classId: z.string().min(1),
+  grantedFeatures: z.array(z.string()),
+  proficiencies: proficienciesSchema,
   attributes: attributeSchema,
   hitPoints: hitPointsSchema,
   hitDice: hitDiceSchema,
@@ -138,6 +161,9 @@ export const characterSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1).max(50),
   level: z.number().min(1).max(20),
+  classId: z.string().min(1),
+  grantedFeatures: z.array(z.string()),
+  proficiencies: proficienciesSchema,
   attributes: attributeSchema,
   hitPoints: hitPointsSchema,
   hitDice: hitDiceSchema,

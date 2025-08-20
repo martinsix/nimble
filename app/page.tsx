@@ -8,43 +8,23 @@ import { LogEntry, DiceRollEntry, AbilityUsageEntry } from "@/lib/types/log-entr
 import { Abilities } from "@/lib/types/abilities";
 import { characterStorageService } from "@/lib/services/character-storage-service";
 import { characterService } from "@/lib/services/character-service";
+import { characterCreationService } from "@/lib/services/character-creation-service";
 import { diceService } from "@/lib/services/dice-service";
 import { activityLogService } from "@/lib/services/activity-log-service";
 import { abilityService } from "@/lib/services/ability-service";
 import { settingsService, AppSettings } from "@/lib/services/settings-service";
 import { AppMenu } from "@/components/app-menu";
-import { createDefaultSkills, createDefaultInventory, createDefaultHitPoints, createDefaultInitiative, createDefaultActionTracker, createDefaultAbilities, createDefaultHitDice, createDefaultWounds, createDefaultCharacterConfiguration } from "@/lib/utils/character-defaults";
-
-const sampleCharacter: Character = {
-  id: "default-character",
-  name: "Sample Character",
-  level: 1,
-  attributes: {
-    strength: 2,
-    dexterity: 1,
-    intelligence: 3,
-    will: 0,
-  },
-  hitPoints: createDefaultHitPoints(),
-  hitDice: createDefaultHitDice(1),
-  wounds: createDefaultWounds(),
-  config: createDefaultCharacterConfiguration(),
-  initiative: createDefaultInitiative(),
-  actionTracker: createDefaultActionTracker(),
-  inEncounter: false,
-  skills: createDefaultSkills(),
-  inventory: createDefaultInventory(2), // Pass the strength value
-  abilities: createDefaultAbilities(),
-  createdAt: new Date(),
-  updatedAt: new Date(),
-};
+import { CharacterSelector } from "@/components/character-selector";
+// Sample character will be created using the factory method
 
 export default function Home() {
-  const [character, setCharacter] = useState<Character>(sampleCharacter);
+  const [character, setCharacter] = useState<Character | null>(null);
   const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
   const [settings, setSettings] = useState<AppSettings>({ mode: 'full', activeCharacterId: 'default-character' });
   const [characters, setCharacters] = useState<Character[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [showCharacterSelection, setShowCharacterSelection] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -58,31 +38,32 @@ export default function Home() {
         setCharacters(characterList);
 
         // Load active character through CharacterService
-        let activeCharacter = await characterService.loadCharacter(loadedSettings.activeCharacterId);
+        let activeCharacter = await characterCreationService.initializeCharacter(loadedSettings.activeCharacterId);
         if (!activeCharacter) {
-          // Create default character if none exists
-          const newCharacter = await characterStorageService.createCharacter({
-            name: sampleCharacter.name,
-            level: sampleCharacter.level,
-            attributes: sampleCharacter.attributes,
-            hitPoints: sampleCharacter.hitPoints,
-            hitDice: sampleCharacter.hitDice,
-            wounds: sampleCharacter.wounds,
-            config: sampleCharacter.config,
-            initiative: sampleCharacter.initiative,
-            actionTracker: sampleCharacter.actionTracker,
-            inEncounter: sampleCharacter.inEncounter,
-            skills: sampleCharacter.skills,
-            inventory: sampleCharacter.inventory,
-            abilities: sampleCharacter.abilities,
-          }, loadedSettings.activeCharacterId);
-          
-          // Load the new character through the service
-          activeCharacter = await characterService.loadCharacter(newCharacter.id);
-          
-          // Character list will be updated automatically when we reload
-          const updatedCharacterList = await characterStorageService.getAllCharacters();
-          setCharacters(updatedCharacterList);
+          // If no characters exist, show character selection
+          if (characterList.length === 0) {
+            setShowCharacterSelection(true);
+            setLoadError("No characters found. Please create your first character.");
+          } else {
+            // Use the first available character instead of creating a default
+            try {
+              const firstCharacter = characterList[0];
+              activeCharacter = await characterCreationService.initializeCharacter(firstCharacter.id);
+              
+              if (activeCharacter) {
+                // Update settings to reflect the new active character
+                const newSettings = { ...loadedSettings, activeCharacterId: firstCharacter.id };
+                await settingsService.saveSettings(newSettings);
+                setSettings(newSettings);
+              } else {
+                throw new Error("Failed to initialize first available character");
+              }
+            } catch (initError) {
+              console.error("Failed to initialize first character:", initError);
+              setShowCharacterSelection(true);
+              setLoadError("Failed to load character. Please select or create a character.");
+            }
+          }
         }
 
         // Load log entries
@@ -90,7 +71,8 @@ export default function Home() {
         setLogEntries(existingEntries);
       } catch (error) {
         console.error("Failed to load data:", error);
-        setCharacter(sampleCharacter);
+        setShowCharacterSelection(true);
+        setLoadError("Failed to load application data. Please try selecting or creating a character.");
       } finally {
         setIsLoaded(true);
       }
@@ -178,6 +160,7 @@ export default function Home() {
   };
 
   const handleRollSkill = async (skillName: SkillName, attributeValue: number, skillModifier: number, advantageLevel: number) => {
+    if (!character) return;
     try {
       const skill = character.skills[skillName];
       const totalModifier = attributeValue + skillModifier;
@@ -218,6 +201,7 @@ export default function Home() {
   };
 
   const handleRollInitiative = async (totalModifier: number, advantageLevel: number) => {
+    if (!character) return;
     try {
       // Roll initiative
       const rollResult = diceService.rollAttributeCheck(totalModifier, advantageLevel);
@@ -265,6 +249,7 @@ export default function Home() {
 
 
   const handleUpdateActions = async (actionTracker: ActionTracker) => {
+    if (!character) return;
     const updatedCharacter = { ...character, actionTracker };
     setCharacter(updatedCharacter);
     try {
@@ -275,6 +260,7 @@ export default function Home() {
   };
 
   const handleEndEncounter = async () => {
+    if (!character) return;
     // Reset both per-encounter and per-turn abilities when encounter ends
     let resetAbilities = abilityService.resetAbilities(character.abilities, 'per_encounter');
     resetAbilities = abilityService.resetAbilities(resetAbilities, 'per_turn');
@@ -298,6 +284,7 @@ export default function Home() {
   };
 
   const handleUpdateAbilities = async (abilities: Abilities) => {
+    if (!character) return;
     const updatedCharacter = { ...character, abilities };
     setCharacter(updatedCharacter);
     try {
@@ -308,6 +295,7 @@ export default function Home() {
   };
 
   const handleEndTurn = async (actionTracker: ActionTracker, abilities: Abilities) => {
+    if (!character) return;
     // Reset per-turn abilities using ability service
     const resetAbilities = abilityService.resetAbilities(abilities, 'per_turn');
     
@@ -329,6 +317,7 @@ export default function Home() {
   };
 
   const handleUseAbility = async (abilityId: string) => {
+    if (!character) return;
     try {
       const result = abilityService.useAbility(character.abilities, abilityId);
       
@@ -376,6 +365,7 @@ export default function Home() {
   };
 
   const handleCatchBreath = async () => {
+    if (!character) return;
     try {
       if (character.hitDice.current <= 0) {
         console.error("No hit dice available");
@@ -432,6 +422,7 @@ export default function Home() {
   };
 
   const handleMakeCamp = async () => {
+    if (!character) return;
     try {
       if (character.hitDice.current <= 0) {
         console.error("No hit dice available");
@@ -488,6 +479,7 @@ export default function Home() {
   };
 
   const handleSafeRest = async () => {
+    if (!character) return;
     try {
       // Reset all abilities (safe rest resets everything)
       let resetAbilities = abilityService.resetAbilities(character.abilities, 'per_turn');
@@ -587,9 +579,61 @@ export default function Home() {
       if (characterId === settings.activeCharacterId && updatedCharacterList.length > 0) {
         const newActiveCharacter = updatedCharacterList[0];
         await handleCharacterSwitch(newActiveCharacter.id);
+      } else if (updatedCharacterList.length === 0) {
+        // If no characters left, show character selection
+        setCharacter(null);
+        setShowCharacterSelection(true);
+        setLoadError("No characters remaining. Please create a new character.");
       }
     } catch (error) {
       console.error("Failed to delete character:", error);
+    }
+  };
+
+  const handleCharacterSelectionCreate = async (name: string, classId: string) => {
+    try {
+      const newCharacter = await characterCreationService.createSampleCharacter(name, classId);
+      
+      // Update character list
+      const updatedCharacters = await characterStorageService.getAllCharacters();
+      setCharacters(updatedCharacters);
+      
+      // Switch to the new character (it's already initialized)
+      setCharacter(newCharacter);
+      
+      // Update settings
+      const newSettings = { ...settings, activeCharacterId: newCharacter.id };
+      await settingsService.saveSettings(newSettings);
+      setSettings(newSettings);
+      
+      // Hide character selection
+      setShowCharacterSelection(false);
+      setLoadError(null);
+    } catch (error) {
+      console.error("Failed to create character:", error);
+      setLoadError("Failed to create character. Please try again.");
+    }
+  };
+
+  const handleCharacterSelectionSwitch = async (characterId: string) => {
+    try {
+      // Use the character creation service to properly initialize the character
+      const initializedCharacter = await characterCreationService.initializeCharacter(characterId);
+      if (!initializedCharacter) {
+        throw new Error("Failed to initialize character");
+      }
+      
+      // Update state and settings
+      setCharacter(initializedCharacter);
+      const newSettings = { ...settings, activeCharacterId: characterId };
+      await settingsService.saveSettings(newSettings);
+      setSettings(newSettings);
+      
+      setShowCharacterSelection(false);
+      setLoadError(null);
+    } catch (error) {
+      console.error("Failed to switch character:", error);
+      setLoadError("Failed to load selected character. Please try another.");
     }
   };
 
@@ -598,13 +642,19 @@ export default function Home() {
     const handleCreateCharacter = async (event: CustomEvent<string>) => {
       try {
         const characterName = event.detail;
-        const newCharacter = await characterStorageService.createCharacterWithDefaults(characterName);
+        // Use the new character creation service with default fighter class
+        const newCharacter = await characterCreationService.createSampleCharacter(characterName, 'fighter');
         
         const updatedCharacterList = await characterStorageService.getAllCharacters();
         setCharacters(updatedCharacterList);
         
-        // Switch to the new character
-        await handleCharacterSwitch(newCharacter.id);
+        // Switch to the new character (it's already initialized)
+        setCharacter(newCharacter);
+        
+        // Update settings
+        const newSettings = { ...settings, activeCharacterId: newCharacter.id };
+        await settingsService.saveSettings(newSettings);
+        setSettings(newSettings);
       } catch (error) {
         console.error("Failed to create character:", error);
       }
@@ -621,6 +671,32 @@ export default function Home() {
       <main className="min-h-screen bg-background flex items-center justify-center">
         <div>Loading character...</div>
       </main>
+    );
+  }
+
+  if (!isLoaded) {
+    return (
+      <main className="min-h-screen bg-background">
+        <div className="container mx-auto py-8">
+          <div className="flex justify-center items-center h-64">
+            <div className="text-lg">Loading...</div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (showCharacterSelection || !character) {
+    return (
+      <CharacterSelector
+        fullScreen={true}
+        characters={characters}
+        activeCharacterId={character?.id}
+        onCharacterSwitch={handleCharacterSelectionSwitch}
+        onCharacterDelete={handleCharacterDelete}
+        onCharacterCreate={handleCharacterSelectionCreate}
+        errorMessage={loadError || undefined}
+      />
     );
   }
 

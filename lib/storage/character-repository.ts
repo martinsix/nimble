@@ -1,5 +1,6 @@
 import { Character, CreateCharacterData } from '../types/character';
-import { createDefaultCharacterConfiguration } from '../utils/character-defaults';
+import { createDefaultCharacterConfiguration, createDefaultProficiencies } from '../utils/character-defaults';
+import { getClassDefinition } from '../data/classes';
 
 export interface ICharacterRepository {
   save(character: Character): Promise<void>;
@@ -38,13 +39,23 @@ export class LocalStorageCharacterRepository implements ICharacterRepository {
     
     try {
       const parsed = JSON.parse(stored);
-      return parsed.map((char: any) => ({
-        ...char,
-        createdAt: new Date(char.createdAt),
-        updatedAt: new Date(char.updatedAt),
-        // Migrate characters missing config field
-        config: char.config || createDefaultCharacterConfiguration(),
-      }));
+      return parsed.map((char: any) => {
+        const classId = char.classId || 'fighter'; // Default to fighter for existing characters
+        const classDefinition = getClassDefinition(classId);
+        
+        return {
+          ...char,
+          createdAt: new Date(char.createdAt),
+          updatedAt: new Date(char.updatedAt),
+          // Migrate characters missing config field
+          config: char.config || createDefaultCharacterConfiguration(),
+          // Migrate characters missing class fields
+          classId,
+          grantedFeatures: char.grantedFeatures || [], // Start with no granted features
+          // Migrate characters missing proficiencies field
+          proficiencies: char.proficiencies || createDefaultProficiencies(classDefinition || undefined),
+        };
+      });
     } catch {
       return [];
     }

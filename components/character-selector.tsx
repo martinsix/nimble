@@ -6,39 +6,53 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { Alert, AlertDescription } from "./ui/alert";
 import { Character } from "@/lib/types/character";
-import { Plus, Trash2, User, Clock } from "lucide-react";
+import { Plus, Trash2, User, Clock, AlertTriangle } from "lucide-react";
+import { getAllClasses } from "@/lib/data/classes";
 
 interface CharacterSelectorProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
   characters: Character[];
-  activeCharacterId: string;
+  activeCharacterId?: string;
   onCharacterSwitch: (characterId: string) => void;
   onCharacterDelete: (characterId: string) => void;
+  onCharacterCreate?: (name: string, classId: string) => void;
+  errorMessage?: string;
+  fullScreen?: boolean; // New prop to render as full screen instead of dialog
 }
 
 export function CharacterSelector({ 
-  isOpen, 
+  isOpen = true, 
   onClose, 
   characters,
   activeCharacterId,
   onCharacterSwitch,
-  onCharacterDelete
+  onCharacterDelete,
+  onCharacterCreate,
+  errorMessage,
+  fullScreen = false
 }: CharacterSelectorProps) {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newCharacterName, setNewCharacterName] = useState("");
+  const [selectedClass, setSelectedClass] = useState("fighter");
+  
+  const availableClasses = getAllClasses();
 
   const handleCreateCharacter = () => {
     if (newCharacterName.trim()) {
-      // This will be handled by the parent component
       const name = newCharacterName.trim();
       setNewCharacterName("");
       setShowCreateForm(false);
       
-      // Trigger creation through a custom event or callback
-      const event = new CustomEvent('createCharacter', { detail: name });
-      window.dispatchEvent(event);
+      if (onCharacterCreate) {
+        onCharacterCreate(name, selectedClass);
+      } else {
+        // Fallback to custom event for backward compatibility
+        const event = new CustomEvent('createCharacter', { detail: name });
+        window.dispatchEvent(event);
+      }
     }
   };
 
@@ -72,14 +86,16 @@ export function CharacterSelector({
     b.updatedAt.getTime() - a.updatedAt.getTime()
   );
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Characters</DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4">
+  const content = (
+    <div className="space-y-4">
+      {errorMessage && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            {errorMessage}
+          </AlertDescription>
+        </Alert>
+      )}
           {/* Create New Character Section */}
           {!showCreateForm ? (
             <Button 
@@ -110,6 +126,21 @@ export function CharacterSelector({
                     }}
                     autoFocus
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="character-class">Class</Label>
+                  <select 
+                    id="character-class"
+                    value={selectedClass} 
+                    onChange={(e) => setSelectedClass(e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                  >
+                    {availableClasses.map((cls) => (
+                      <option key={cls.id} value={cls.id}>
+                        {cls.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="flex gap-2">
                   <Button 
@@ -152,7 +183,7 @@ export function CharacterSelector({
                   onClick={() => {
                     if (character.id !== activeCharacterId) {
                       onCharacterSwitch(character.id);
-                      onClose();
+                      onClose?.();
                     }
                   }}
                 >
@@ -197,7 +228,32 @@ export function CharacterSelector({
               ))
             )}
           </div>
+    </div>
+  );
+
+  if (fullScreen) {
+    return (
+      <main className="min-h-screen bg-background">
+        <div className="container mx-auto py-8">
+          <div className="max-w-2xl mx-auto space-y-6">
+            <div className="text-center">
+              <h1 className="text-3xl font-bold mb-2">Nimble Navigator</h1>
+              <p className="text-muted-foreground">Select a character or create a new one</p>
+            </div>
+            {content}
+          </div>
         </div>
+      </main>
+    );
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Characters</DialogTitle>
+        </DialogHeader>
+        {content}
       </DialogContent>
     </Dialog>
   );

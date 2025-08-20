@@ -8,6 +8,8 @@ import { AbilityUsageEntry } from "@/lib/types/log-entries";
 import { AppMode } from "@/lib/services/settings-service";
 import { CharacterNameSection } from "./sections/character-name-section";
 import { AdvantageToggle } from "./advantage-toggle";
+import { ClassInfoSection } from "./sections/class-info-section";
+import { ClassFeaturesSection } from "./sections/class-features-section";
 import { HitPointsSection } from "./sections/hit-points-section";
 import { HitDiceSection } from "./sections/hit-dice-section";
 import { WoundsSection } from "./sections/wounds-section";
@@ -48,6 +50,8 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
   const [uiState, setUIState] = useState<UIState>({
     collapsibleSections: {
+      classInfo: true,
+      classFeatures: true,
       hitPoints: true,
       hitDice: true,
       wounds: true,
@@ -192,6 +196,20 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
       <AdvantageToggle 
         advantageLevel={uiState.advantageLevel} 
         onAdvantageChange={updateAdvantageLevel} 
+      />
+
+      {/* Class Info Section */}
+      <ClassInfoSection
+        character={localCharacter}
+        isOpen={uiState.collapsibleSections.classInfo}
+        onToggle={(isOpen) => updateCollapsibleState('classInfo', isOpen)}
+      />
+
+      {/* Class Features Section */}
+      <ClassFeaturesSection
+        character={localCharacter}
+        isOpen={uiState.collapsibleSections.classFeatures}
+        onToggle={(isOpen) => updateCollapsibleState('classFeatures', isOpen)}
       />
 
       {/* Hit Points Section */}

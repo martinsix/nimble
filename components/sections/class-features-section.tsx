@@ -1,0 +1,344 @@
+"use client";
+
+import { Character } from "@/lib/types/character";
+import { ClassFeature } from "@/lib/types/class";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "../ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
+import { Badge } from "../ui/badge";
+import { Sparkles, ChevronDown, ChevronRight, Star, Zap, TrendingUp } from "lucide-react";
+import { getAllClassFeaturesUpToLevel, getClassDefinition } from "@/lib/data/classes";
+
+interface ClassFeaturesSectionProps {
+  character: Character;
+  isOpen: boolean;
+  onToggle: (isOpen: boolean) => void;
+}
+
+export function ClassFeaturesSection({ character, isOpen, onToggle }: ClassFeaturesSectionProps) {
+  const classDefinition = getClassDefinition(character.classId);
+  
+  if (!classDefinition) {
+    return null;
+  }
+
+  // Get all features the character should have at their level
+  const availableFeatures = getAllClassFeaturesUpToLevel(character.classId, character.level);
+  
+  // Separate features by type for better organization
+  const abilities = availableFeatures.filter(f => f.type === 'ability');
+  const passiveFeatures = availableFeatures.filter(f => f.type === 'passive_feature');
+  const statBoosts = availableFeatures.filter(f => f.type === 'stat_boost');
+  const proficiencies = availableFeatures.filter(f => f.type === 'proficiency');
+  const spellAccess = availableFeatures.filter(f => f.type === 'spell_access');
+  const resources = availableFeatures.filter(f => f.type === 'resource');
+
+  const getFeatureIcon = (type: ClassFeature['type']) => {
+    switch (type) {
+      case 'ability':
+        return <Zap className="w-4 h-4" />;
+      case 'passive_feature':
+        return <Star className="w-4 h-4" />;
+      case 'stat_boost':
+        return <TrendingUp className="w-4 h-4" />;
+      case 'proficiency':
+        return <Star className="w-4 h-4" />;
+      case 'spell_access':
+        return <Sparkles className="w-4 h-4" />;
+      case 'resource':
+        return <Zap className="w-4 h-4" />;
+      default:
+        return <Sparkles className="w-4 h-4" />;
+    }
+  };
+
+  const getFeatureTypeColor = (type: ClassFeature['type']) => {
+    switch (type) {
+      case 'ability':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'passive_feature':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'stat_boost':
+        return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'proficiency':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'spell_access':
+        return 'bg-indigo-100 text-indigo-800 border-indigo-200';
+      case 'resource':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const formatFeatureType = (type: ClassFeature['type']) => {
+    switch (type) {
+      case 'ability':
+        return 'Active Ability';
+      case 'passive_feature':
+        return 'Passive Feature';
+      case 'stat_boost':
+        return 'Stat Boost';
+      case 'proficiency':
+        return 'Proficiency';
+      case 'spell_access':
+        return 'Spell Access';
+      case 'resource':
+        return 'Resource';
+      default:
+        return 'Feature';
+    }
+  };
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={onToggle}>
+      <CollapsibleTrigger asChild>
+        <Button variant="ghost" className="w-full justify-between p-4 h-auto">
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-yellow-500" />
+            Class Features
+          </h2>
+          {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <Card className="w-full">
+          <CardContent className="space-y-4 pt-6">
+            {availableFeatures.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8">
+                No class features unlocked yet. Level up to gain new abilities!
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Active Abilities */}
+                {abilities.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-blue-600 flex items-center gap-2">
+                      <Zap className="w-5 h-5" />
+                      Active Abilities ({abilities.length})
+                    </h3>
+                    <div className="space-y-3">
+                      {abilities.map((feature, index) => (
+                        <div key={index} className="border rounded-lg p-4 space-y-2">
+                          <div className="flex items-start justify-between">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-semibold">{feature.name}</h4>
+                                <Badge variant="outline" className={getFeatureTypeColor(feature.type)}>
+                                  Level {feature.level}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                {feature.description}
+                              </p>
+                            </div>
+                            {getFeatureIcon(feature.type)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Passive Features */}
+                {passiveFeatures.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-green-600 flex items-center gap-2">
+                      <Star className="w-5 h-5" />
+                      Passive Features ({passiveFeatures.length})
+                    </h3>
+                    <div className="space-y-3">
+                      {passiveFeatures.map((feature, index) => (
+                        <div key={index} className="border rounded-lg p-4 space-y-2">
+                          <div className="flex items-start justify-between">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-semibold">{feature.name}</h4>
+                                <Badge variant="outline" className={getFeatureTypeColor(feature.type)}>
+                                  Level {feature.level}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                {feature.description}
+                              </p>
+                            </div>
+                            {getFeatureIcon(feature.type)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Stat Boosts */}
+                {statBoosts.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-purple-600 flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5" />
+                      Stat Improvements ({statBoosts.length})
+                    </h3>
+                    <div className="space-y-3">
+                      {statBoosts.map((feature, index) => (
+                        <div key={index} className="border rounded-lg p-4 space-y-2">
+                          <div className="flex items-start justify-between">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-semibold">{feature.name}</h4>
+                                <Badge variant="outline" className={getFeatureTypeColor(feature.type)}>
+                                  Level {feature.level}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                {feature.description}
+                              </p>
+                              {feature.type === 'stat_boost' && feature.statBoosts && (
+                                <div className="flex gap-2 mt-2">
+                                  {feature.statBoosts.map((boost, boostIndex) => (
+                                    <Badge key={boostIndex} variant="secondary" className="text-xs">
+                                      +{boost.amount} {boost.attribute}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            {getFeatureIcon(feature.type)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Proficiencies */}
+                {proficiencies.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-orange-600 flex items-center gap-2">
+                      <Star className="w-5 h-5" />
+                      Proficiencies ({proficiencies.length})
+                    </h3>
+                    <div className="space-y-3">
+                      {proficiencies.map((feature, index) => (
+                        <div key={index} className="border rounded-lg p-4 space-y-2">
+                          <div className="flex items-start justify-between">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-semibold">{feature.name}</h4>
+                                <Badge variant="outline" className={getFeatureTypeColor(feature.type)}>
+                                  Level {feature.level}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                {feature.description}
+                              </p>
+                              {feature.type === 'proficiency' && feature.proficiencies && (
+                                <div className="flex gap-2 mt-2">
+                                  {feature.proficiencies.map((prof, profIndex) => (
+                                    <Badge key={profIndex} variant="secondary" className="text-xs">
+                                      {prof.name} ({prof.type})
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            {getFeatureIcon(feature.type)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Spell Access */}
+                {spellAccess.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-indigo-600 flex items-center gap-2">
+                      <Sparkles className="w-5 h-5" />
+                      Spell Access ({spellAccess.length})
+                    </h3>
+                    <div className="space-y-3">
+                      {spellAccess.map((feature, index) => (
+                        <div key={index} className="border rounded-lg p-4 space-y-2">
+                          <div className="flex items-start justify-between">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-semibold">{feature.name}</h4>
+                                <Badge variant="outline" className={getFeatureTypeColor(feature.type)}>
+                                  Level {feature.level}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                {feature.description}
+                              </p>
+                              {feature.type === 'spell_access' && feature.spellAccess && (
+                                <div className="flex gap-2 mt-2">
+                                  <Badge variant="secondary" className="text-xs">
+                                    Level {feature.spellAccess.spellLevel} Spells
+                                  </Badge>
+                                  {feature.spellAccess.spellsKnown && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      {feature.spellAccess.spellsKnown} spells known
+                                    </Badge>
+                                  )}
+                                  {feature.spellAccess.cantrips && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      {feature.spellAccess.cantrips} cantrips
+                                    </Badge>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            {getFeatureIcon(feature.type)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Resources */}
+                {resources.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-yellow-600 flex items-center gap-2">
+                      <Zap className="w-5 h-5" />
+                      Resources ({resources.length})
+                    </h3>
+                    <div className="space-y-3">
+                      {resources.map((feature, index) => (
+                        <div key={index} className="border rounded-lg p-4 space-y-2">
+                          <div className="flex items-start justify-between">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-semibold">{feature.name}</h4>
+                                <Badge variant="outline" className={getFeatureTypeColor(feature.type)}>
+                                  Level {feature.level}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                {feature.description}
+                              </p>
+                              {feature.type === 'resource' && feature.resource && (
+                                <div className="flex gap-2 mt-2">
+                                  <Badge variant="secondary" className="text-xs">
+                                    {feature.resource.resourceName}: {feature.resource.amount}
+                                  </Badge>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {feature.resource.rechargeType.replace('_', ' ')}
+                                  </Badge>
+                                </div>
+                              )}
+                            </div>
+                            {getFeatureIcon(feature.type)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}

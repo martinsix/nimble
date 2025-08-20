@@ -8,6 +8,7 @@ export interface Skill {
 
 import { Inventory } from './inventory';
 import { Abilities } from './abilities';
+import { ArmorProficiency, WeaponProficiency } from './class';
 
 export interface ActionTracker {
   current: number; // Currently available actions
@@ -38,6 +39,11 @@ export interface Mana {
   max: number; // Maximum mana (3 * mana attribute + level)
 }
 
+export interface Proficiencies {
+  armor: ArmorProficiency[]; // Armor types character is proficient with
+  weapons: WeaponProficiency[]; // Weapon categories character is proficient with
+}
+
 export interface CharacterConfiguration {
   maxWounds: number; // Maximum wounds before death (default 6)
   maxHP: number; // Maximum hit points (default 10)
@@ -49,6 +55,9 @@ export interface Character {
   id: string;
   name: string;
   level: number; // Character level (starting at 1)
+  classId: string; // Character's class (e.g., 'fighter', 'wizard')
+  grantedFeatures: string[]; // IDs of class features already granted to this character
+  proficiencies: Proficiencies; // Armor and weapon proficiencies
   attributes: {
     strength: number;
     dexterity: number;
@@ -88,6 +97,9 @@ export interface Character {
 export interface CreateCharacterData {
   name: string;
   level: number;
+  classId: string;
+  grantedFeatures: string[];
+  proficiencies: Proficiencies;
   attributes: {
     strength: number;
     dexterity: number;

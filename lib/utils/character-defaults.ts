@@ -1,6 +1,7 @@
-import { Skill, AttributeName, HitDice, Wounds, CharacterConfiguration, Mana } from '../types/character';
+import { Skill, AttributeName, HitDice, Wounds, CharacterConfiguration, Mana, Proficiencies, HitDieSize } from '../types/character';
 import { Inventory } from '../types/inventory';
 import { Abilities } from '../types/abilities';
+import { ClassDefinition } from '../types/class';
 
 export const createDefaultSkills = () => {
   const defaultSkills = {
@@ -45,10 +46,10 @@ export const createDefaultInventory = (strength: number = 0): Inventory => {
   };
 };
 
-export const createDefaultHitPoints = () => {
+export const createDefaultHitPoints = (startingHP: number = 10) => {
   return {
-    current: 10,
-    max: 10,
+    current: startingHP,
+    max: startingHP,
     temporary: 0,
   };
 };
@@ -69,9 +70,9 @@ export const createDefaultActionTracker = () => {
   };
 };
 
-export const createDefaultHitDice = (level: number = 1): HitDice => {
+export const createDefaultHitDice = (level: number = 1, hitDieSize: HitDieSize = 8): HitDice => {
   return {
-    size: 8, // Default to d8 hit dice
+    size: hitDieSize,
     current: level,
     max: level,
   };
@@ -101,6 +102,13 @@ export const createDefaultMana = (attribute: number, level: number): Mana => {
   return {
     current: maxMana, // Start with full mana
     max: maxMana, // 3 * mana attribute + level
+  };
+};
+
+export const createDefaultProficiencies = (classDefinition?: ClassDefinition): Proficiencies => {
+  return {
+    armor: classDefinition?.armorProficiencies || [],
+    weapons: classDefinition?.weaponProficiencies || [],
   };
 };
 

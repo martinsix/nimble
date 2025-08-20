@@ -1,5 +1,7 @@
 export interface UIState {
   collapsibleSections: {
+    classInfo: boolean;
+    classFeatures: boolean;
     hitPoints: boolean;
     hitDice: boolean;
     wounds: boolean;
@@ -39,6 +41,8 @@ export class UIStateService {
   private getDefaultUIState(): UIState {
     return {
       collapsibleSections: {
+        classInfo: true,
+        classFeatures: true,
         hitPoints: true,
         hitDice: true,
         wounds: true,
