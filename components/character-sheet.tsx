@@ -33,7 +33,6 @@ interface CharacterSheetProps {
 }
 
 export function CharacterSheet({ character, mode }: CharacterSheetProps) {
-  const [localCharacter, setLocalCharacter] = useState(character);
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
 
   // Get character service from factory
@@ -59,31 +58,24 @@ export function CharacterSheet({ character, mode }: CharacterSheetProps) {
 
   const { uiState, updateCollapsibleState, updateAdvantageLevel } = useUIState();
 
-  useEffect(() => {
-    setLocalCharacter(character);
-  }, [character]);
-
 
   const updateName = (name: string) => {
-    const updated = { ...localCharacter, name };
-    setLocalCharacter(updated);
+    const updated = { ...character, name };
     onCharacterUpdate(updated);
   };
 
   const updateCharacter = (updated: Character) => {
-    setLocalCharacter(updated);
     onCharacterUpdate(updated);
   };
 
   const updateAttribute = (attributeName: AttributeName, value: number) => {
     const updated = {
-      ...localCharacter,
+      ...character,
       attributes: {
-        ...localCharacter.attributes,
+        ...character.attributes,
         [attributeName]: value,
       },
     };
-    setLocalCharacter(updated);
     onCharacterUpdate(updated);
   };
 
@@ -96,16 +88,15 @@ export function CharacterSheet({ character, mode }: CharacterSheetProps) {
 
   const updateSkill = (skillName: SkillName, modifier: number) => {
     const updated = {
-      ...localCharacter,
+      ...character,
       skills: {
-        ...localCharacter.skills,
+        ...character.skills,
         [skillName]: {
-          ...localCharacter.skills[skillName],
+          ...character.skills[skillName],
           modifier,
         },
       },
     };
-    setLocalCharacter(updated);
     onCharacterUpdate(updated);
   };
 
@@ -118,23 +109,21 @@ export function CharacterSheet({ character, mode }: CharacterSheetProps) {
 
   const updateInventory = (inventory: InventoryType) => {
     const updated = {
-      ...localCharacter,
+      ...character,
       inventory,
     };
-    setLocalCharacter(updated);
     onCharacterUpdate(updated);
   };
 
 
   const updateInitiative = (modifier: number) => {
     const updated = {
-      ...localCharacter,
+      ...character,
       initiative: {
-        ...localCharacter.initiative,
+        ...character.initiative,
         modifier,
       },
     };
-    setLocalCharacter(updated);
     onCharacterUpdate(updated);
   };
 
@@ -150,7 +139,7 @@ export function CharacterSheet({ character, mode }: CharacterSheetProps) {
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       {/* Character Name */}
       <CharacterNameSection 
-        name={localCharacter.name}
+        name={character.name}
         onNameChange={updateName}
         onOpenConfig={handleOpenConfig}
       />
@@ -163,30 +152,30 @@ export function CharacterSheet({ character, mode }: CharacterSheetProps) {
 
       {/* Class Info Section */}
       <ClassInfoSection
-        character={localCharacter}
+        character={character}
         isOpen={uiState.collapsibleSections.classInfo}
         onToggle={(isOpen) => updateCollapsibleState('classInfo', isOpen)}
       />
 
       {/* Class Features Section */}
       <ClassFeaturesSection
-        character={localCharacter}
+        character={character}
         isOpen={uiState.collapsibleSections.classFeatures}
         onToggle={(isOpen) => updateCollapsibleState('classFeatures', isOpen)}
       />
 
       {/* Hit Points Section */}
       <HitPointsSection 
-        currentHp={localCharacter.hitPoints.current}
-        maxHp={localCharacter.hitPoints.max}
-        temporaryHp={localCharacter.hitPoints.temporary}
+        currentHp={character.hitPoints.current}
+        maxHp={character.hitPoints.max}
+        temporaryHp={character.hitPoints.temporary}
         isOpen={uiState.collapsibleSections.hitPoints}
         onToggle={(isOpen) => updateCollapsibleState('hitPoints', isOpen)}
       />
 
       {/* Hit Dice Section */}
       <HitDiceSection
-        character={localCharacter}
+        character={character}
         isOpen={uiState.collapsibleSections.hitDice}
         onToggle={(isOpen) => updateCollapsibleState('hitDice', isOpen)}
         onUpdate={updateCharacter}
@@ -197,18 +186,18 @@ export function CharacterSheet({ character, mode }: CharacterSheetProps) {
 
       {/* Wounds Section */}
       <WoundsSection
-        character={localCharacter}
+        character={character}
         isOpen={uiState.collapsibleSections.wounds}
         onToggle={(isOpen) => updateCollapsibleState('wounds', isOpen)}
         onUpdate={updateCharacter}
       />
 
       {/* Mana Section - Only show if mana is enabled */}
-      {localCharacter.config?.mana?.enabled && localCharacter.mana && (
+      {character.config?.mana?.enabled && character.mana && (
         <ManaSection
-          currentMana={localCharacter.mana.current}
-          maxMana={localCharacter.mana.max}
-          manaAttribute={localCharacter.config.mana.attribute}
+          currentMana={character.mana.current}
+          maxMana={character.mana.max}
+          manaAttribute={character.config.mana.attribute}
           isOpen={uiState.collapsibleSections.mana}
           onToggle={(isOpen) => updateCollapsibleState('mana', isOpen)}
         />
@@ -216,8 +205,8 @@ export function CharacterSheet({ character, mode }: CharacterSheetProps) {
 
       {/* Initiative Section */}
       <InitiativeSection 
-        initiative={localCharacter.initiative}
-        dexterityValue={localCharacter.attributes.dexterity}
+        initiative={character.initiative}
+        dexterityValue={character.attributes.dexterity}
         isOpen={uiState.collapsibleSections.initiative}
         inEncounter={character.inEncounter}
         onToggle={(isOpen) => updateCollapsibleState('initiative', isOpen)}
@@ -242,7 +231,7 @@ export function CharacterSheet({ character, mode }: CharacterSheetProps) {
 
       {/* Attributes Section */}
       <AttributesSection 
-        character={localCharacter}
+        character={character}
         isOpen={uiState.collapsibleSections.attributes}
         onToggle={(isOpen) => updateCollapsibleState('attributes', isOpen)}
         onAttributeChange={handleAttributeChange}
@@ -253,7 +242,7 @@ export function CharacterSheet({ character, mode }: CharacterSheetProps) {
 
       {/* Skills Section */}
       <SkillsSection 
-        character={localCharacter}
+        character={character}
         isOpen={uiState.collapsibleSections.skills}
         onToggle={(isOpen) => updateCollapsibleState('skills', isOpen)}
         onSkillChange={handleSkillChange}
@@ -266,14 +255,14 @@ export function CharacterSheet({ character, mode }: CharacterSheetProps) {
         <>
           {/* Armor Section */}
           <ArmorSection 
-            character={localCharacter}
+            character={character}
             isOpen={uiState.collapsibleSections.armor}
             onToggle={(isOpen: boolean) => updateCollapsibleState('armor', isOpen)}
           />
 
           {/* Actions Section */}
           <ActionsSection 
-            character={localCharacter}
+            character={character}
             isOpen={uiState.collapsibleSections.actions}
             onToggle={(isOpen) => updateCollapsibleState('actions', isOpen)}
             onAttack={onAttack}
@@ -293,8 +282,8 @@ export function CharacterSheet({ character, mode }: CharacterSheetProps) {
 
           {/* Inventory Section */}
           <InventorySection 
-            inventory={localCharacter.inventory}
-            characterDexterity={localCharacter.attributes.dexterity}
+            inventory={character.inventory}
+            characterDexterity={character.attributes.dexterity}
             isOpen={uiState.collapsibleSections.inventory}
             onToggle={(isOpen) => updateCollapsibleState('inventory', isOpen)}
             onUpdateInventory={updateInventory}
@@ -304,7 +293,7 @@ export function CharacterSheet({ character, mode }: CharacterSheetProps) {
 
       {/* Character Configuration Dialog */}
       <CharacterConfigDialog
-        character={localCharacter}
+        character={character}
         isOpen={isConfigDialogOpen}
         onClose={() => setIsConfigDialogOpen(false)}
         onSave={handleConfigSave}
