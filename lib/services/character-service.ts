@@ -1,23 +1,31 @@
-import { Character, ActionTracker, CharacterConfiguration, Mana } from '../types/character';
+import { Character, ActionTracker, CharacterConfiguration } from '../types/character';
 import { Abilities } from '../types/abilities';
+import { ICharacterService, ICharacterStorage, IActivityLog, IAbilityService } from './interfaces';
+import { createDefaultMana } from '../utils/character-defaults';
+
+// Import for backward compatibility singleton
 import { characterStorageService } from './character-storage-service';
 import { activityLogService } from './activity-log-service';
 import { abilityService } from './ability-service';
-import { createDefaultMana } from '../utils/character-defaults';
 
-export class CharacterService {
+/**
+ * Character Service with Dependency Injection
+ * Manages character state without tight coupling to concrete implementations
+ */
+export class CharacterService implements ICharacterService {
   private _character: Character | null = null;
   private characterListeners: ((character: Character) => void)[] = [];
+
+  constructor(
+    private storageService: ICharacterStorage,
+    private logService: IActivityLog,
+    private abilityService: IAbilityService
+  ) {}
 
   // Public getter for character
   get character(): Character | null {
     return this._character;
   }
-
-  constructor(
-    private storageService = characterStorageService,
-    private logService = activityLogService
-  ) {}
 
   // State Management
   subscribeToCharacter(listener: (character: Character) => void): () => void {
@@ -294,56 +302,15 @@ export class CharacterService {
   }
 
   /**
-   * Update character configuration (wounds, mana settings, etc.)
-   */
-  async updateCharacterConfiguration(config: CharacterConfiguration): Promise<void> {
-    if (!this._character) return;
-
-    let updatedCharacter = {
-      ...this._character,
-      config,
-      wounds: {
-        ...this._character.wounds,
-        max: config.maxWounds, // Update wounds max based on config
-      },
-    };
-
-    // Handle mana configuration changes
-    if (config.mana.enabled) {
-      const manaAttributeValue = this._character.attributes[config.mana.attribute];
-      const newMaxMana = 3 * manaAttributeValue + this._character.level;
-      
-      if (!this._character.mana) {
-        // Create new mana pool if enabling for first time
-        updatedCharacter.mana = createDefaultMana(manaAttributeValue, this._character.level);
-      } else {
-        // Update existing mana pool
-        updatedCharacter.mana = {
-          current: Math.min(this._character.mana.current, newMaxMana), // Don't exceed new max
-          max: newMaxMana,
-        };
-      }
-    } else {
-      // Remove mana if disabled
-      updatedCharacter.mana = undefined;
-    }
-
-    this._character = updatedCharacter;
-
-    await this.saveCharacter();
-    this.notifyCharacterChanged();
-  }
-
-  /**
    * Perform safe rest - restore HP, hit dice, remove wound, reset abilities
    */
   async performSafeRest(): Promise<void> {
     if (!this._character) return;
 
     // Reset all abilities (safe rest resets everything)
-    let resetAbilities = abilityService.resetAbilities(this._character.abilities, 'per_turn');
-    resetAbilities = abilityService.resetAbilities(resetAbilities, 'per_encounter');
-    resetAbilities = abilityService.resetAbilities(resetAbilities, 'per_safe_rest');
+    let resetAbilities = this.abilityService.resetAbilities(this._character.abilities, 'per_turn');
+    resetAbilities = this.abilityService.resetAbilities(resetAbilities, 'per_encounter');
+    resetAbilities = this.abilityService.resetAbilities(resetAbilities, 'per_safe_rest');
 
     // Calculate what was restored for logging
     const healingAmount = this._character.hitPoints.max - this._character.hitPoints.current;
@@ -401,8 +368,8 @@ export class CharacterService {
     if (!this._character) return;
 
     // Reset both per-encounter and per-turn abilities when encounter ends
-    let resetAbilities = abilityService.resetAbilities(this._character.abilities, 'per_encounter');
-    resetAbilities = abilityService.resetAbilities(resetAbilities, 'per_turn');
+    let resetAbilities = this.abilityService.resetAbilities(this._character.abilities, 'per_encounter');
+    resetAbilities = this.abilityService.resetAbilities(resetAbilities, 'per_turn');
 
     this._character = {
       ...this._character,
@@ -426,7 +393,7 @@ export class CharacterService {
     if (!this._character) return;
 
     // Reset per-turn abilities
-    const resetAbilities = abilityService.resetAbilities(this._character.abilities, 'per_turn');
+    const resetAbilities = this.abilityService.resetAbilities(this._character.abilities, 'per_turn');
     
     this._character = {
       ...this._character,
@@ -473,6 +440,47 @@ export class CharacterService {
   }
 
   /**
+   * Update character configuration (wounds, mana settings, etc.)
+   */
+  async updateCharacterConfiguration(config: CharacterConfiguration): Promise<void> {
+    if (!this._character) return;
+
+    let updatedCharacter = {
+      ...this._character,
+      config,
+      wounds: {
+        ...this._character.wounds,
+        max: config.maxWounds, // Update wounds max based on config
+      },
+    };
+
+    // Handle mana configuration changes
+    if (config.mana.enabled) {
+      const manaAttributeValue = this._character.attributes[config.mana.attribute];
+      const newMaxMana = 3 * manaAttributeValue + this._character.level;
+      
+      if (!this._character.mana) {
+        // Create new mana pool if enabling for first time
+        updatedCharacter.mana = createDefaultMana(manaAttributeValue, this._character.level);
+      } else {
+        // Update existing mana pool
+        updatedCharacter.mana = {
+          current: Math.min(this._character.mana.current, newMaxMana), // Don't exceed new max
+          max: newMaxMana,
+        };
+      }
+    } else {
+      // Remove mana if disabled
+      updatedCharacter.mana = undefined;
+    }
+
+    this._character = updatedCharacter;
+
+    await this.saveCharacter();
+    this.notifyCharacterChanged();
+  }
+
+  /**
    * Public method to update the character (used by class service)
    */
   async updateCharacter(character: Character): Promise<void> {
@@ -482,4 +490,10 @@ export class CharacterService {
   }
 }
 
-export const characterService = new CharacterService();
+// Export a singleton instance for backward compatibility
+// This is deprecated - use the service factory instead
+export const characterService = new CharacterService(
+  characterStorageService,
+  activityLogService,
+  abilityService
+);

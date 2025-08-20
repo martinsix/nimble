@@ -2,9 +2,15 @@ import { Character } from '../types/character';
 import { ClassDefinition, ClassFeature, ClassFeatureGrant, AbilityFeature, StatBoostFeature, ProficiencyFeature, SpellAccessFeature, ResourceFeature, SubclassChoiceFeature, SubclassDefinition } from '../types/class';
 import { getClassDefinition, getClassFeaturesForLevel, getAllClassFeaturesUpToLevel } from '../data/classes/index';
 import { getSubclassDefinition, getSubclassFeaturesForLevel, getAllSubclassFeaturesUpToLevel } from '../data/subclasses/index';
-import { characterService } from './character-service';
+import { IClassService, ICharacterService } from './interfaces';
 
-export class ClassService {
+/**
+ * Class Service with Dependency Injection
+ * Manages class features and progression without tight coupling
+ */
+export class ClassService implements IClassService {
+  constructor(private characterService: ICharacterService) {}
+
   /**
    * Get the class definition for a character
    */
@@ -90,7 +96,7 @@ export class ClassService {
    * Level up a character and grant new features
    */
   async levelUpCharacter(targetLevel: number): Promise<ClassFeatureGrant[]> {
-    const character = characterService.character;
+    const character = this.characterService.character;
     if (!character) {
       throw new Error('No character loaded');
     }
@@ -128,7 +134,7 @@ export class ClassService {
       }
     };
 
-    await characterService.updateCharacter(updatedCharacter);
+    await this.characterService.updateCharacter(updatedCharacter);
     return newFeatures;
   }
 
@@ -181,7 +187,7 @@ export class ClassService {
         break;
     }
 
-    await characterService.updateCharacter(updatedCharacter);
+    await this.characterService.updateCharacter(updatedCharacter);
     return featureGrant;
   }
 
@@ -268,7 +274,7 @@ export class ClassService {
    * Select a subclass for a character
    */
   async selectSubclass(characterId: string, subclassId: string): Promise<Character> {
-    const character = await characterService.loadCharacter(characterId);
+    const character = await this.characterService.loadCharacter(characterId);
     if (!character) {
       throw new Error('Character not found');
     }
@@ -301,12 +307,12 @@ export class ClassService {
     };
 
     // Save the updated character
-    await characterService.updateCharacter(updatedCharacter);
+    await this.characterService.updateCharacter(updatedCharacter);
 
     // Sync any missing subclass features
     await this.syncCharacterFeatures();
 
-    return characterService.getCurrentCharacter()!;
+    return this.characterService.getCurrentCharacter()!;
   }
 
   /**
@@ -329,7 +335,7 @@ export class ClassService {
    * Check if character needs to catch up on missing features
    */
   async syncCharacterFeatures(): Promise<ClassFeatureGrant[]> {
-    const character = characterService.character;
+    const character = this.characterService.character;
     if (!character) {
       throw new Error('No character loaded');
     }
@@ -345,5 +351,3 @@ export class ClassService {
     return grantedFeatures;
   }
 }
-
-export const classService = new ClassService();

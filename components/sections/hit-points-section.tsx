@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -8,7 +8,7 @@ import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { Heart, Minus, Plus, ChevronDown, ChevronRight } from "lucide-react";
 
-import { characterService } from "@/lib/services/character-service";
+import { getCharacterService } from "@/lib/services/service-factory";
 
 interface HitPointsSectionProps {
   currentHp: number;
@@ -22,6 +22,9 @@ export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onTogg
   const [damageAmount, setDamageAmount] = useState<string>("1");
   const [healAmount, setHealAmount] = useState<string>("1");
   const [tempHpAmount, setTempHpAmount] = useState<string>("1");
+
+  // Get character service from factory
+  const characterService = useMemo(() => getCharacterService(), []);
 
   const applyDamage = async (amount: number, resetInput: boolean = false) => {
     await characterService.applyDamage(amount);

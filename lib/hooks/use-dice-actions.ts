@@ -1,10 +1,8 @@
+import { useMemo } from 'react';
 import { Character, AttributeName, SkillName, ActionTracker } from '@/lib/types/character';
 import { Abilities } from '@/lib/types/abilities';
 import { LogEntry } from '@/lib/types/log-entries';
-import { diceService } from '@/lib/services/dice-service';
-import { activityLogService } from '@/lib/services/activity-log-service';
-import { abilityService } from '@/lib/services/ability-service';
-import { characterStorageService } from '@/lib/services/character-storage-service';
+import { getDiceService, getActivityLog, getAbilityService, getCharacterStorage } from '@/lib/services/service-factory';
 
 export interface UseDiceActionsReturn {
   handleRollAttribute: (attributeName: AttributeName, value: number, advantageLevel: number) => Promise<void>;
@@ -15,6 +13,11 @@ export interface UseDiceActionsReturn {
 }
 
 export function useDiceActions(addLogEntry: (entry: LogEntry) => void): UseDiceActionsReturn {
+  // Get services from factory (memoized)
+  const diceService = useMemo(() => getDiceService(), []);
+  const activityLogService = useMemo(() => getActivityLog(), []);
+  const abilityService = useMemo(() => getAbilityService(), []);
+  const characterStorage = useMemo(() => getCharacterStorage(), []);
   const handleRollAttribute = async (attributeName: AttributeName, value: number, advantageLevel: number) => {
     try {
       const attributeLabel = attributeName.charAt(0).toUpperCase() + attributeName.slice(1);
@@ -126,7 +129,7 @@ export function useDiceActions(addLogEntry: (entry: LogEntry) => void): UseDiceA
         inEncounter: true
       };
       onCharacterUpdate(updatedCharacter);
-      await characterStorageService.updateCharacter(updatedCharacter);
+      await characterStorage.updateCharacter(updatedCharacter);
     } catch (error) {
       console.error("Failed to roll initiative:", error);
     }

@@ -44,39 +44,52 @@ export default function Home() {
 - **Maintainability**: Related logic is co-located in dedicated files
 - **Readability**: Main component now focuses solely on UI orchestration
 
-### 2. Service Layer Circular Dependencies
+### 2. Service Layer Circular Dependencies ✅ COMPLETED
 **Severity: High**  
 **Impact: Testability, Modularity**
 
-The service layer shows circular and tight dependencies:
-- `CharacterCreationService` depends on `CharacterService`, `CharacterStorageService`, and `ClassService`
-- `CharacterService` depends on `CharacterStorageService` and `ActivityLogService`
-- `ClassService` likely depends on `CharacterService` (based on usage patterns)
+~~The service layer shows circular and tight dependencies with singleton pattern abuse~~
 
-**Problems:**
-- **Singleton pattern abuse**: All services are exported as singleton instances
-- **Tight coupling**: Services directly import and use other service instances
-- **No dependency injection**: Hard-coded dependencies make testing difficult
-- **State leakage**: CharacterService maintains internal state (`_character`)
+**RESOLUTION IMPLEMENTED:**
+- **Created service interfaces**: Defined `ICharacterService`, `ICharacterStorage`, `IActivityLog`, `IAbilityService`, `IClassService`, and `ICharacterCreation` interfaces to break tight coupling
+- **Implemented dependency injection**: Created `ServiceContainer` with factory pattern for controlled service instantiation
+- **Refactored all service classes**: Updated `CharacterService`, `ClassService`, and `CharacterCreationService` to use dependency injection
+- **Eliminated circular dependencies**: Services now depend on interfaces rather than concrete implementations
+- **Updated all consuming code**: Migrated all components and hooks to use service factory pattern with `getCharacterService()`, `getClassService()`, etc.
+- **Maintained singleton behavior**: Services are still singletons but now properly managed through the container
 
-**Example from CharacterService:**
+**New Architecture:**
 ```typescript
-// Lines 8-20: Stateful singleton with hard dependencies
-export class CharacterService {
-  private _character: Character | null = null;
-  private characterListeners: ((character: Character) => void)[] = [];
+// Service factory with proper dependency injection
+export class ServiceFactory {
+  static initialize(): void {
+    serviceContainer.register(
+      SERVICE_KEYS.CHARACTER_SERVICE,
+      (container) => new CharacterService(
+        container.get(SERVICE_KEYS.CHARACTER_STORAGE),
+        container.get(SERVICE_KEYS.ACTIVITY_LOG),
+        container.get(SERVICE_KEYS.ABILITY_SERVICE)
+      ),
+      true // singleton
+    );
+  }
+}
 
+// Services now depend on interfaces
+export class CharacterService implements ICharacterService {
   constructor(
-    private storageService = characterStorageService,  // Hard dependency
-    private logService = activityLogService           // Hard dependency
+    private storageService: ICharacterStorage,     // Interface dependency
+    private logService: IActivityLog,              // Interface dependency
+    private abilityService: IAbilityService       // Interface dependency
   ) {}
+}
 ```
 
-**Recommendation:**
-- Implement proper dependency injection
-- Use factory pattern or IoC container
-- Remove stateful singletons
-- Define clear service interfaces
+**Benefits Achieved:**
+- **Testability**: Services can be easily mocked through interfaces
+- **Modularity**: Clear separation of concerns with interface boundaries
+- **Flexibility**: Services can be swapped out without affecting dependents
+- **Maintainability**: Reduced coupling makes the codebase easier to modify
 
 ### 3. Component Prop Drilling
 **Severity: Medium-High**  

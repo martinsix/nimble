@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Character } from '@/lib/types/character';
 import { AppSettings } from '@/lib/services/settings-service';
-import { characterStorageService } from '@/lib/services/character-storage-service';
-import { characterService } from '@/lib/services/character-service';
-import { characterCreationService } from '@/lib/services/character-creation-service';
-import { settingsService } from '@/lib/services/settings-service';
+import { 
+  getCharacterStorage, 
+  getCharacterService, 
+  getCharacterCreation, 
+  getSettingsService 
+} from '@/lib/services/service-factory';
 
 export interface UseCharacterManagementReturn {
   character: Character | null;
@@ -29,6 +31,12 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [showCharacterSelection, setShowCharacterSelection] = useState(false);
 
+  // Get services from the factory (memoized to prevent recreation on each render)
+  const characterStorage = useMemo(() => getCharacterStorage(), []);
+  const characterService = useMemo(() => getCharacterService(), []);
+  const characterCreation = useMemo(() => getCharacterCreation(), []);
+  const settingsService = useMemo(() => getSettingsService(), []);
+
   // Initial data loading
   useEffect(() => {
     const loadData = async () => {
@@ -38,11 +46,11 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
         setSettings(loadedSettings);
 
         // Load character list
-        const characterList = await characterStorageService.getAllCharacters();
+        const characterList = await characterStorage.getAllCharacters();
         setCharacters(characterList);
 
         // Load active character through CharacterService
-        let activeCharacter = await characterCreationService.initializeCharacter(loadedSettings.activeCharacterId);
+        let activeCharacter = await characterCreation.initializeCharacter(loadedSettings.activeCharacterId);
         if (!activeCharacter) {
           // If no characters exist, show character selection
           if (characterList.length === 0) {
@@ -52,7 +60,7 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
             // Use the first available character instead of creating a default
             try {
               const firstCharacter = characterList[0];
-              activeCharacter = await characterCreationService.initializeCharacter(firstCharacter.id);
+              activeCharacter = await characterCreation.initializeCharacter(firstCharacter.id);
               
               if (activeCharacter) {
                 // Update settings to reflect the new active character
@@ -79,7 +87,7 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
     };
 
     loadData();
-  }, []);
+  }, [settingsService, characterStorage, characterCreation]);
 
   // Subscribe to character updates from the service
   useEffect(() => {
@@ -88,7 +96,7 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
     });
 
     return unsubscribe;
-  }, []);
+  }, [characterService]);
 
   // Listen for character creation events from the character selector
   useEffect(() => {
@@ -96,9 +104,9 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
       try {
         const characterName = event.detail;
         // Use the new character creation service with default fighter class
-        const newCharacter = await characterCreationService.createSampleCharacter(characterName, 'fighter');
+        const newCharacter = await characterCreation.createSampleCharacter(characterName, 'fighter');
         
-        const updatedCharacterList = await characterStorageService.getAllCharacters();
+        const updatedCharacterList = await characterStorage.getAllCharacters();
         setCharacters(updatedCharacterList);
         
         // Switch to the new character (it's already initialized)
@@ -117,7 +125,7 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
     return () => {
       window.removeEventListener('createCharacter', handleCreateCharacter as unknown as EventListener);
     };
-  }, [settings]);
+  }, [settings, characterCreation, characterStorage, settingsService]);
 
   const handleCharacterUpdate = async (updatedCharacter: Character) => {
     // Update through the service, which will trigger the subscription
@@ -125,7 +133,7 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
     
     try {
       // Refresh the character list to reflect name changes
-      const updatedCharacterList = await characterStorageService.getAllCharacters();
+      const updatedCharacterList = await characterStorage.getAllCharacters();
       setCharacters(updatedCharacterList);
     } catch (error) {
       console.error("Failed to refresh character list:", error);
@@ -142,20 +150,20 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
         await settingsService.saveSettings(newSettings);
         
         // Update last played timestamp
-        await characterStorageService.updateLastPlayed(characterId);
-        const updatedCharacterList = await characterStorageService.getAllCharacters();
+        await characterStorage.updateLastPlayed(characterId);
+        const updatedCharacterList = await characterStorage.getAllCharacters();
         setCharacters(updatedCharacterList);
       }
     } catch (error) {
       console.error("Failed to switch character:", error);
     }
-  }, [settings]);
+  }, [settings, characterService, settingsService, characterStorage]);
 
   const handleCharacterDelete = async (characterId: string) => {
     try {
-      await characterStorageService.deleteCharacter(characterId);
+      await characterStorage.deleteCharacter(characterId);
       
-      const updatedCharacterList = await characterStorageService.getAllCharacters();
+      const updatedCharacterList = await characterStorage.getAllCharacters();
       setCharacters(updatedCharacterList);
       
       // If we deleted the active character, switch to another one
@@ -175,10 +183,10 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
 
   const handleCharacterSelectionCreate = async (name: string, classId: string) => {
     try {
-      const newCharacter = await characterCreationService.createSampleCharacter(name, classId);
+      const newCharacter = await characterCreation.createSampleCharacter(name, classId);
       
       // Update character list
-      const updatedCharacters = await characterStorageService.getAllCharacters();
+      const updatedCharacters = await characterStorage.getAllCharacters();
       setCharacters(updatedCharacters);
       
       // Switch to the new character (it's already initialized)
@@ -201,7 +209,7 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
   const handleCharacterSelectionSwitch = async (characterId: string) => {
     try {
       // Use the character creation service to properly initialize the character
-      const initializedCharacter = await characterCreationService.initializeCharacter(characterId);
+      const initializedCharacter = await characterCreation.initializeCharacter(characterId);
       if (!initializedCharacter) {
         throw new Error("Failed to initialize character");
       }

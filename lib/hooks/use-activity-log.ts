@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { LogEntry } from '@/lib/types/log-entries';
-import { activityLogService } from '@/lib/services/activity-log-service';
+import { getActivityLog } from '@/lib/services/service-factory';
 
 export interface UseActivityLogReturn {
   logEntries: LogEntry[];
@@ -10,6 +10,9 @@ export interface UseActivityLogReturn {
 
 export function useActivityLog(): UseActivityLogReturn {
   const [logEntries, setLogEntries] = useState<LogEntry[]>([]);
+  
+  // Get service from factory (memoized)
+  const activityLogService = useMemo(() => getActivityLog(), []);
 
   // Subscribe to activity log updates
   useEffect(() => {
@@ -27,7 +30,7 @@ export function useActivityLog(): UseActivityLogReturn {
     const interval = setInterval(refreshLogs, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [activityLogService]);
 
   const addLogEntry = (entry: LogEntry) => {
     setLogEntries(prevEntries => [entry, ...prevEntries.slice(0, 99)]); // Keep only 100 entries

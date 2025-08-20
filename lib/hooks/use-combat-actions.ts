@@ -1,10 +1,8 @@
+import { useMemo } from 'react';
 import { Character, ActionTracker } from '@/lib/types/character';
 import { Abilities } from '@/lib/types/abilities';
 import { LogEntry } from '@/lib/types/log-entries';
-import { diceService } from '@/lib/services/dice-service';
-import { activityLogService } from '@/lib/services/activity-log-service';
-import { abilityService } from '@/lib/services/ability-service';
-import { characterStorageService } from '@/lib/services/character-storage-service';
+import { getDiceService, getActivityLog, getAbilityService, getCharacterStorage } from '@/lib/services/service-factory';
 
 export interface UseCombatActionsReturn {
   handleUpdateActions: (character: Character, actionTracker: ActionTracker) => Promise<void>;
@@ -18,11 +16,16 @@ export interface UseCombatActionsReturn {
 }
 
 export function useCombatActions(): UseCombatActionsReturn {
+  // Get services from factory (memoized)
+  const diceService = useMemo(() => getDiceService(), []);
+  const activityLogService = useMemo(() => getActivityLog(), []);
+  const abilityService = useMemo(() => getAbilityService(), []);
+  const characterStorage = useMemo(() => getCharacterStorage(), []);
   const handleUpdateActions = async (character: Character, actionTracker: ActionTracker) => {
     if (!character) return;
     const updatedCharacter = { ...character, actionTracker };
     try {
-      await characterStorageService.updateCharacter(updatedCharacter);
+      await characterStorage.updateCharacter(updatedCharacter);
     } catch (error) {
       console.error("Failed to update action tracker:", error);
     }
@@ -46,7 +49,7 @@ export function useCombatActions(): UseCombatActionsReturn {
     };
     onCharacterUpdate(updatedCharacter);
     try {
-      await characterStorageService.updateCharacter(updatedCharacter);
+      await characterStorage.updateCharacter(updatedCharacter);
     } catch (error) {
       console.error("Failed to end encounter:", error);
     }
@@ -56,7 +59,7 @@ export function useCombatActions(): UseCombatActionsReturn {
     if (!character) return;
     const updatedCharacter = { ...character, abilities };
     try {
-      await characterStorageService.updateCharacter(updatedCharacter);
+      await characterStorage.updateCharacter(updatedCharacter);
     } catch (error) {
       console.error("Failed to update abilities:", error);
     }
@@ -78,7 +81,7 @@ export function useCombatActions(): UseCombatActionsReturn {
     };
     onCharacterUpdate(updatedCharacter);
     try {
-      await characterStorageService.updateCharacter(updatedCharacter);
+      await characterStorage.updateCharacter(updatedCharacter);
     } catch (error) {
       console.error("Failed to end turn:", error);
     }
@@ -97,7 +100,7 @@ export function useCombatActions(): UseCombatActionsReturn {
       // Update character with new abilities state
       const updatedCharacter = { ...character, abilities: result.updatedAbilities };
       onCharacterUpdate(updatedCharacter);
-      await characterStorageService.updateCharacter(updatedCharacter);
+      await characterStorage.updateCharacter(updatedCharacter);
 
       // Log the ability usage
       const logEntry = activityLogService.createAbilityUsageEntry(
@@ -176,7 +179,7 @@ export function useCombatActions(): UseCombatActionsReturn {
       };
       
       onCharacterUpdate(updatedCharacter);
-      await characterStorageService.updateCharacter(updatedCharacter);
+      await characterStorage.updateCharacter(updatedCharacter);
 
       // Log the healing
       if (healingAmount > 0) {
@@ -233,7 +236,7 @@ export function useCombatActions(): UseCombatActionsReturn {
       };
       
       onCharacterUpdate(updatedCharacter);
-      await characterStorageService.updateCharacter(updatedCharacter);
+      await characterStorage.updateCharacter(updatedCharacter);
 
       // Log the healing
       if (healingAmount > 0) {
@@ -281,7 +284,7 @@ export function useCombatActions(): UseCombatActionsReturn {
       };
 
       onCharacterUpdate(updatedCharacter);
-      await characterStorageService.updateCharacter(updatedCharacter);
+      await characterStorage.updateCharacter(updatedCharacter);
 
       // Calculate what was restored for logging
       const healingAmount = character.hitPoints.max - character.hitPoints.current;

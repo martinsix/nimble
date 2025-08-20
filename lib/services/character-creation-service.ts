@@ -1,7 +1,5 @@
 import { Character } from '../types/character';
-import { characterStorageService } from './character-storage-service';
-import { characterService } from './character-service';
-import { classService } from './class-service';
+import { ICharacterCreation, ICharacterStorage, ICharacterService, IClassService } from './interfaces';
 import { getClassDefinition } from '../data/classes/index';
 import { 
   createDefaultCharacterConfiguration, 
@@ -28,7 +26,17 @@ export interface CreateCharacterOptions {
   };
 }
 
-export class CharacterCreationService {
+/**
+ * Character Creation Service with Dependency Injection
+ * Handles character creation and initialization without tight coupling
+ */
+export class CharacterCreationService implements ICharacterCreation {
+  constructor(
+    private characterStorage: ICharacterStorage,
+    private characterService: ICharacterService,
+    private classService: IClassService
+  ) {}
+
   /**
    * Creates a new character with proper initialization and class features
    */
@@ -54,7 +62,7 @@ export class CharacterCreationService {
 
     // Create the base character
     const characterId = `character-${Date.now()}`;
-    const baseCharacter = await characterStorageService.createCharacter({
+    const baseCharacter = await this.characterStorage.createCharacter({
       name,
       level,
       classId,
@@ -74,13 +82,13 @@ export class CharacterCreationService {
     }, characterId);
 
     // Initialize the character service with the new character
-    await characterService.loadCharacter(baseCharacter.id);
+    await this.characterService.loadCharacter(baseCharacter.id);
 
     // Apply class features for the character's level
-    await classService.syncCharacterFeatures();
+    await this.classService.syncCharacterFeatures();
 
     // Get the final character with all features applied
-    const finalCharacter = await characterStorageService.getCharacter(baseCharacter.id);
+    const finalCharacter = await this.characterStorage.getCharacter(baseCharacter.id);
     if (!finalCharacter) {
       throw new Error('Failed to retrieve created character');
     }
@@ -119,17 +127,15 @@ export class CharacterCreationService {
    */
   async initializeCharacter(characterId: string): Promise<Character | null> {
     // Load character into character service
-    const character = await characterService.loadCharacter(characterId);
+    const character = await this.characterService.loadCharacter(characterId);
     if (!character) {
       return null;
     }
 
     // Sync any missing class features
-    await classService.syncCharacterFeatures();
+    await this.classService.syncCharacterFeatures();
 
     // Return the updated character
-    return characterService.getCurrentCharacter();
+    return this.characterService.getCurrentCharacter();
   }
 }
-
-export const characterCreationService = new CharacterCreationService();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Character, AttributeName, SkillName, ActionTracker, CharacterConfiguration } from "@/lib/types/character";
 import { Inventory as InventoryType } from "@/lib/types/inventory";
 import { Abilities } from "@/lib/types/abilities";
@@ -24,7 +24,7 @@ import { AbilitySection } from "./sections/ability-section";
 import { InventorySection } from "./sections/inventory-section";
 import { CharacterConfigDialog } from "./character-config-dialog";
 import { uiStateService, UIState } from "@/lib/services/ui-state-service";
-import { characterService } from "@/lib/services/character-service";
+import { getCharacterService } from "@/lib/services/service-factory";
 
 interface CharacterSheetProps {
   character: Character;
@@ -48,6 +48,9 @@ interface CharacterSheetProps {
 export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onRollSave, onRollSkill, onRollInitiative, onAttack, onUpdateActions, onEndEncounter, onUpdateAbilities, onEndTurn, onUseAbility, onCatchBreath, onMakeCamp, onSafeRest }: CharacterSheetProps) {
   const [localCharacter, setLocalCharacter] = useState(character);
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
+
+  // Get character service from factory
+  const characterService = useMemo(() => getCharacterService(), []);
   const [uiState, setUIState] = useState<UIState>({
     collapsibleSections: {
       classInfo: true,
