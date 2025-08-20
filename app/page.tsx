@@ -10,6 +10,8 @@ import { useCharacterManagement } from "@/lib/hooks/use-character-management";
 import { useDiceActions } from "@/lib/hooks/use-dice-actions";
 import { useCombatActions } from "@/lib/hooks/use-combat-actions";
 import { useActivityLog } from "@/lib/hooks/use-activity-log";
+import { CharacterActionsProvider } from "@/lib/contexts/character-actions-context";
+import { UIStateProvider } from "@/lib/contexts/ui-state-context";
 
 export default function Home() {
   // Character and settings management
@@ -82,49 +84,59 @@ export default function Home() {
     );
   }
 
+  // Character actions context value
+  const characterActionsValue = {
+    character,
+    onCharacterUpdate: handleCharacterUpdate,
+    onRollAttribute: handleRollAttribute,
+    onRollSave: handleRollSave,
+    onRollSkill: (skillName: SkillName, attributeValue: number, skillModifier: number, advantageLevel: number) => 
+      handleRollSkill(character!, skillName, attributeValue, skillModifier, advantageLevel),
+    onRollInitiative: (totalModifier: number, advantageLevel: number) => 
+      handleRollInitiative(character!, totalModifier, advantageLevel, handleCharacterUpdate),
+    onAttack: handleAttack,
+    onUpdateActions: (actionTracker: ActionTracker) => 
+      handleUpdateActions(character!, actionTracker),
+    onEndEncounter: () => 
+      handleEndEncounter(character!, handleCharacterUpdate),
+    onUpdateAbilities: (abilities: Abilities) => 
+      handleUpdateAbilities(character!, abilities),
+    onEndTurn: (actionTracker: ActionTracker, abilities: Abilities) => 
+      handleEndTurn(character!, actionTracker, abilities, handleCharacterUpdate),
+    onUseAbility: (abilityId: string) => 
+      handleUseAbility(character!, abilityId, handleCharacterUpdate, addLogEntry),
+    onCatchBreath: () => 
+      handleCatchBreath(character!, handleCharacterUpdate, addLogEntry),
+    onMakeCamp: () => 
+      handleMakeCamp(character!, handleCharacterUpdate, addLogEntry),
+    onSafeRest: () => 
+      handleSafeRest(character!, handleCharacterUpdate, addLogEntry),
+    addLogEntry,
+  };
+
   return (
-    <main className="min-h-screen bg-background">
-      <div className="container mx-auto py-8 space-y-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Nimble Navigator</h1>
-          <AppMenu 
-            settings={settings}
-            characters={characters}
-            onSettingsChange={handleSettingsChange}
-            onCharacterSwitch={handleCharacterSwitch}
-            onCharacterDelete={handleCharacterDelete}
-          />
-        </div>
-        <CharacterSheet 
-          character={character}
-          mode={settings.mode}
-          onUpdate={handleCharacterUpdate} 
-          onRollAttribute={handleRollAttribute}
-          onRollSave={handleRollSave}
-          onRollSkill={(skillName, attributeValue, skillModifier, advantageLevel) => 
-            handleRollSkill(character!, skillName, attributeValue, skillModifier, advantageLevel)}
-          onRollInitiative={(totalModifier, advantageLevel) => 
-            handleRollInitiative(character!, totalModifier, advantageLevel, handleCharacterUpdate)}
-          onAttack={handleAttack}
-          onUpdateActions={(actionTracker) => 
-            handleUpdateActions(character!, actionTracker)}
-          onEndEncounter={() => 
-            handleEndEncounter(character!, handleCharacterUpdate)}
-          onUpdateAbilities={(abilities) => 
-            handleUpdateAbilities(character!, abilities)}
-          onEndTurn={(actionTracker, abilities) => 
-            handleEndTurn(character!, actionTracker, abilities, handleCharacterUpdate)}
-          onUseAbility={(abilityId) => 
-            handleUseAbility(character!, abilityId, handleCharacterUpdate, addLogEntry)}
-          onCatchBreath={() => 
-            handleCatchBreath(character!, handleCharacterUpdate, addLogEntry)}
-          onMakeCamp={() => 
-            handleMakeCamp(character!, handleCharacterUpdate, addLogEntry)}
-          onSafeRest={() => 
-            handleSafeRest(character!, handleCharacterUpdate, addLogEntry)}
-        />
-        <ActivityLog entries={logEntries} onClearRolls={handleClearRolls} />
-      </div>
-    </main>
+    <CharacterActionsProvider value={characterActionsValue}>
+      <UIStateProvider>
+        <main className="min-h-screen bg-background">
+          <div className="container mx-auto py-8 space-y-8">
+            <div className="flex justify-between items-center">
+              <h1 className="text-3xl font-bold">Nimble Navigator</h1>
+              <AppMenu 
+                settings={settings}
+                characters={characters}
+                onSettingsChange={handleSettingsChange}
+                onCharacterSwitch={handleCharacterSwitch}
+                onCharacterDelete={handleCharacterDelete}
+              />
+            </div>
+            <CharacterSheet 
+              character={character}
+              mode={settings.mode}
+            />
+            <ActivityLog entries={logEntries} onClearRolls={handleClearRolls} />
+          </div>
+        </main>
+      </UIStateProvider>
+    </CharacterActionsProvider>
   );
 }

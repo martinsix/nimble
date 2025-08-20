@@ -23,96 +23,56 @@ import { ArmorSection } from "./sections/armor-section";
 import { AbilitySection } from "./sections/ability-section";
 import { InventorySection } from "./sections/inventory-section";
 import { CharacterConfigDialog } from "./character-config-dialog";
-import { uiStateService, UIState } from "@/lib/services/ui-state-service";
 import { getCharacterService } from "@/lib/services/service-factory";
+import { useCharacterActions } from "@/lib/contexts/character-actions-context";
+import { useUIState } from "@/lib/contexts/ui-state-context";
 
 interface CharacterSheetProps {
   character: Character;
   mode: AppMode;
-  onUpdate: (character: Character) => void;
-  onRollAttribute: (attributeName: AttributeName, value: number, advantageLevel: number) => void;
-  onRollSave: (attributeName: AttributeName, value: number, advantageLevel: number) => void;
-  onRollSkill: (skillName: SkillName, attributeValue: number, skillModifier: number, advantageLevel: number) => void;
-  onRollInitiative: (totalModifier: number, advantageLevel: number) => void;
-  onAttack: (weaponName: string, damage: string, attributeModifier: number, advantageLevel: number) => void;
-  onUpdateActions?: (actionTracker: ActionTracker) => void;
-  onEndEncounter?: () => void;
-  onUpdateAbilities?: (abilities: Abilities) => void;
-  onEndTurn?: (actionTracker: ActionTracker, abilities: Abilities) => void;
-  onUseAbility?: (abilityId: string) => void;
-  onCatchBreath?: () => void;
-  onMakeCamp?: () => void;
-  onSafeRest?: () => void;
 }
 
-export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onRollSave, onRollSkill, onRollInitiative, onAttack, onUpdateActions, onEndEncounter, onUpdateAbilities, onEndTurn, onUseAbility, onCatchBreath, onMakeCamp, onSafeRest }: CharacterSheetProps) {
+export function CharacterSheet({ character, mode }: CharacterSheetProps) {
   const [localCharacter, setLocalCharacter] = useState(character);
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
 
   // Get character service from factory
   const characterService = useMemo(() => getCharacterService(), []);
-  const [uiState, setUIState] = useState<UIState>({
-    collapsibleSections: {
-      classInfo: true,
-      classFeatures: true,
-      hitPoints: true,
-      hitDice: true,
-      wounds: true,
-      mana: true,
-      initiative: true,
-      actionTracker: true,
-      attributes: true,
-      skills: true,
-      actions: true,
-      armor: true,
-      abilities: true,
-      inventory: true,
-    },
-    advantageLevel: 0,
-  });
 
-  useEffect(() => {
-    const loadUIState = async () => {
-      const state = await uiStateService.getUIState();
-      setUIState(state);
-    };
-    loadUIState();
-  }, []);
+  // Get context values
+  const {
+    onCharacterUpdate,
+    onRollAttribute,
+    onRollSave,
+    onRollSkill,
+    onRollInitiative,
+    onAttack,
+    onUpdateActions,
+    onEndEncounter,
+    onUpdateAbilities,
+    onEndTurn,
+    onUseAbility,
+    onCatchBreath,
+    onMakeCamp,
+    onSafeRest,
+  } = useCharacterActions();
+
+  const { uiState, updateCollapsibleState, updateAdvantageLevel } = useUIState();
 
   useEffect(() => {
     setLocalCharacter(character);
   }, [character]);
 
-  const updateCollapsibleState = async (section: keyof UIState['collapsibleSections'], isOpen: boolean) => {
-    const newUIState = {
-      ...uiState,
-      collapsibleSections: {
-        ...uiState.collapsibleSections,
-        [section]: isOpen,
-      },
-    };
-    setUIState(newUIState);
-    await uiStateService.saveUIState(newUIState);
-  };
-
-  const updateAdvantageLevel = async (advantageLevel: number) => {
-    const newUIState = {
-      ...uiState,
-      advantageLevel,
-    };
-    setUIState(newUIState);
-    await uiStateService.saveUIState(newUIState);
-  };
 
   const updateName = (name: string) => {
     const updated = { ...localCharacter, name };
     setLocalCharacter(updated);
-    onUpdate(updated);
+    onCharacterUpdate(updated);
   };
 
   const updateCharacter = (updated: Character) => {
     setLocalCharacter(updated);
-    onUpdate(updated);
+    onCharacterUpdate(updated);
   };
 
   const updateAttribute = (attributeName: AttributeName, value: number) => {
@@ -124,7 +84,7 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
       },
     };
     setLocalCharacter(updated);
-    onUpdate(updated);
+    onCharacterUpdate(updated);
   };
 
   const handleAttributeChange = (attributeName: AttributeName, value: string) => {
@@ -146,7 +106,7 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
       },
     };
     setLocalCharacter(updated);
-    onUpdate(updated);
+    onCharacterUpdate(updated);
   };
 
   const handleSkillChange = (skillName: SkillName, value: string) => {
@@ -162,7 +122,7 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
       inventory,
     };
     setLocalCharacter(updated);
-    onUpdate(updated);
+    onCharacterUpdate(updated);
   };
 
 
@@ -175,7 +135,7 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
       },
     };
     setLocalCharacter(updated);
-    onUpdate(updated);
+    onCharacterUpdate(updated);
   };
 
   const handleOpenConfig = () => {
@@ -274,8 +234,8 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
           abilities={character.abilities}
           isOpen={uiState.collapsibleSections.actionTracker}
           onToggle={(isOpen) => updateCollapsibleState('actionTracker', isOpen)}
-          onUpdateActions={onUpdateActions || (() => {})}
-          onUpdateAbilities={onUpdateAbilities || (() => {})}
+          onUpdateActions={onUpdateActions}
+          onUpdateAbilities={onUpdateAbilities}
           onEndTurn={onEndTurn}
         />
       )}
@@ -327,7 +287,7 @@ export function CharacterSheet({ character, mode, onUpdate, onRollAttribute, onR
             character={character}
             isOpen={uiState.collapsibleSections.abilities}
             onToggle={(isOpen) => updateCollapsibleState('abilities', isOpen)}
-            onUpdateAbilities={onUpdateAbilities || (() => {})}
+            onUpdateAbilities={onUpdateAbilities}
             onUseAbility={onUseAbility}
           />
 
