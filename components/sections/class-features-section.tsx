@@ -7,7 +7,7 @@ import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { Badge } from "../ui/badge";
 import { Sparkles, ChevronDown, ChevronRight, Star, Zap, TrendingUp } from "lucide-react";
-import { getAllClassFeaturesUpToLevel, getClassDefinition } from "@/lib/data/classes";
+import { getAllClassFeaturesUpToLevel, getClassDefinition } from "@/lib/data/classes/index";
 
 interface ClassFeaturesSectionProps {
   character: Character;

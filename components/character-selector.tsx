@@ -9,7 +9,7 @@ import { Label } from "./ui/label";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Character } from "@/lib/types/character";
 import { Plus, Trash2, User, Clock, AlertTriangle } from "lucide-react";
-import { getAllClasses } from "@/lib/data/classes";
+import { getAllClasses } from "@/lib/data/classes/index";
 
 interface CharacterSelectorProps {
   isOpen?: boolean;
@@ -135,7 +135,7 @@ export function CharacterSelector({
                     onChange={(e) => setSelectedClass(e.target.value)}
                     className="w-full p-2 border rounded-md"
                   >
-                    {availableClasses.map((cls) => (
+                    {availableClasses.map((cls: any) => (
                       <option key={cls.id} value={cls.id}>
                         {cls.name}
                       </option>

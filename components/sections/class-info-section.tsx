@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { Shield, ChevronDown, ChevronRight, TrendingUp } from "lucide-react";
-import { getClassDefinition } from "@/lib/data/classes";
+import { getClassDefinition } from "@/lib/data/classes/index";
 
 interface ClassInfoSectionProps {
   character: Character;

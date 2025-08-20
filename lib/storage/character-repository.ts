@@ -1,6 +1,6 @@
 import { Character, CreateCharacterData } from '../types/character';
 import { createDefaultCharacterConfiguration, createDefaultProficiencies } from '../utils/character-defaults';
-import { getClassDefinition } from '../data/classes';
+import { getClassDefinition } from '../data/classes/index';
 
 export interface ICharacterRepository {
   save(character: Character): Promise<void>;

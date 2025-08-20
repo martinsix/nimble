@@ -56,6 +56,7 @@ export interface Character {
   name: string;
   level: number; // Character level (starting at 1)
   classId: string; // Character's class (e.g., 'fighter', 'wizard')
+  subclassId?: string; // Character's subclass (e.g., 'fighter-champion', 'wizard-evocation')
   grantedFeatures: string[]; // IDs of class features already granted to this character
   proficiencies: Proficiencies; // Armor and weapon proficiencies
   attributes: {
@@ -98,6 +99,7 @@ export interface CreateCharacterData {
   name: string;
   level: number;
   classId: string;
+  subclassId?: string;
   grantedFeatures: string[];
   proficiencies: Proficiencies;
   attributes: {

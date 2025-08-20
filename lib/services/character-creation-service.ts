@@ -2,7 +2,7 @@ import { Character } from '../types/character';
 import { characterStorageService } from './character-storage-service';
 import { characterService } from './character-service';
 import { classService } from './class-service';
-import { getClassDefinition } from '../data/classes';
+import { getClassDefinition } from '../data/classes/index';
 import { 
   createDefaultCharacterConfiguration, 
   createDefaultHitPoints, 

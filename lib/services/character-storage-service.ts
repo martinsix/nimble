@@ -2,7 +2,7 @@ import { Character, CreateCharacterData } from '../types/character';
 import { ICharacterRepository, LocalStorageCharacterRepository } from '../storage/character-repository';
 import { createCharacterSchema, characterSchema } from '../schemas/character';
 import { createDefaultCharacterConfiguration, createDefaultHitPoints, createDefaultHitDice, createDefaultProficiencies } from '../utils/character-defaults';
-import { getClassDefinition } from '../data/classes';
+import { getClassDefinition } from '../data/classes/index';
 
 export class CharacterStorageService {
   private readonly characterListStorageKey = 'nimble-navigator-character-list';

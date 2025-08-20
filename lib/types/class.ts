@@ -1,7 +1,7 @@
 import { HitDieSize, AttributeName } from './character';
 import { Ability } from './abilities';
 
-export type ClassFeatureType = 'ability' | 'passive_feature' | 'stat_boost' | 'proficiency' | 'spell_access' | 'resource';
+export type ClassFeatureType = 'ability' | 'passive_feature' | 'stat_boost' | 'proficiency' | 'spell_access' | 'resource' | 'subclass_choice';
 
 export interface StatBoost {
   attribute: AttributeName;
@@ -70,13 +70,20 @@ export interface ResourceFeature extends BaseClassFeature {
   resource: ResourceGrant;
 }
 
+// Subclass Choice - allows player to choose a subclass specialization
+export interface SubclassChoiceFeature extends BaseClassFeature {
+  type: 'subclass_choice';
+  availableSubclasses: string[]; // Array of subclass IDs that can be chosen
+}
+
 export type ClassFeature = 
   | AbilityFeature 
   | PassiveFeature 
   | StatBoostFeature 
   | ProficiencyFeature 
   | SpellAccessFeature 
-  | ResourceFeature;
+  | ResourceFeature
+  | SubclassChoiceFeature;
 
 export type ArmorProficiency = 
   | { type: 'cloth' }
@@ -91,6 +98,14 @@ export type WeaponProficiency =
   | { type: 'dexterity_weapons' }
   | { type: 'freeform'; name: string };
 
+export interface SubclassDefinition {
+  id: string; // Unique identifier for the subclass
+  name: string; // Display name (e.g., "Champion", "Battle Master")
+  description: string; // Brief description of the subclass
+  parentClassId: string; // Which class this subclass belongs to
+  features: ClassFeature[]; // Features provided by this subclass
+}
+
 export interface ClassDefinition {
   id: string; // Unique identifier for the class
   name: string; // Display name (e.g., "Fighter", "Wizard")
@@ -101,6 +116,7 @@ export interface ClassDefinition {
   armorProficiencies: ArmorProficiency[]; // Armor types the class is proficient with
   weaponProficiencies: WeaponProficiency[]; // Weapon categories the class is proficient with
   features: ClassFeature[]; // All features available to this class
+  subclasses?: SubclassDefinition[]; // Available subclasses for this class
 }
 
 // Helper types for working with class data
