@@ -75,8 +75,22 @@ export const resourceSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   description: z.string().optional(),
-  color: z.string().min(1),
-  icon: z.string().optional(),
+  colorScheme: z.enum([
+    'blue-magic',
+    'red-fury', 
+    'green-nature',
+    'purple-arcane',
+    'orange-ki',
+    'yellow-divine',
+    'teal-focus',
+    'gray-stamina'
+  ]),
+  icon: z.enum([
+    'sparkles', 'crystal', 'wand', 'orb', 'star', 'comet',
+    'fire', 'lightning', 'zap', 'battery', 'sun', 'flame',
+    'muscle', 'heart', 'droplet', 'shield', 'sword',
+    'eye', 'brain', 'leaf', 'snowflake', 'potion', 'hourglass'
+  ]).optional(),
   resetCondition: z.enum(['safe_rest', 'encounter_end', 'turn_end', 'never', 'manual']),
   resetType: z.enum(['to_max', 'to_zero', 'to_default']),
   resetValue: z.number().optional(),

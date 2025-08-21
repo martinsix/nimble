@@ -23,8 +23,8 @@ export interface CharacterResource {
   id: string;                           // Unique identifier (e.g., 'mana', 'fury')
   name: string;                         // Display name (e.g., 'Mana', 'Fury')
   description?: string;                 // Optional description
-  color: string;                        // Color for UI (e.g., 'blue', 'red', '#ff0000')
-  icon?: string;                        // Optional icon identifier
+  colorScheme: string;                  // Color scheme ID (e.g., 'blue-magic', 'red-fury')
+  icon?: string;                        // Icon identifier (e.g., 'sparkles', 'fire')
   resetCondition: ResourceResetCondition;
   resetType: ResourceResetType;
   resetValue?: number;                  // Used with 'to_default' reset type
@@ -40,7 +40,7 @@ export const DEFAULT_RESOURCE_TEMPLATES: CharacterResource[] = [
     id: 'mana',
     name: 'Mana',
     description: 'Magical energy used to cast spells',
-    color: 'blue',
+    colorScheme: 'blue-magic',
     icon: 'sparkles',
     resetCondition: 'safe_rest',
     resetType: 'to_max',

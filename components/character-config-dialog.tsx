@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Character, CharacterConfiguration } from "@/lib/types/character";
 import { CharacterResource, ResourceResetCondition, ResourceResetType } from "@/lib/types/resources";
+import { RESOURCE_COLOR_SCHEMES, RESOURCE_ICONS, getIconById, getColorSchemeById, getDefaultColorSchemeForIcon } from "@/lib/utils/resource-config";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -25,6 +26,7 @@ export function CharacterConfigDialog({ character, isOpen, onClose, onSave }: Ch
   const [maxHP, setMaxHP] = useState<number>(character.hitPoints.max);
   const [newResource, setNewResource] = useState<Partial<CharacterResource> | null>(null);
   const [isCreatingResource, setIsCreatingResource] = useState(false);
+  const [editingResource, setEditingResource] = useState<string | null>(null);
 
   const handleSave = () => {
     onSave(config, resources, maxHP);
@@ -38,6 +40,7 @@ export function CharacterConfigDialog({ character, isOpen, onClose, onSave }: Ch
     setMaxHP(character.hitPoints.max);
     setIsCreatingResource(false);
     setNewResource(null);
+    setEditingResource(null);
     onClose();
   };
 
@@ -72,8 +75,8 @@ export function CharacterConfigDialog({ character, isOpen, onClose, onSave }: Ch
       id: '',
       name: '',
       description: '',
-      color: 'blue',
-      icon: '',
+      colorScheme: 'blue-magic',
+      icon: 'sparkles',
       resetCondition: 'safe_rest',
       resetType: 'to_max',
       minValue: 0,
@@ -82,6 +85,20 @@ export function CharacterConfigDialog({ character, isOpen, onClose, onSave }: Ch
       sortOrder: resources.length + 1,
     });
     setIsCreatingResource(true);
+  };
+
+  const startEditingResource = (resourceId: string) => {
+    setEditingResource(resourceId);
+  };
+
+  const stopEditingResource = () => {
+    setEditingResource(null);
+  };
+
+  const updateResource = (resourceId: string, field: keyof CharacterResource, value: any) => {
+    setResources(prev => prev.map(resource => 
+      resource.id === resourceId ? { ...resource, [field]: value } : resource
+    ));
   };
 
   const cancelCreateResource = () => {
@@ -103,7 +120,7 @@ export function CharacterConfigDialog({ character, isOpen, onClose, onSave }: Ch
       id: newResource.id,
       name: newResource.name,
       description: newResource.description || '',
-      color: newResource.color || 'blue',
+      colorScheme: newResource.colorScheme || 'blue-magic',
       icon: newResource.icon,
       resetCondition: newResource.resetCondition || 'safe_rest',
       resetType: newResource.resetType || 'to_max',
@@ -221,35 +238,239 @@ export function CharacterConfigDialog({ character, isOpen, onClose, onSave }: Ch
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {resources.map((resource) => (
-                    <div key={resource.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium">{resource.name}</span>
-                          <span className="text-xs px-2 py-1 bg-muted rounded" style={{ backgroundColor: resource.color + '20', color: resource.color }}>
-                            {resource.color}
-                          </span>
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          ID: {resource.id} | {resource.current}/{resource.maxValue} | 
-                          Reset: {resource.resetCondition} → {resource.resetType}
-                        </div>
-                        {resource.description && (
-                          <div className="text-xs text-muted-foreground mt-1">
-                            {resource.description}
+                  {resources.map((resource) => {
+                    const isEditing = editingResource === resource.id;
+                    const iconOption = getIconById(resource.icon || '');
+                    const colorScheme = getColorSchemeById(resource.colorScheme);
+                    
+                    return (
+                      <div key={resource.id} className="p-3 border rounded-lg">
+                        {isEditing ? (
+                          // Edit mode
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <Label className="text-xs">Name</Label>
+                                <Input
+                                  value={resource.name}
+                                  onChange={(e) => updateResource(resource.id, 'name', e.target.value)}
+                                  className="text-sm"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">ID (read-only)</Label>
+                                <Input
+                                  value={resource.id}
+                                  disabled
+                                  className="text-sm bg-muted"
+                                />
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-1">
+                              <Label className="text-xs">Description</Label>
+                              <Textarea
+                                value={resource.description || ''}
+                                onChange={(e) => updateResource(resource.id, 'description', e.target.value)}
+                                rows={2}
+                                className="text-sm resize-none"
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <Label className="text-xs">Color Scheme</Label>
+                                <Select 
+                                  value={resource.colorScheme} 
+                                  onValueChange={(value) => updateResource(resource.id, 'colorScheme', value)}
+                                >
+                                  <SelectTrigger className="text-sm">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {RESOURCE_COLOR_SCHEMES.map(scheme => (
+                                      <SelectItem key={scheme.id} value={scheme.id}>
+                                        <div className="flex items-center gap-2">
+                                          <div 
+                                            className="w-3 h-3 rounded"
+                                            style={{ backgroundColor: scheme.colors.full }}
+                                          />
+                                          {scheme.name}
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Icon</Label>
+                                <Select 
+                                  value={resource.icon || ''} 
+                                  onValueChange={(value) => updateResource(resource.id, 'icon', value)}
+                                >
+                                  <SelectTrigger className="text-sm">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {Object.entries(
+                                      RESOURCE_ICONS.reduce((acc, icon) => {
+                                        if (!acc[icon.category]) acc[icon.category] = [];
+                                        acc[icon.category].push(icon);
+                                        return acc;
+                                      }, {} as Record<string, typeof RESOURCE_ICONS>)
+                                    ).map(([category, icons]) => (
+                                      <div key={category}>
+                                        <div className="px-2 py-1 text-xs font-semibold text-muted-foreground capitalize">
+                                          {category}
+                                        </div>
+                                        {icons.map(icon => (
+                                          <SelectItem key={icon.id} value={icon.id}>
+                                            <div className="flex items-center gap-2">
+                                              <span>{icon.icon}</span>
+                                              {icon.name}
+                                            </div>
+                                          </SelectItem>
+                                        ))}
+                                      </div>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <Label className="text-xs">Reset Condition</Label>
+                                <Select 
+                                  value={resource.resetCondition} 
+                                  onValueChange={(value: ResourceResetCondition) => updateResource(resource.id, 'resetCondition', value)}
+                                >
+                                  <SelectTrigger className="text-sm">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="safe_rest">Safe Rest</SelectItem>
+                                    <SelectItem value="encounter_end">Encounter End</SelectItem>
+                                    <SelectItem value="turn_end">Turn End</SelectItem>
+                                    <SelectItem value="never">Never</SelectItem>
+                                    <SelectItem value="manual">Manual</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Reset Type</Label>
+                                <Select 
+                                  value={resource.resetType} 
+                                  onValueChange={(value: ResourceResetType) => updateResource(resource.id, 'resetType', value)}
+                                >
+                                  <SelectTrigger className="text-sm">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="to_max">To Maximum</SelectItem>
+                                    <SelectItem value="to_zero">To Zero</SelectItem>
+                                    <SelectItem value="to_default">To Default</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-4 gap-2">
+                              <div className="space-y-1">
+                                <Label className="text-xs">Min</Label>
+                                <Input
+                                  type="number"
+                                  value={resource.minValue}
+                                  onChange={(e) => updateResource(resource.id, 'minValue', parseInt(e.target.value) || 0)}
+                                  className="text-sm"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Max</Label>
+                                <Input
+                                  type="number"
+                                  value={resource.maxValue}
+                                  onChange={(e) => updateResource(resource.id, 'maxValue', parseInt(e.target.value) || 10)}
+                                  className="text-sm"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Current</Label>
+                                <Input
+                                  type="number"
+                                  value={resource.current}
+                                  onChange={(e) => updateResource(resource.id, 'current', parseInt(e.target.value) || 0)}
+                                  className="text-sm"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs">Default</Label>
+                                <Input
+                                  type="number"
+                                  value={resource.resetValue || ''}
+                                  onChange={(e) => updateResource(resource.id, 'resetValue', e.target.value ? parseInt(e.target.value) : undefined)}
+                                  className="text-sm"
+                                  disabled={resource.resetType !== 'to_default'}
+                                />
+                              </div>
+                            </div>
+
+                            <div className="flex gap-2 pt-2">
+                              <Button size="sm" onClick={stopEditingResource}>
+                                Done Editing
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => deleteResource(resource.id)}>
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          // View mode
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-lg">{iconOption?.icon || '💎'}</span>
+                                <span className="font-medium">{resource.name}</span>
+                                <div 
+                                  className="text-xs px-2 py-1 rounded text-white"
+                                  style={{ backgroundColor: colorScheme?.colors.full || '#6b7280' }}
+                                >
+                                  {colorScheme?.name || 'Default'}
+                                </div>
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                ID: {resource.id} | {resource.current}/{resource.maxValue} | 
+                                Reset: {resource.resetCondition} → {resource.resetType}
+                              </div>
+                              {resource.description && (
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  {resource.description}
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => startEditingResource(resource.id)}
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => deleteResource(resource.id)}
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         )}
                       </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => deleteResource(resource.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
@@ -297,34 +518,69 @@ export function CharacterConfigDialog({ character, isOpen, onClose, onSave }: Ch
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <Label htmlFor="resource-color" className="text-xs">Color</Label>
+                        <Label htmlFor="resource-color-scheme" className="text-xs">Color Scheme</Label>
                         <Select 
-                          value={newResource.color || 'blue'} 
-                          onValueChange={(value) => updateNewResource('color', value)}
+                          value={newResource.colorScheme || 'blue-magic'} 
+                          onValueChange={(value) => updateNewResource('colorScheme', value)}
                         >
                           <SelectTrigger className="text-sm">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="blue">Blue</SelectItem>
-                            <SelectItem value="red">Red</SelectItem>
-                            <SelectItem value="green">Green</SelectItem>
-                            <SelectItem value="purple">Purple</SelectItem>
-                            <SelectItem value="orange">Orange</SelectItem>
-                            <SelectItem value="yellow">Yellow</SelectItem>
-                            <SelectItem value="gray">Gray</SelectItem>
+                            {RESOURCE_COLOR_SCHEMES.map(scheme => (
+                              <SelectItem key={scheme.id} value={scheme.id}>
+                                <div className="flex items-center gap-2">
+                                  <div 
+                                    className="w-3 h-3 rounded"
+                                    style={{ backgroundColor: scheme.colors.full }}
+                                  />
+                                  {scheme.name}
+                                </div>
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-1">
                         <Label htmlFor="resource-icon" className="text-xs">Icon</Label>
-                        <Input
-                          id="resource-icon"
-                          placeholder="sparkles"
-                          value={newResource.icon || ''}
-                          onChange={(e) => updateNewResource('icon', e.target.value)}
-                          className="text-sm"
-                        />
+                        <Select 
+                          value={newResource.icon || 'sparkles'} 
+                          onValueChange={(value) => {
+                            updateNewResource('icon', value);
+                            // Auto-suggest color scheme based on icon category
+                            if (!newResource.colorScheme || newResource.colorScheme === 'blue-magic') {
+                              const suggestedScheme = getDefaultColorSchemeForIcon(value);
+                              updateNewResource('colorScheme', suggestedScheme);
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.entries(
+                              RESOURCE_ICONS.reduce((acc, icon) => {
+                                if (!acc[icon.category]) acc[icon.category] = [];
+                                acc[icon.category].push(icon);
+                                return acc;
+                              }, {} as Record<string, typeof RESOURCE_ICONS>)
+                            ).map(([category, icons]) => (
+                              <div key={category}>
+                                <div className="px-2 py-1 text-xs font-semibold text-muted-foreground capitalize">
+                                  {category}
+                                </div>
+                                {icons.map(icon => (
+                                  <SelectItem key={icon.id} value={icon.id}>
+                                    <div className="flex items-center gap-2">
+                                      <span>{icon.icon}</span>
+                                      {icon.name}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </div>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 

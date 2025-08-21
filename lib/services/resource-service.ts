@@ -171,6 +171,37 @@ export class ResourceService {
   }
 
   /**
+   * Migrate resources from old color field to colorScheme field
+   */
+  migrateResourceColorSchemes(character: Character): void {
+    character.resources.forEach(resource => {
+      // Check if resource has old 'color' field but no 'colorScheme'
+      const resourceAny = resource as any;
+      if (resourceAny.color && !resource.colorScheme) {
+        // Map old colors to new color schemes
+        const colorMapping: Record<string, string> = {
+          'blue': 'blue-magic',
+          'red': 'red-fury',
+          'green': 'green-nature',
+          'purple': 'purple-arcane',
+          'orange': 'orange-ki',
+          'yellow': 'yellow-divine',
+          'teal': 'teal-focus',
+          'gray': 'gray-stamina'
+        };
+        
+        resource.colorScheme = colorMapping[resourceAny.color] || 'blue-magic';
+        delete resourceAny.color; // Remove old field
+      }
+      
+      // Ensure colorScheme exists
+      if (!resource.colorScheme) {
+        resource.colorScheme = 'blue-magic';
+      }
+    });
+  }
+
+  /**
    * Create a log entry for resource usage
    */
   createResourceLogEntry(entry: { resourceId: string; amount: number; type: 'spend' | 'restore'; resource: CharacterResource }): ResourceUsageEntry {

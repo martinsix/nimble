@@ -99,7 +99,7 @@ export const createDefaultResources = (): CharacterResource[] => {
       id: 'mana',
       name: 'Mana',
       description: 'Magical energy used to cast spells',
-      color: 'blue',
+      colorScheme: 'blue-magic',
       icon: 'sparkles',
       resetCondition: 'safe_rest',
       resetType: 'to_max',
