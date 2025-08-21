@@ -5,9 +5,9 @@ export interface UIState {
     hitPoints: boolean;
     hitDice: boolean;
     wounds: boolean;
-    mana: boolean;
     initiative: boolean;
     actionTracker: boolean;
+    resources: boolean;
     attributes: boolean;
     skills: boolean;
     actions: boolean;
@@ -57,7 +57,8 @@ export class UIStateService {
       this._uiState = this.getDefaultUIState();
     } else {
       try {
-        this._uiState = JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        this._uiState = this.migrateUIState(parsed);
       } catch {
         this._uiState = this.getDefaultUIState();
       }
@@ -93,6 +94,31 @@ export class UIStateService {
     await this.saveUIState(newState);
   }
 
+  private migrateUIState(stored: any): UIState {
+    // Handle migration from old mana-based UI state
+    const sections = stored.collapsibleSections || {};
+    
+    return {
+      collapsibleSections: {
+        classInfo: sections.classInfo ?? true,
+        classFeatures: sections.classFeatures ?? true,
+        hitPoints: sections.hitPoints ?? true,
+        hitDice: sections.hitDice ?? true,
+        wounds: sections.wounds ?? true,
+        initiative: sections.initiative ?? true,
+        actionTracker: sections.actionTracker ?? true,
+        resources: sections.resources ?? true,
+        attributes: sections.attributes ?? true,
+        skills: sections.skills ?? true,
+        actions: sections.actions ?? true,
+        armor: sections.armor ?? true,
+        abilities: sections.abilities ?? true,
+        inventory: sections.inventory ?? true,
+      },
+      advantageLevel: stored.advantageLevel ?? 0,
+    };
+  }
+
   private getDefaultUIState(): UIState {
     return {
       collapsibleSections: {
@@ -101,9 +127,9 @@ export class UIStateService {
         hitPoints: true,
         hitDice: true,
         wounds: true,
-        mana: true,
         initiative: true,
         actionTracker: true,
+        resources: true,
         attributes: true,
         skills: true,
         actions: true,

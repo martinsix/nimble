@@ -34,7 +34,7 @@ export function useUIStateService() {
         hitPoints: true,
         hitDice: true,
         wounds: true,
-        mana: true,
+        resources: true,
         initiative: true,
         actionTracker: true,
         attributes: true,

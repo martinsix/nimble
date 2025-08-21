@@ -23,7 +23,7 @@ export function UIStateProvider({ children }: UIStateProviderProps) {
       hitPoints: true,
       hitDice: true,
       wounds: true,
-      mana: true,
+      resources: true,
       initiative: true,
       actionTracker: true,
       attributes: true,

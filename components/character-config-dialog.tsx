@@ -1,13 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Character, AttributeName, CharacterConfiguration } from "@/lib/types/character";
+import { Character, CharacterConfiguration } from "@/lib/types/character";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Switch } from "./ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 interface CharacterConfigDialogProps {
   character: Character;
@@ -54,36 +52,7 @@ export function CharacterConfigDialog({ character, isOpen, onClose, onSave }: Ch
     }));
   };
 
-  const updateManaEnabled = (enabled: boolean) => {
-    setConfig(prev => ({
-      ...prev,
-      mana: {
-        ...prev.mana,
-        enabled,
-      },
-    }));
-  };
-
-  const updateManaAttribute = (attribute: AttributeName) => {
-    setConfig(prev => ({
-      ...prev,
-      mana: {
-        ...prev.mana,
-        attribute,
-      },
-    }));
-  };
-
-  const attributeOptions: { value: AttributeName; label: string }[] = [
-    { value: 'strength', label: 'Strength' },
-    { value: 'dexterity', label: 'Dexterity' },
-    { value: 'intelligence', label: 'Intelligence' },
-    { value: 'will', label: 'Will' },
-  ];
-
-  // Calculate what the mana pool would be if enabled
-  const manaAttributeValue = character.attributes[config.mana.attribute];
-  const calculatedMaxMana = 3 * manaAttributeValue + character.level;
+  // No mana configuration needed - resources are now managed directly on the character
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
@@ -159,65 +128,7 @@ export function CharacterConfigDialog({ character, isOpen, onClose, onSave }: Ch
             </div>
           </div>
 
-          {/* Mana Configuration */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label className="text-sm font-medium">
-                  Mana System
-                </Label>
-                <div className="text-xs text-muted-foreground">
-                  Enable mana points for spellcasting or special abilities.
-                </div>
-              </div>
-              <Switch
-                checked={config.mana.enabled}
-                onCheckedChange={updateManaEnabled}
-              />
-            </div>
-
-            {config.mana.enabled && (
-              <div className="space-y-3 pl-4 border-l-2 border-muted">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">
-                    Mana Attribute
-                  </Label>
-                  <Select 
-                    value={config.mana.attribute} 
-                    onValueChange={updateManaAttribute}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {attributeOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Which attribute determines the mana pool size.
-                  </p>
-                </div>
-
-                <div className="space-y-1">
-                  <Label className="text-sm font-medium text-muted-foreground">
-                    Calculated Mana Pool
-                  </Label>
-                  <div className="p-2 bg-muted rounded text-sm">
-                    <div className="font-mono">
-                      {calculatedMaxMana} mana points
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Formula: (3 × {config.mana.attribute} [{manaAttributeValue}]) + level [{character.level}] = {calculatedMaxMana}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Resources are now managed directly on the character - no configuration needed */}
         </div>
 
         <DialogFooter>

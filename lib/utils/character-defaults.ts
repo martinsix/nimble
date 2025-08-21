@@ -1,7 +1,8 @@
-import { Skill, AttributeName, HitDice, Wounds, CharacterConfiguration, Mana, Proficiencies, HitDieSize } from '../types/character';
+import { Skill, AttributeName, HitDice, Wounds, CharacterConfiguration, Proficiencies, HitDieSize } from '../types/character';
 import { Inventory } from '../types/inventory';
 import { Abilities } from '../types/abilities';
 import { ClassDefinition } from '../types/class';
+import { CharacterResource } from '../types/resources';
 
 export const createDefaultSkills = () => {
   const defaultSkills = {
@@ -90,19 +91,25 @@ export const createDefaultCharacterConfiguration = (): CharacterConfiguration =>
     maxWounds: 6, // Default to 6 max wounds before death
     maxHP: 10, // Default to 10 max hit points
     maxInventorySize: 10, // Default to 10 base inventory slots (before strength bonus)
-    mana: {
-      enabled: false, // Mana disabled by default
-      attribute: 'intelligence', // Default to intelligence if enabled
-    },
   };
 };
 
-export const createDefaultMana = (attribute: number, level: number): Mana => {
-  const maxMana = 3 * attribute + level;
-  return {
-    current: maxMana, // Start with full mana
-    max: maxMana, // 3 * mana attribute + level
-  };
+export const createDefaultResources = (): CharacterResource[] => {
+  return [
+    {
+      id: 'mana',
+      name: 'Mana',
+      description: 'Magical energy used to cast spells',
+      color: 'blue',
+      icon: 'sparkles',
+      resetCondition: 'safe_rest',
+      resetType: 'to_max',
+      minValue: 0,
+      maxValue: 10,
+      current: 10,
+      sortOrder: 1,
+    },
+  ];
 };
 
 export const createDefaultProficiencies = (classDefinition?: ClassDefinition): Proficiencies => {

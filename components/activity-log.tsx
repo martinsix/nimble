@@ -1,6 +1,6 @@
 "use client";
 
-import { LogEntry, DiceRollEntry, DamageEntry, HealingEntry, TempHPEntry, InitiativeEntry, AbilityUsageEntry, SafeRestEntry, ManaEntry } from "@/lib/types/log-entries";
+import { LogEntry, DiceRollEntry, DamageEntry, HealingEntry, TempHPEntry, InitiativeEntry, AbilityUsageEntry, SafeRestEntry, ManaEntry, ResourceUsageEntry } from "@/lib/types/log-entries";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
@@ -145,7 +145,7 @@ function RollEntryDisplay({ roll, formatTime }: { roll: DiceRollEntry, formatTim
 }
 
 // Component for displaying non-roll entries
-function NonRollEntryDisplay({ entry, formatTime }: { entry: DamageEntry | HealingEntry | TempHPEntry | InitiativeEntry | AbilityUsageEntry | SafeRestEntry | ManaEntry, formatTime: (date: Date) => string }) {
+function NonRollEntryDisplay({ entry, formatTime }: { entry: DamageEntry | HealingEntry | TempHPEntry | InitiativeEntry | AbilityUsageEntry | SafeRestEntry | ManaEntry | ResourceUsageEntry, formatTime: (date: Date) => string }) {
   const getEntryIcon = () => {
     switch (entry.type) {
       case 'damage':
@@ -162,6 +162,8 @@ function NonRollEntryDisplay({ entry, formatTime }: { entry: DamageEntry | Heali
         return '🏠';
       case 'mana':
         return '🔮';
+      case 'resource':
+        return '💎';
       default:
         return '📝';
     }
@@ -183,6 +185,8 @@ function NonRollEntryDisplay({ entry, formatTime }: { entry: DamageEntry | Heali
         return 'text-green-700';
       case 'mana':
         return 'text-blue-600';
+      case 'resource':
+        return 'text-purple-600';
       default:
         return 'text-muted-foreground';
     }
@@ -202,6 +206,7 @@ function NonRollEntryDisplay({ entry, formatTime }: { entry: DamageEntry | Heali
            entry.type === 'ability_usage' ? `${(entry as AbilityUsageEntry).usesRemaining}/${(entry as AbilityUsageEntry).maxUses}` :
            entry.type === 'safe_rest' ? 'REST' :
            entry.type === 'mana' ? (entry as ManaEntry).action === 'spent' ? `-${entry.amount}` : `+${entry.amount}` :
+           entry.type === 'resource' ? (entry as ResourceUsageEntry).action === 'spent' ? `-${entry.amount}` : `+${entry.amount}` :
            `+${entry.amount}`}
         </span>
       </div>

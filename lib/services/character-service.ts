@@ -1,7 +1,7 @@
 import { Character, ActionTracker, CharacterConfiguration } from '../types/character';
 import { Abilities } from '../types/abilities';
 import { ICharacterService, ICharacterStorage, IActivityLog, IAbilityService } from './interfaces';
-import { createDefaultMana } from '../utils/character-defaults';
+import { resourceService } from './resource-service';
 
 // Import for backward compatibility singleton
 import { characterStorageService } from './character-storage-service';
@@ -47,7 +47,14 @@ export class CharacterService implements ICharacterService {
   async loadCharacter(characterId: string): Promise<Character | null> {
     const character = await this.storageService.getCharacter(characterId);
     if (character) {
+      // Migrate character from old mana system to new resource system
+      resourceService.migrateCharacterFromMana(character);
+      
       this._character = character;
+      
+      // Save migrated character if migration occurred
+      await this.saveCharacter();
+      
       this.notifyCharacterChanged();
     }
     return character;
@@ -251,58 +258,9 @@ export class CharacterService implements ICharacterService {
     this.notifyCharacterChanged();
   }
 
-  /**
-   * Spend mana points
-   */
-  async spendMana(amount: number): Promise<void> {
-    if (!this._character?.mana) return;
-
-    const newCurrent = Math.max(0, this._character.mana.current - amount);
-
-    this._character = {
-      ...this._character,
-      mana: {
-        current: newCurrent,
-        max: this._character.mana.max,
-      },
-    };
-
-    await this.saveCharacter();
-    this.notifyCharacterChanged();
-
-    // Log mana usage
-    await this.logService.addLogEntry(
-      this.logService.createManaEntry(amount, 'spent', newCurrent, this._character.mana?.max || 0)
-    );
-  }
 
   /**
-   * Restore mana points
-   */
-  async restoreMana(amount: number): Promise<void> {
-    if (!this._character?.mana) return;
-
-    const newCurrent = Math.min(this._character.mana.max, this._character.mana.current + amount);
-
-    this._character = {
-      ...this._character,
-      mana: {
-        current: newCurrent,
-        max: this._character.mana.max,
-      },
-    };
-
-    await this.saveCharacter();
-    this.notifyCharacterChanged();
-
-    // Log mana restoration
-    await this.logService.addLogEntry(
-      this.logService.createManaEntry(amount, 'restored', newCurrent, this._character.mana?.max || 0)
-    );
-  }
-
-  /**
-   * Perform safe rest - restore HP, hit dice, remove wound, reset abilities
+   * Perform safe rest - restore HP, hit dice, remove wound, reset abilities and resources
    */
   async performSafeRest(): Promise<void> {
     if (!this._character) return;
@@ -311,6 +269,9 @@ export class CharacterService implements ICharacterService {
     let resetAbilities = this.abilityService.resetAbilities(this._character.abilities, 'per_turn');
     resetAbilities = this.abilityService.resetAbilities(resetAbilities, 'per_encounter');
     resetAbilities = this.abilityService.resetAbilities(resetAbilities, 'per_safe_rest');
+
+    // Reset resources that reset on safe rest
+    const resourceEntries = resourceService.resetResourcesByCondition(this._character, 'safe_rest');
 
     // Calculate what was restored for logging
     const healingAmount = this._character.hitPoints.max - this._character.hitPoints.current;
@@ -359,10 +320,16 @@ export class CharacterService implements ICharacterService {
         abilitiesReset
       )
     );
+
+    // Log resource resets
+    for (const entry of resourceEntries) {
+      const logEntry = resourceService.createResourceLogEntry(entry);
+      await this.logService.addLogEntry(logEntry);
+    }
   }
 
   /**
-   * End encounter - reset per-encounter abilities and action tracker
+   * End encounter - reset per-encounter abilities, action tracker, and resources
    */
   async endEncounter(): Promise<void> {
     if (!this._character) return;
@@ -370,6 +337,9 @@ export class CharacterService implements ICharacterService {
     // Reset both per-encounter and per-turn abilities when encounter ends
     let resetAbilities = this.abilityService.resetAbilities(this._character.abilities, 'per_encounter');
     resetAbilities = this.abilityService.resetAbilities(resetAbilities, 'per_turn');
+
+    // Reset resources that reset on encounter end
+    const resourceEntries = resourceService.resetResourcesByCondition(this._character, 'encounter_end');
 
     this._character = {
       ...this._character,
@@ -384,16 +354,25 @@ export class CharacterService implements ICharacterService {
 
     await this.saveCharacter();
     this.notifyCharacterChanged();
+
+    // Log resource resets
+    for (const entry of resourceEntries) {
+      const logEntry = resourceService.createResourceLogEntry(entry);
+      await this.logService.addLogEntry(logEntry);
+    }
   }
 
   /**
-   * End turn - reset per-turn abilities and action tracker
+   * End turn - reset per-turn abilities, action tracker, and resources
    */
   async endTurn(): Promise<void> {
     if (!this._character) return;
 
     // Reset per-turn abilities
     const resetAbilities = this.abilityService.resetAbilities(this._character.abilities, 'per_turn');
+    
+    // Reset resources that reset on turn end
+    const resourceEntries = resourceService.resetResourcesByCondition(this._character, 'turn_end');
     
     this._character = {
       ...this._character,
@@ -407,6 +386,12 @@ export class CharacterService implements ICharacterService {
 
     await this.saveCharacter();
     this.notifyCharacterChanged();
+
+    // Log resource resets
+    for (const entry of resourceEntries) {
+      const logEntry = resourceService.createResourceLogEntry(entry);
+      await this.logService.addLogEntry(logEntry);
+    }
   }
 
   /**
@@ -440,7 +425,7 @@ export class CharacterService implements ICharacterService {
   }
 
   /**
-   * Update character configuration (wounds, mana settings, etc.)
+   * Update character configuration (wounds, max HP, etc.)
    */
   async updateCharacterConfiguration(config: CharacterConfiguration): Promise<void> {
     if (!this._character) return;
@@ -453,26 +438,6 @@ export class CharacterService implements ICharacterService {
         max: config.maxWounds, // Update wounds max based on config
       },
     };
-
-    // Handle mana configuration changes
-    if (config.mana.enabled) {
-      const manaAttributeValue = this._character.attributes[config.mana.attribute];
-      const newMaxMana = 3 * manaAttributeValue + this._character.level;
-      
-      if (!this._character.mana) {
-        // Create new mana pool if enabling for first time
-        updatedCharacter.mana = createDefaultMana(manaAttributeValue, this._character.level);
-      } else {
-        // Update existing mana pool
-        updatedCharacter.mana = {
-          current: Math.min(this._character.mana.current, newMaxMana), // Don't exceed new max
-          max: newMaxMana,
-        };
-      }
-    } else {
-      // Remove mana if disabled
-      updatedCharacter.mana = undefined;
-    }
 
     this._character = updatedCharacter;
 

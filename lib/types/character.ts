@@ -9,6 +9,7 @@ export interface Skill {
 import { Inventory } from './inventory';
 import { Abilities } from './abilities';
 import { ArmorProficiency, WeaponProficiency } from './class';
+import { CharacterResource } from './resources';
 
 export interface ActionTracker {
   current: number; // Currently available actions
@@ -29,16 +30,6 @@ export interface Wounds {
   max: number; // Maximum wounds before death (default 6)
 }
 
-export interface ManaConfiguration {
-  enabled: boolean; // Whether this character uses mana
-  attribute: AttributeName; // Which attribute determines mana pool size
-}
-
-export interface Mana {
-  current: number; // Current mana available
-  max: number; // Maximum mana (3 * mana attribute + level)
-}
-
 export interface Proficiencies {
   armor: ArmorProficiency[]; // Armor types character is proficient with
   weapons: WeaponProficiency[]; // Weapon categories character is proficient with
@@ -48,7 +39,6 @@ export interface CharacterConfiguration {
   maxWounds: number; // Maximum wounds before death (default 6)
   maxHP: number; // Maximum hit points (default 10)
   maxInventorySize: number; // Base inventory size before strength bonus (default 10)
-  mana: ManaConfiguration; // Mana system configuration
 }
 
 export interface Character {
@@ -72,7 +62,7 @@ export interface Character {
   };
   hitDice: HitDice; // Hit dice for healing and recovery
   wounds: Wounds; // Wounds sustained from reaching 0 HP
-  mana?: Mana; // Mana pool (optional - only if enabled in config)
+  resources: CharacterResource[]; // Character's resources (mana, fury, etc.)
   config: CharacterConfiguration; // Character configuration settings
   initiative: Skill;
   actionTracker: ActionTracker;
@@ -115,7 +105,7 @@ export interface CreateCharacterData {
   };
   hitDice: HitDice;
   wounds: Wounds;
-  mana?: Mana;
+  resources: CharacterResource[];
   config: CharacterConfiguration;
   initiative: Skill;
   actionTracker: ActionTracker;

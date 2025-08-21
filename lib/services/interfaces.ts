@@ -37,7 +37,7 @@ export interface IActivityLog {
   createHealingEntry(amount: number): LogEntry;
   createDamageEntry(amount: number, targetType: 'hp' | 'temp_hp'): LogEntry;
   createTempHPEntry(amount: number, previousAmount?: number): LogEntry;
-  createManaEntry(amount: number, type: 'spent' | 'restored', currentMana: number, maxMana: number): LogEntry;
+  createResourceEntry(resourceId: string, amount: number, type: 'spent' | 'restored', currentAmount: number, maxAmount: number): LogEntry;
   createAbilityUsageEntry(abilityName: string, frequency: string, currentUses: number, maxUses: number): LogEntry;
   createInitiativeEntry(rollTotal: number, actionsGranted: number): LogEntry;
   createSafeRestEntry(healingAmount: number, hitDiceRestored: number, woundsRemoved: number, abilitiesReset: number): LogEntry;
@@ -71,8 +71,6 @@ export interface ICharacterService {
   updateWounds(current: number, max: number): Promise<void>;
   updateActionTracker(actionTracker: ActionTracker): Promise<void>;
   updateAbilities(abilities: Abilities): Promise<void>;
-  spendMana(amount: number): Promise<void>;
-  restoreMana(amount: number): Promise<void>;
   performSafeRest(): Promise<void>;
   endEncounter(): Promise<void>;
   endTurn(): Promise<void>;

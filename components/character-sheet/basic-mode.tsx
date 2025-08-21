@@ -3,11 +3,13 @@
 import { CharacterStats } from "./character-stats";
 import { HealthManagement } from "./health-management";
 import { CombatSection } from "./combat-section";
+import { ResourceSection } from "../sections/resource-section";
 
 /**
  * BasicMode component renders the essential character sheet features.
  * This is the simplified interface that shows only the core functionality:
- * - Health Management (HP, Hit Dice, Wounds, Mana)
+ * - Health Management (HP, Hit Dice, Wounds)
+ * - Resources (Mana, Fury, Focus, etc.)
  * - Combat Section (Initiative, Action Tracker)
  * - Character Stats (Attributes, Skills)
  * 
@@ -16,8 +18,11 @@ import { CombatSection } from "./combat-section";
 export function BasicMode() {
   return (
     <>
-      {/* Health Management - HP, Hit Dice, Wounds, Mana */}
+      {/* Health Management - HP, Hit Dice, Wounds */}
       <HealthManagement />
+
+      {/* Resources - Mana, Fury, Focus, etc. */}
+      <ResourceSection />
 
       {/* Combat Section - Initiative, Action Tracker */}
       <CombatSection />

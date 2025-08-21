@@ -1,7 +1,7 @@
 import { Character, CreateCharacterData } from '../types/character';
 import { ICharacterRepository, LocalStorageCharacterRepository } from '../storage/character-repository';
 import { createCharacterSchema, characterSchema } from '../schemas/character';
-import { createDefaultCharacterConfiguration, createDefaultHitPoints, createDefaultHitDice, createDefaultProficiencies } from '../utils/character-defaults';
+import { createDefaultCharacterConfiguration, createDefaultHitPoints, createDefaultHitDice, createDefaultProficiencies, createDefaultResources } from '../utils/character-defaults';
 import { getClassDefinition } from '../data/classes/index';
 
 export class CharacterStorageService {
@@ -90,6 +90,7 @@ export class CharacterStorageService {
       hitPoints,
       hitDice,
       wounds: { current: 0, max: config.maxWounds },
+      resources: createDefaultResources(),
       config,
       initiative: { name: 'Initiative', associatedAttribute: 'dexterity', modifier: 0 },
       actionTracker: { current: 3, base: 3, bonus: 0 },

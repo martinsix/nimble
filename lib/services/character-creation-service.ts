@@ -11,7 +11,8 @@ import {
   createDefaultInitiative,
   createDefaultActionTracker,
   createDefaultAbilities,
-  createDefaultWounds
+  createDefaultWounds,
+  createDefaultResources
 } from '../utils/character-defaults';
 
 export interface CreateCharacterOptions {
@@ -72,6 +73,7 @@ export class CharacterCreationService implements ICharacterCreation {
       hitPoints,
       hitDice,
       wounds: createDefaultWounds(config.maxWounds),
+      resources: createDefaultResources(), // Initialize with default resources
       config,
       initiative: createDefaultInitiative(),
       actionTracker: createDefaultActionTracker(),

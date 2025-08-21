@@ -71,21 +71,25 @@ export const woundsSchema = z.object({
   max: z.number().min(1),
 });
 
-export const manaSchema = z.object({
+export const resourceSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  description: z.string().optional(),
+  color: z.string().min(1),
+  icon: z.string().optional(),
+  resetCondition: z.enum(['safe_rest', 'encounter_end', 'turn_end', 'never', 'manual']),
+  resetType: z.enum(['to_max', 'to_zero', 'to_default']),
+  resetValue: z.number().optional(),
+  minValue: z.number().min(0),
+  maxValue: z.number().min(1),
   current: z.number().min(0),
-  max: z.number().min(0),
-});
-
-export const manaConfigurationSchema = z.object({
-  enabled: z.boolean(),
-  attribute: attributeNameSchema,
+  sortOrder: z.number().min(0),
 });
 
 export const characterConfigurationSchema = z.object({
   maxWounds: z.number().min(1),
   maxHP: z.number().min(1),
   maxInventorySize: z.number().min(1),
-  mana: manaConfigurationSchema,
 });
 
 const abilityRollSchema = z.object({
@@ -148,7 +152,7 @@ export const createCharacterSchema = z.object({
   hitPoints: hitPointsSchema,
   hitDice: hitDiceSchema,
   wounds: woundsSchema,
-  mana: manaSchema.optional(),
+  resources: z.array(resourceSchema),
   config: characterConfigurationSchema,
   initiative: skillSchema,
   actionTracker: actionTrackerSchema,
@@ -170,7 +174,7 @@ export const characterSchema = z.object({
   hitPoints: hitPointsSchema,
   hitDice: hitDiceSchema,
   wounds: woundsSchema,
-  mana: manaSchema.optional(),
+  resources: z.array(resourceSchema),
   config: characterConfigurationSchema,
   initiative: skillSchema,
   actionTracker: actionTrackerSchema,

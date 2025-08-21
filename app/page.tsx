@@ -70,15 +70,6 @@ function HomeContent() {
     await characterService.applyTemporaryHP(amount);
   }, []);
 
-  const onSpendMana = useCallback(async (amount: number) => {
-    const characterService = getCharacterService();
-    await characterService.spendMana(amount);
-  }, []);
-
-  const onRestoreMana = useCallback(async (amount: number) => {
-    const characterService = getCharacterService();
-    await characterService.restoreMana(amount);
-  }, []);
 
   const onUpdateCharacterConfiguration = useCallback(async (config: CharacterConfiguration) => {
     const characterService = getCharacterService();
@@ -155,8 +146,6 @@ function HomeContent() {
     onApplyDamage,
     onApplyHealing,
     onApplyTemporaryHP,
-    onSpendMana,
-    onRestoreMana,
     onUpdateCharacterConfiguration,
     onRollAttribute: rollAttribute,
     onRollSave: rollSave,
@@ -178,8 +167,6 @@ function HomeContent() {
     onApplyDamage,
     onApplyHealing,
     onApplyTemporaryHP,
-    onSpendMana,
-    onRestoreMana,
     onUpdateCharacterConfiguration,
     rollAttribute,
     rollSave,
