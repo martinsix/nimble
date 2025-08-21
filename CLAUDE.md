@@ -33,6 +33,9 @@ interface Character {
   attributes: { strength, dexterity, intelligence, will }
   hitPoints: { current, max, temporary }
   hitDice: { size, current, max }
+  wounds: { current, max }
+  resources: CharacterResource[] // Generic resource system (mana, fury, focus, etc.)
+  config: CharacterConfiguration
   initiative: Skill
   actionTracker: { current, base, bonus }
   inEncounter: boolean
@@ -42,16 +45,33 @@ interface Character {
   grantedFeatures: string[]
   timestamps: { createdAt, updatedAt }
 }
+
+interface CharacterResource {
+  id: string
+  name: string
+  description?: string
+  colorScheme: string // Predefined color scheme (blue-magic, red-fury, etc.)
+  icon?: string // Icon identifier (sparkles, fire, etc.)
+  resetCondition: 'safe_rest' | 'encounter_end' | 'turn_end' | 'never' | 'manual'
+  resetType: 'to_max' | 'to_zero' | 'to_default'
+  resetValue?: number
+  minValue: number
+  maxValue: number
+  current: number
+  sortOrder: number
+}
 ```
 
 #### Service Architecture
-- **CharacterStorageService** handles character CRUD operations with validation
-- **DiceService** manages all dice rolling mechanics
-- **ActivityLogService** tracks character actions and dice rolls
+- **CharacterService** handles character CRUD operations with validation and business logic
+- **ResourceService** manages generic resource system (mana, fury, focus, etc.) with configurable reset conditions
+- **DiceService** manages all dice rolling mechanics with advantage/disadvantage and critical hits
+- **ActivityLogService** tracks character actions, dice rolls, and resource usage
 - **AbilityService** handles ability usage, cooldowns, and roll calculations
 - **SettingsService** manages app settings and character selection
 - **ClassService** handles class definitions, subclass management, and feature progression
-- **Singleton pattern** for easy dependency injection and state management
+- **UIStateService** manages collapsible sections and UI preferences
+- **Singleton pattern** for direct service access without React Context overhead
 
 #### Storage & State
 - **Local Storage** with JSON serialization for persistence
@@ -66,25 +86,32 @@ interface Character {
 app/page.tsx (main orchestrator)
 ├── AppMenu (settings, character selector)
 ├── CharacterSheet (main form component, mode-aware)
-│   ├── CharacterNameSection
-│   ├── AdvantageToggle (global advantage/disadvantage)
-│   ├── HitPointsSection (with temporary HP support)
-│   ├── ActionTrackerSection (encounter actions)
-│   ├── InitiativeSection (collapsible)
-│   ├── ArmorSection (collapsible, main vs supplementary armor)
-│   ├── AttributesSection (collapsible, with saves)
-│   ├── SkillsSection (collapsible)
-│   ├── ActionsSection (collapsible, equipped weapons and abilities)
-│   ├── AbilitySection (collapsible, ability management) [full mode only]
-│   └── InventorySection (collapsible, equipment management) [full mode only]
-└── ActivityLog (character activity and dice results)
+│   ├── CharacterHeader (name, class info, advantage toggle)
+│   ├── BasicMode (simplified interface)
+│   │   ├── HitPointsSection (HP, temporary HP, wounds)
+│   │   ├── ActionTrackerSection (encounter actions)
+│   │   ├── AttributesSection (attributes and saving throws)
+│   │   └── SkillsSection (skill checks)
+│   └── FullMode (complete interface)
+│       ├── All BasicMode sections
+│       ├── ResourceSection (generic resource management with color schemes)
+│       ├── InitiativeSection (initiative rolls)
+│       ├── ArmorSection (main vs supplementary armor)
+│       ├── ActionsSection (equipped weapons and abilities)
+│       ├── AbilitySection (ability management with usage tracking)
+│       └── InventorySection (equipment management)
+├── CharacterConfigDialog (comprehensive character configuration)
+│   ├── Wounds/HP/Inventory settings
+│   └── Resource Management (create, edit, delete resources)
+└── ActivityLog (character activity, dice results, resource usage)
 ```
 
 #### Modular Design
+- **Direct service access** eliminating React Context overhead
 - **Component composition** over inheritance
-- **Props drilling** with typed interfaces
 - **Single responsibility** principle per component
 - **Reusable UI components** from shadcn/ui
+- **Type-safe hooks** for service integration
 
 ### Features
 
@@ -102,6 +129,7 @@ app/page.tsx (main orchestrator)
 2. **Combat & Health System**
    - Hit points with temporary HP (D&D 5e rules)
    - Temporary HP absorbs damage first, doesn't stack
+   - Wounds system for tracking serious injuries
    - Quick damage/heal buttons (1, 5, 10) and custom amounts
    - Health bar with color-coded status
    - Dying indicator when at 0 HP
@@ -143,12 +171,22 @@ app/page.tsx (main orchestrator)
    - Dexterity bonus calculations with armor limits
    - Visual indicators for armor types and effective bonuses
 
-9. **Ability System**
-   - Freeform abilities (text-only descriptions)
-   - Action abilities with frequency-based usage (per-turn, per-encounter, at-will)
-   - Integrated roll mechanics with dice, modifiers, and attribute bonuses
-   - Automatic ability resets on turn/encounter end
-   - Visual usage tracking and roll descriptions
+9. **Generic Resource System**
+   - Configurable resources (mana, fury, focus, ki, divine power, etc.)
+   - 8 predefined color schemes with dynamic percentage-based gradients
+   - 25+ categorized icons (magic, energy, physical, special)
+   - Flexible reset conditions (safe rest, encounter end, turn end, never, manual)
+   - Multiple reset types (to max, to zero, to custom default value)
+   - Visual resource bars with real-time color changes
+   - Activity logging for all resource usage
+   - Full CRUD operations in character configuration dialog
+
+10. **Ability System**
+    - Freeform abilities (text-only descriptions)
+    - Action abilities with frequency-based usage (per-turn, per-encounter, at-will)
+    - Integrated roll mechanics with dice, modifiers, and attribute bonuses
+    - Automatic ability resets on turn/encounter end
+    - Visual usage tracking and roll descriptions
 
 10. **Dice Rolling & Combat**
     - **Attack Rolls**: Exploding crits, miss on natural 1
