@@ -60,6 +60,23 @@ export const fighter: ClassDefinition = {
       }
     },
     {
+      level: 2,
+      type: 'resource',
+      name: 'Battlefield Fury',
+      description: 'You can channel your combat experience into bursts of tactical fury.',
+      resourceDefinition: {
+        id: 'battlefield-fury',
+        name: 'Battlefield Fury',
+        description: 'Combat rage that builds during intense fighting',
+        colorScheme: 'red-fury',
+        icon: 'fire',
+        resetCondition: 'encounter_end',
+        resetType: 'to_max',
+        minValue: 0,
+        maxValue: 2
+      }
+    },
+    {
       level: 4,
       type: 'stat_boost',
       name: 'Ability Score Improvement',

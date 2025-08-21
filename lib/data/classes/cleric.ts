@@ -41,10 +41,33 @@ export const cleric: ClassDefinition = {
       type: 'resource',
       name: 'Channel Divinity',
       description: 'You can channel divine energy to fuel magical effects.',
-      resource: {
-        resourceName: 'Channel Divinity',
-        amount: 1,
-        rechargeType: 'short_rest'
+      resourceDefinition: {
+        id: 'channel-divinity',
+        name: 'Channel Divinity',
+        description: 'Divine power channeled through your connection to your deity',
+        colorScheme: 'yellow-divine',
+        icon: 'sun',
+        resetCondition: 'encounter_end',
+        resetType: 'to_max',
+        minValue: 0,
+        maxValue: 1
+      }
+    },
+    {
+      level: 3,
+      type: 'resource',
+      name: 'Divine Blessing',
+      description: 'You gain divine blessings that can aid you and your allies.',
+      resourceDefinition: {
+        id: 'divine-blessing',
+        name: 'Divine Blessing',
+        description: 'Sacred blessings granted by your deity for special occasions',
+        colorScheme: 'yellow-divine',
+        icon: 'star',
+        resetCondition: 'safe_rest',
+        resetType: 'to_max',
+        minValue: 0,
+        maxValue: 3
       }
     },
     {

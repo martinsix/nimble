@@ -4,7 +4,7 @@
  * Replaces the hardcoded mana system with a flexible resource system
  * that can handle mana, fury, focus, energy, etc.
  * 
- * Resources are now stored directly on the character with their complete definition.
+ * Separates pure resource definitions from runtime instance state.
  */
 
 export type ResourceResetCondition = 
@@ -19,6 +19,35 @@ export type ResourceResetType =
   | 'to_zero'        // Reset to zero (fury)
   | 'to_default';    // Reset to a specific default value
 
+/**
+ * Pure resource definition - immutable template for a resource type
+ */
+export interface ResourceDefinition {
+  id: string;                           // Unique identifier (e.g., 'mana', 'fury')
+  name: string;                         // Display name (e.g., 'Mana', 'Fury')
+  description?: string;                 // Optional description
+  colorScheme: string;                  // Color scheme ID (e.g., 'blue-magic', 'red-fury')
+  icon?: string;                        // Icon identifier (e.g., 'sparkles', 'fire')
+  resetCondition: ResourceResetCondition;
+  resetType: ResourceResetType;
+  resetValue?: number;                  // Used with 'to_default' reset type
+  minValue: number;                     // Minimum value (usually 0)
+  maxValue: number;                     // Maximum value
+}
+
+/**
+ * Resource instance - combines definition with runtime state
+ */
+export interface ResourceInstance {
+  definition: ResourceDefinition;       // The immutable resource definition
+  current: number;                      // Current amount
+  sortOrder: number;                    // Display order in UI
+}
+
+/**
+ * Legacy interface for backward compatibility
+ * @deprecated Use ResourceInstance instead
+ */
 export interface CharacterResource {
   id: string;                           // Unique identifier (e.g., 'mana', 'fury')
   name: string;                         // Display name (e.g., 'Mana', 'Fury')
@@ -34,8 +63,8 @@ export interface CharacterResource {
   sortOrder: number;                    // Display order in UI
 }
 
-// Default resource templates for character creation
-export const DEFAULT_RESOURCE_TEMPLATES: CharacterResource[] = [
+// Default resource definitions for character creation
+export const DEFAULT_RESOURCE_DEFINITIONS: ResourceDefinition[] = [
   {
     id: 'mana',
     name: 'Mana',
@@ -46,7 +75,37 @@ export const DEFAULT_RESOURCE_TEMPLATES: CharacterResource[] = [
     resetType: 'to_max',
     minValue: 0,
     maxValue: 10,
-    current: 10,
-    sortOrder: 1,
   },
 ];
+
+// Helper function to create a ResourceInstance from a ResourceDefinition
+export function createResourceInstance(
+  definition: ResourceDefinition, 
+  current?: number, 
+  sortOrder?: number
+): ResourceInstance {
+  return {
+    definition,
+    current: current ?? definition.maxValue,
+    sortOrder: sortOrder ?? 1,
+  };
+}
+
+// Helper function to convert ResourceInstance to legacy CharacterResource format
+export function resourceInstanceToCharacterResource(instance: ResourceInstance): CharacterResource {
+  return {
+    ...instance.definition,
+    current: instance.current,
+    sortOrder: instance.sortOrder,
+  };
+}
+
+// Helper function to convert legacy CharacterResource to ResourceInstance format
+export function characterResourceToResourceInstance(characterResource: CharacterResource): ResourceInstance {
+  const { current, sortOrder, ...definition } = characterResource;
+  return {
+    definition,
+    current,
+    sortOrder,
+  };
+}

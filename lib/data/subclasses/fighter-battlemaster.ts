@@ -11,10 +11,16 @@ export const fighterBattleMaster: SubclassDefinition = {
       type: 'resource',
       name: 'Superiority Dice',
       description: 'You have four superiority dice, which are d8s used to fuel your combat maneuvers.',
-      resource: {
-        resourceName: 'Superiority Dice',
-        amount: 4,
-        rechargeType: 'short_rest'
+      resourceDefinition: {
+        id: 'superiority-dice',
+        name: 'Superiority Dice',
+        description: 'Tactical dice used to fuel combat maneuvers',
+        colorScheme: 'orange-ki',
+        icon: 'sword',
+        resetCondition: 'encounter_end',
+        resetType: 'to_max',
+        minValue: 0,
+        maxValue: 4
       }
     },
     {
@@ -48,10 +54,16 @@ export const fighterBattleMaster: SubclassDefinition = {
       type: 'resource',
       name: 'Improved Superiority Dice',
       description: 'Your superiority dice turn into d10s and you gain two more.',
-      resource: {
-        resourceName: 'Superiority Dice',
-        amount: 2,
-        rechargeType: 'short_rest'
+      resourceDefinition: {
+        id: 'improved-superiority-dice',
+        name: 'Improved Superiority Dice',
+        description: 'Enhanced tactical dice (d10s) for advanced combat maneuvers',
+        colorScheme: 'orange-ki',
+        icon: 'sword',
+        resetCondition: 'encounter_end',
+        resetType: 'to_max',
+        minValue: 0,
+        maxValue: 6
       }
     },
     {
@@ -66,10 +78,16 @@ export const fighterBattleMaster: SubclassDefinition = {
       type: 'resource',
       name: 'Master Tactician',
       description: 'Your superiority dice turn into d12s and you gain two more.',
-      resource: {
-        resourceName: 'Superiority Dice',
-        amount: 2,
-        rechargeType: 'short_rest'
+      resourceDefinition: {
+        id: 'master-superiority-dice',
+        name: 'Master Superiority Dice',
+        description: 'Ultimate tactical dice (d12s) for masterful combat maneuvers',
+        colorScheme: 'orange-ki',
+        icon: 'sword',
+        resetCondition: 'encounter_end',
+        resetType: 'to_max',
+        minValue: 0,
+        maxValue: 8
       }
     }
   ]

@@ -180,6 +180,11 @@ app/page.tsx (main orchestrator)
    - Visual resource bars with real-time color changes
    - Activity logging for all resource usage
    - Full CRUD operations in character configuration dialog
+   - **Class Integration**: ResourceFeature automatically grants resources when leveling up
+   - **Pure Definitions**: ResourceDefinition interface separates immutable resource templates from runtime state
+   - **Instance Pattern**: ResourceInstance combines definition with current value and sort order
+   - **Type Safety**: Complete type separation between definition (template) and instance (runtime state)
+   - **Examples**: Wizard "Spell Slots", Fighter "Battlefield Fury", Rogue "Focus", Cleric "Divine Blessing"
 
 10. **Ability System**
     - Freeform abilities (text-only descriptions)

@@ -57,6 +57,23 @@ export const rogue: ClassDefinition = {
     },
     {
       level: 3,
+      type: 'resource',
+      name: 'Focus Pool',
+      description: 'You gain the ability to focus your energy for special techniques.',
+      resourceDefinition: {
+        id: 'focus',
+        name: 'Focus',
+        description: 'Mental energy used for precise techniques and concentration',
+        colorScheme: 'teal-focus',
+        icon: 'eye',
+        resetCondition: 'encounter_end',
+        resetType: 'to_max',
+        minValue: 0,
+        maxValue: 3
+      }
+    },
+    {
+      level: 3,
       type: 'subclass_choice',
       name: 'Roguish Archetype',
       description: 'Choose an archetype that defines your rogue abilities and specialization.',

@@ -321,13 +321,16 @@ export function ClassFeaturesSection() {
                               <p className="text-sm text-muted-foreground">
                                 {feature.description}
                               </p>
-                              {feature.type === 'resource' && feature.resource && (
+                              {feature.type === 'resource' && feature.resourceDefinition && (
                                 <div className="flex gap-2 mt-2">
                                   <Badge variant="secondary" className="text-xs">
-                                    {feature.resource.resourceName}: {feature.resource.amount}
+                                    {feature.resourceDefinition.name}: {feature.resourceDefinition.maxValue}
                                   </Badge>
                                   <Badge variant="secondary" className="text-xs">
-                                    {feature.resource.rechargeType.replace('_', ' ')}
+                                    {feature.resourceDefinition.resetCondition.replace('_', ' ')}
+                                  </Badge>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {feature.resourceDefinition.colorScheme}
                                   </Badge>
                                 </div>
                               )}

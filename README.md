@@ -41,6 +41,16 @@ A comprehensive digital character sheet application for the Nimble RPG system. N
 - **Smart Inventory**: Equipped items don't count toward size limits
 - **Dex Bonus Calculation**: Armor-aware dexterity bonus with visual indicators
 
+### Resource Management
+- **Generic Resources**: Customizable resource pools (mana, fury, focus, stamina, etc.)
+- **Color Schemes**: 8 predefined color schemes with percentage-based gradients
+- **Icon System**: 23+ categorized icons (magic, combat, nature, etc.)
+- **Reset Conditions**: Per-turn, per-encounter, safe rest, never, or manual
+- **Reset Types**: To maximum, to zero, or to custom default value
+- **Resource Bar**: Visual progress bars with color-coded status
+- **Quick Actions**: Fast spend/restore buttons (1, 3, 5) plus custom amounts
+- **Activity Logging**: Comprehensive tracking of resource usage
+
 ### Advanced Features
 - **Class Progression**: Automatic feature grants based on class and level
 - **Subclass Selection**: Choose specializations that provide unique abilities
@@ -101,7 +111,8 @@ npm start
 5. **Attributes**: Use the number inputs to set attribute values (-2 to 10)
 6. **Hit Points**: Set max HP and track current/temporary HP with hit dice
 7. **Skills**: Adjust skill modifiers (0-20) for each of the 10 skills
-8. **Abilities**: Add custom abilities with usage frequencies and roll mechanics
+8. **Resources**: Configure custom resource pools with color schemes and icons
+9. **Abilities**: Add custom abilities with usage frequencies and roll mechanics
 
 ### Combat & Rolling
 1. **Advantage/Disadvantage**: Use the global toggle at the top
@@ -123,6 +134,15 @@ npm start
 3. **Main Armor**: Only one main armor piece can be equipped at a time
 4. **Size Limits**: Weapons have a total size limit (default: 2)
 5. **Armor Display**: View total armor value with dexterity bonus calculations
+
+### Resource Management
+1. **Add Resources**: Create custom resource pools in character configuration
+2. **Color Schemes**: Choose from 8 predefined color schemes for visual distinction
+3. **Icon Selection**: Select from 23+ categorized icons (magic, combat, nature, etc.)
+4. **Reset Configuration**: Set when resources reset (turn, encounter, rest, etc.)
+5. **Quick Actions**: Use -1/-3/-5 and +1/+3/+5 buttons for fast adjustments
+6. **Custom Amounts**: Enter specific amounts to spend or restore
+7. **Visual Feedback**: Progress bars show current/max with color-coded status
 
 ### Health Management
 1. **Damage**: Use quick buttons (-1, -5, -10) or custom amounts

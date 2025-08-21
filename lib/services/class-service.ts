@@ -1,5 +1,6 @@
 import { Character } from '../types/character';
 import { ClassDefinition, ClassFeature, ClassFeatureGrant, AbilityFeature, StatBoostFeature, ProficiencyFeature, SpellAccessFeature, ResourceFeature, SubclassChoiceFeature, SubclassDefinition } from '../types/class';
+import { CharacterResource, createResourceInstance, resourceInstanceToCharacterResource } from '../types/resources';
 import { getClassDefinition, getClassFeaturesForLevel, getAllClassFeaturesUpToLevel } from '../data/classes/index';
 import { getSubclassDefinition, getSubclassFeaturesForLevel, getAllSubclassFeaturesUpToLevel } from '../data/subclasses/index';
 import { IClassService, ICharacterService } from './interfaces';
@@ -256,9 +257,32 @@ export class ClassService implements IClassService {
    * Grant resource feature (adds new resources like Ki Points, etc.)
    */
   private async grantResourceFeature(character: Character, feature: ResourceFeature): Promise<Character> {
-    // For now, resources are just recorded as granted features
-    // In the future, we could add a resources system to the character model
-    return character;
+    const { resourceDefinition, startingAmount } = feature;
+    
+    // Check if resource already exists to avoid duplicates
+    const existingResource = character.resources.find(r => r.id === resourceDefinition.id);
+    if (existingResource) {
+      // If resource already exists, don't add it again
+      return character;
+    }
+
+    // Create a resource instance from the definition
+    const resourceInstance = createResourceInstance(
+      resourceDefinition,
+      startingAmount, // Use provided starting amount or default to maxValue
+      character.resources.length + 1 // Sort order
+    );
+
+    // Convert to legacy CharacterResource format for storage
+    const newResource = resourceInstanceToCharacterResource(resourceInstance);
+
+    // Add the resource to character's resources
+    const updatedResources = [...character.resources, newResource];
+
+    return {
+      ...character,
+      resources: updatedResources
+    };
   }
 
   /**

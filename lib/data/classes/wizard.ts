@@ -61,10 +61,16 @@ export const wizard: ClassDefinition = {
       type: 'resource',
       name: 'Arcane Recovery',
       description: 'You can recover some of your magical energy by studying your spellbook.',
-      resource: {
-        resourceName: 'Spell Slots',
-        amount: 2,
-        rechargeType: 'long_rest'
+      resourceDefinition: {
+        id: 'spell-slots',
+        name: 'Spell Slots',
+        description: 'Magical energy stored in prepared spells',
+        colorScheme: 'blue-magic',
+        icon: 'sparkles',
+        resetCondition: 'safe_rest',
+        resetType: 'to_max',
+        minValue: 0,
+        maxValue: 2
       }
     },
     {

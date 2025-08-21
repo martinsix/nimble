@@ -1,5 +1,6 @@
 import { HitDieSize, AttributeName } from './character';
 import { Ability } from './abilities';
+import { ResourceDefinition } from './resources';
 
 export type ClassFeatureType = 'ability' | 'passive_feature' | 'stat_boost' | 'proficiency' | 'spell_access' | 'resource' | 'subclass_choice';
 
@@ -21,11 +22,6 @@ export interface SpellAccess {
   spellList?: string; // Which spell list to use (e.g., 'wizard', 'cleric')
 }
 
-export interface ResourceGrant {
-  resourceName: string; // e.g., 'Ki Points', 'Sorcery Points', 'Bardic Inspiration'
-  amount: number;
-  rechargeType: 'short_rest' | 'long_rest' | 'per_turn' | 'per_encounter';
-}
 
 // Base interface for all class features
 interface BaseClassFeature {
@@ -67,7 +63,8 @@ export interface SpellAccessFeature extends BaseClassFeature {
 // Resource - grants new resources (like Ki, Bardic Inspiration, etc.)
 export interface ResourceFeature extends BaseClassFeature {
   type: 'resource';
-  resource: ResourceGrant;
+  resourceDefinition: ResourceDefinition;
+  startingAmount?: number; // Optional override for initial current amount (defaults to maxValue)
 }
 
 // Subclass Choice - allows player to choose a subclass specialization
