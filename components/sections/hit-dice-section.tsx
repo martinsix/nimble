@@ -9,32 +9,32 @@ import { Label } from "../ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Character, HitDice, HitDieSize } from "@/lib/types/character";
 import { ChevronDown, ChevronRight, Heart, Dices, Shield } from "lucide-react";
+import { getCharacterService } from "@/lib/services/service-factory";
+import { useCharacterActions } from "@/lib/contexts/character-actions-context";
+import { useUIState } from "@/lib/contexts/ui-state-context";
 
-interface HitDiceSectionProps {
-  character: Character;
-  isOpen: boolean;
-  onToggle: (isOpen: boolean) => void;
-  onUpdate: (character: Character) => void;
-  onCatchBreath?: () => void;
-  onMakeCamp?: () => void;
-  onSafeRest?: () => void;
-}
-
-export function HitDiceSection({ 
-  character, 
-  isOpen, 
-  onToggle, 
-  onUpdate,
-  onCatchBreath,
-  onMakeCamp,
-  onSafeRest 
-}: HitDiceSectionProps) {
+export function HitDiceSection() {
+  // Get everything we need from context - complete independence!
+  const { character, onCatchBreath, onMakeCamp, onSafeRest } = useCharacterActions();
+  const { uiState, updateCollapsibleState } = useUIState();
+  
   const [isEditing, setIsEditing] = useState(false);
   const [editValues, setEditValues] = useState({
-    level: character.level,
-    hitDieSize: character.hitDice.size,
-    currentHitDice: character.hitDice.current,
+    level: character?.level || 1,
+    hitDieSize: character?.hitDice.size || 6,
+    currentHitDice: character?.hitDice.current || 1,
   });
+  
+  // Early return if no character (shouldn't happen in normal usage)
+  if (!character) return null;
+  
+  const isOpen = uiState.collapsibleSections.hitDice;
+  const onToggle = (isOpen: boolean) => updateCollapsibleState('hitDice', isOpen);
+  
+  const updateCharacter = async (updatedCharacter: Character) => {
+    const characterService = getCharacterService();
+    await characterService.updateCharacter(updatedCharacter);
+  };
 
   const handleSave = () => {
     const updatedCharacter = {
@@ -46,7 +46,7 @@ export function HitDiceSection({
         max: editValues.level, // Max hit dice always equals level
       },
     };
-    onUpdate(updatedCharacter);
+    updateCharacter(updatedCharacter);
     setIsEditing(false);
   };
 

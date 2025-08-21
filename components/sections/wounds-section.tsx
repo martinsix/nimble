@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
@@ -8,20 +8,25 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Character, Wounds } from "@/lib/types/character";
 import { ChevronDown, ChevronRight, Heart, Skull, AlertTriangle } from "lucide-react";
+import { getCharacterService } from "@/lib/services/service-factory";
+import { useCharacterActions } from "@/lib/contexts/character-actions-context";
+import { useUIState } from "@/lib/contexts/ui-state-context";
 
-interface WoundsSectionProps {
-  character: Character;
-  isOpen: boolean;
-  onToggle: (isOpen: boolean) => void;
-  onUpdate: (character: Character) => void;
-}
-
-export function WoundsSection({ 
-  character, 
-  isOpen, 
-  onToggle, 
-  onUpdate
-}: WoundsSectionProps) {
+export function WoundsSection() {
+  // Get everything we need from context - complete independence!
+  const { character } = useCharacterActions();
+  const { uiState, updateCollapsibleState } = useUIState();
+  
+  const onUpdate = useCallback(async (updatedCharacter: Character) => {
+    const characterService = getCharacterService();
+    await characterService.updateCharacter(updatedCharacter);
+  }, []);
+  
+  // Early return if no character (shouldn't happen in normal usage)
+  if (!character) return null;
+  
+  const isOpen = uiState.collapsibleSections.wounds;
+  const onToggle = (isOpen: boolean) => updateCollapsibleState('wounds', isOpen);
 
   const addWound = () => {
     if (character.wounds.current < character.wounds.max) {

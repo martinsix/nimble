@@ -20,22 +20,77 @@ export interface UIState {
 
 export class UIStateService {
   private readonly storageKey = 'nimble-navigator-ui-state';
+  private _uiState: UIState | null = null;
+  private uiStateListeners: ((uiState: UIState) => void)[] = [];
 
-  async getUIState(): Promise<UIState> {
-    const stored = localStorage.getItem(this.storageKey);
-    if (!stored) {
-      return this.getDefaultUIState();
+  // Public getter for UI state
+  get uiState(): UIState | null {
+    return this._uiState;
+  }
+
+  // State Management with subscriptions
+  subscribeToUIState(listener: (uiState: UIState) => void): () => void {
+    this.uiStateListeners.push(listener);
+    if (this._uiState) {
+      listener(this._uiState);
     }
     
-    try {
-      return JSON.parse(stored);
-    } catch {
-      return this.getDefaultUIState();
+    // Return unsubscribe function
+    return () => {
+      this.uiStateListeners = this.uiStateListeners.filter(l => l !== listener);
+    };
+  }
+
+  private notifyListeners(): void {
+    if (this._uiState) {
+      this.uiStateListeners.forEach(listener => listener(this._uiState!));
     }
   }
 
+  async getUIState(): Promise<UIState> {
+    if (this._uiState) {
+      return this._uiState;
+    }
+
+    const stored = localStorage.getItem(this.storageKey);
+    if (!stored) {
+      this._uiState = this.getDefaultUIState();
+    } else {
+      try {
+        this._uiState = JSON.parse(stored);
+      } catch {
+        this._uiState = this.getDefaultUIState();
+      }
+    }
+    
+    return this._uiState!; // We know it's not null at this point
+  }
+
   async saveUIState(state: UIState): Promise<void> {
+    this._uiState = state;
     localStorage.setItem(this.storageKey, JSON.stringify(state));
+    this.notifyListeners();
+  }
+
+  async updateCollapsibleState(section: keyof UIState['collapsibleSections'], isOpen: boolean): Promise<void> {
+    const currentState = await this.getUIState();
+    const newState = {
+      ...currentState,
+      collapsibleSections: {
+        ...currentState.collapsibleSections,
+        [section]: isOpen,
+      },
+    };
+    await this.saveUIState(newState);
+  }
+
+  async updateAdvantageLevel(advantageLevel: number): Promise<void> {
+    const currentState = await this.getUIState();
+    const newState = {
+      ...currentState,
+      advantageLevel,
+    };
+    await this.saveUIState(newState);
   }
 
   private getDefaultUIState(): UIState {

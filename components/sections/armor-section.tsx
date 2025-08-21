@@ -2,17 +2,21 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
-import { Character } from "@/lib/types/character";
 import { getEquippedArmor, getEquippedMainArmor, getEquippedSupplementaryArmor } from "@/lib/utils/equipment";
 import { Shield, ChevronDown, ChevronRight, Shirt } from "lucide-react";
+import { useCharacterActions } from "@/lib/contexts/character-actions-context";
+import { useUIState } from "@/lib/contexts/ui-state-context";
 
-interface ArmorSectionProps {
-  character: Character;
-  isOpen: boolean;
-  onToggle: (isOpen: boolean) => void;
-}
-
-export function ArmorSection({ character, isOpen, onToggle }: ArmorSectionProps) {
+export function ArmorSection() {
+  // Get everything we need from context - complete independence!
+  const { character } = useCharacterActions();
+  const { uiState, updateCollapsibleState } = useUIState();
+  
+  // Early return if no character (shouldn't happen in normal usage)
+  if (!character) return null;
+  
+  const isOpen = uiState.collapsibleSections.armor;
+  const onToggle = (isOpen: boolean) => updateCollapsibleState('armor', isOpen);
   const equippedArmor = getEquippedArmor(character.inventory.items);
   const mainArmor = getEquippedMainArmor(character.inventory.items);
   const supplementaryArmor = getEquippedSupplementaryArmor(character.inventory.items);

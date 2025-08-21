@@ -3,13 +3,12 @@
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { ChevronUp, ChevronDown, Equal } from "lucide-react";
+import { useUIState } from "@/lib/contexts/ui-state-context";
 
-interface AdvantageToggleProps {
-  advantageLevel: number;
-  onAdvantageChange: (level: number) => void;
-}
-
-export function AdvantageToggle({ advantageLevel, onAdvantageChange }: AdvantageToggleProps) {
+export function AdvantageToggle() {
+  // Get UI state directly
+  const { uiState, updateAdvantageLevel } = useUIState();
+  const advantageLevel = uiState.advantageLevel;
   const getDisplayText = () => {
     if (advantageLevel > 0) {
       return `Advantage ${advantageLevel}`;
@@ -31,15 +30,15 @@ export function AdvantageToggle({ advantageLevel, onAdvantageChange }: Advantage
   };
 
   const incrementAdvantage = () => {
-    onAdvantageChange(advantageLevel + 1);
+    updateAdvantageLevel(advantageLevel + 1);
   };
 
   const decrementAdvantage = () => {
-    onAdvantageChange(advantageLevel - 1);
+    updateAdvantageLevel(advantageLevel - 1);
   };
 
   const resetAdvantage = () => {
-    onAdvantageChange(0);
+    updateAdvantageLevel(0);
   };
 
   return (

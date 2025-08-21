@@ -3,25 +3,35 @@
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { Inventory as InventoryType } from "@/lib/types/inventory";
-import { Character } from "@/lib/types/character";
 import { Inventory } from "../inventory";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { useCharacterActions } from "@/lib/contexts/character-actions-context";
+import { useUIState } from "@/lib/contexts/ui-state-context";
+import { getCharacterService } from "@/lib/services/service-factory";
+import { useCallback } from "react";
 
-interface InventorySectionProps {
-  inventory: InventoryType;
-  characterDexterity: number;
-  isOpen: boolean;
-  onToggle: (isOpen: boolean) => void;
-  onUpdateInventory: (inventory: InventoryType) => void;
-}
-
-export function InventorySection({ 
-  inventory, 
-  characterDexterity,
-  isOpen, 
-  onToggle, 
-  onUpdateInventory 
-}: InventorySectionProps) {
+export function InventorySection() {
+  // Get everything we need from context - complete independence!
+  const { character } = useCharacterActions();
+  const { uiState, updateCollapsibleState } = useUIState();
+  
+  const onUpdateInventory = useCallback(async (inventory: InventoryType) => {
+    if (!character) return;
+    const characterService = getCharacterService();
+    const updated = {
+      ...character,
+      inventory,
+    };
+    await characterService.updateCharacter(updated);
+  }, [character]);
+  
+  // Early return if no character (shouldn't happen in normal usage)
+  if (!character) return null;
+  
+  const isOpen = uiState.collapsibleSections.inventory;
+  const onToggle = (isOpen: boolean) => updateCollapsibleState('inventory', isOpen);
+  const inventory = character.inventory;
+  const characterDexterity = character.attributes.dexterity;
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>
       <CollapsibleTrigger asChild>

@@ -10,18 +10,11 @@ import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Abilities, Ability, ActionAbility, FreeformAbility, AbilityFrequency, AbilityRoll } from "@/lib/types/abilities";
-import { AttributeName, Character } from "@/lib/types/character";
+import { AttributeName } from "@/lib/types/character";
 import { abilityService } from "@/lib/services/ability-service";
 import { Sparkles, Plus, Trash2, Edit, ChevronDown, ChevronRight, Zap, FileText } from "lucide-react";
-
-interface AbilitySectionProps {
-  abilities: Abilities;
-  character: Character;
-  isOpen: boolean;
-  onToggle: (isOpen: boolean) => void;
-  onUpdateAbilities: (abilities: Abilities) => void;
-  onUseAbility?: (abilityId: string) => void;
-}
+import { useCharacterActions } from "@/lib/contexts/character-actions-context";
+import { useUIState } from "@/lib/contexts/ui-state-context";
 
 interface NewAbilityForm {
   name: string;
@@ -36,14 +29,11 @@ interface NewAbilityForm {
   };
 }
 
-export function AbilitySection({ 
-  abilities, 
-  character,
-  isOpen, 
-  onToggle, 
-  onUpdateAbilities,
-  onUseAbility 
-}: AbilitySectionProps) {
+export function AbilitySection() {
+  // Get everything we need from context - complete independence!
+  const { character, onUpdateAbilities, onUseAbility } = useCharacterActions();
+  const { uiState, updateCollapsibleState } = useUIState();
+  
   const [isAddingAbility, setIsAddingAbility] = useState(false);
   const [editingAbility, setEditingAbility] = useState<string | null>(null);
   const [newAbility, setNewAbility] = useState<NewAbilityForm>({
@@ -53,6 +43,13 @@ export function AbilitySection({
     frequency: 'per_encounter',
     maxUses: 1,
   });
+  
+  // Early return if no character (shouldn't happen in normal usage)
+  if (!character) return null;
+  
+  const isOpen = uiState.collapsibleSections.abilities;
+  const onToggle = (isOpen: boolean) => updateCollapsibleState('abilities', isOpen);
+  const abilities = character.abilities;
 
   const handleUseAbility = (abilityId: string) => {
     if (onUseAbility) {

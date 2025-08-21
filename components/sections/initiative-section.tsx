@@ -1,36 +1,45 @@
 "use client";
 
+import { useCallback } from "react";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
-import { Skill } from "@/lib/types/character";
+import { Character } from "@/lib/types/character";
 import { Zap, Dice6, ChevronDown, ChevronRight, Swords } from "lucide-react";
+import { getCharacterService } from "@/lib/services/service-factory";
+import { useCharacterActions } from "@/lib/contexts/character-actions-context";
+import { useUIState } from "@/lib/contexts/ui-state-context";
 
-interface InitiativeSectionProps {
-  initiative: Skill;
-  dexterityValue: number;
-  isOpen: boolean;
-  inEncounter: boolean;
-  onToggle: (isOpen: boolean) => void;
-  onInitiativeChange: (modifier: number) => void;
-  onRollInitiative: (totalModifier: number, advantageLevel: number) => void;
-  onEndEncounter?: () => void;
-  advantageLevel: number;
-}
-
-export function InitiativeSection({ 
-  initiative, 
-  dexterityValue, 
-  isOpen, 
-  inEncounter,
-  onToggle, 
-  onInitiativeChange, 
-  onRollInitiative, 
-  onEndEncounter,
-  advantageLevel 
-}: InitiativeSectionProps) {
+export function InitiativeSection() {
+  // Get everything we need from context - complete independence!
+  const { character, onRollInitiative, onEndEncounter } = useCharacterActions();
+  const { uiState, updateCollapsibleState } = useUIState();
+  
+  const onInitiativeChange = useCallback(async (modifier: number) => {
+    if (!character) return;
+    const characterService = getCharacterService();
+    const updated = {
+      ...character,
+      initiative: {
+        ...character.initiative,
+        modifier,
+      },
+    };
+    await characterService.updateCharacter(updated);
+  }, [character]);
+  
+  // Early return if no character (shouldn't happen in normal usage)
+  if (!character) return null;
+  
+  const isOpen = uiState.collapsibleSections.initiative;
+  const advantageLevel = uiState.advantageLevel;
+  const onToggle = (isOpen: boolean) => updateCollapsibleState('initiative', isOpen);
+  
+  const initiative = character.initiative;
+  const dexterityValue = character.attributes.dexterity;
+  const inEncounter = character.inEncounter;
   const totalModifier = dexterityValue + initiative.modifier;
 
   const handleModifierChange = (value: string) => {

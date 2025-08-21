@@ -8,14 +8,19 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/colla
 import { Badge } from "../ui/badge";
 import { Sparkles, ChevronDown, ChevronRight, Star, Zap, TrendingUp } from "lucide-react";
 import { getAllClassFeaturesUpToLevel, getClassDefinition } from "@/lib/data/classes/index";
+import { useCharacterActions } from "@/lib/contexts/character-actions-context";
+import { useUIState } from "@/lib/contexts/ui-state-context";
 
-interface ClassFeaturesSectionProps {
-  character: Character;
-  isOpen: boolean;
-  onToggle: (isOpen: boolean) => void;
-}
-
-export function ClassFeaturesSection({ character, isOpen, onToggle }: ClassFeaturesSectionProps) {
+export function ClassFeaturesSection() {
+  // Get everything we need from context - complete independence!
+  const { character } = useCharacterActions();
+  const { uiState, updateCollapsibleState } = useUIState();
+  
+  // Early return if no character (shouldn't happen in normal usage)
+  if (!character) return null;
+  
+  const isOpen = uiState.collapsibleSections.classFeatures;
+  const onToggle = (isOpen: boolean) => updateCollapsibleState('classFeatures', isOpen);
   const classDefinition = getClassDefinition(character.classId);
   
   if (!classDefinition) {

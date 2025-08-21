@@ -39,7 +39,7 @@ function HomeContent() {
   const { logEntries, addLogEntry, handleClearRolls } = useActivityLog();
 
   // Dice rolling actions
-  const { handleRollAttribute, handleRollSave, handleRollSkill, handleAttack, handleRollInitiative } = useDiceActions(addLogEntry);
+  const { rollAttribute, rollSave, rollSkill, attack, rollInitiative } = useDiceActions();
 
   // Combat and encounter actions
   const {
@@ -87,14 +87,26 @@ function HomeContent() {
 
   // Memoize action handlers that depend on character or other handlers
   const onRollSkill = useCallback((skillName: SkillName, attributeValue: number, skillModifier: number, advantageLevel: number) => 
-    handleRollSkill(character!, skillName, attributeValue, skillModifier, advantageLevel),
-    [character, handleRollSkill]
+    rollSkill(skillName, attributeValue, skillModifier, advantageLevel),
+    [rollSkill]
   );
 
-  const onRollInitiative = useCallback((totalModifier: number, advantageLevel: number) => 
-    handleRollInitiative(character!, totalModifier, advantageLevel, handleCharacterUpdate),
-    [character, handleRollInitiative, handleCharacterUpdate]
-  );
+  const onRollInitiative = useCallback(async (totalModifier: number, advantageLevel: number) => {
+    const result = await rollInitiative(totalModifier, advantageLevel);
+    // Update character with new action tracker based on initiative result
+    if (character) {
+      const updatedCharacter = {
+        ...character,
+        inEncounter: true,
+        actionTracker: {
+          ...character.actionTracker,
+          current: result.actionsGranted,
+          bonus: 0
+        }
+      };
+      handleCharacterUpdate(updatedCharacter);
+    }
+  }, [rollInitiative, character, handleCharacterUpdate]);
 
   const onUpdateActions = useCallback((actionTracker: ActionTracker) => 
     handleUpdateActions(character!, actionTracker),
@@ -146,11 +158,11 @@ function HomeContent() {
     onSpendMana,
     onRestoreMana,
     onUpdateCharacterConfiguration,
-    onRollAttribute: handleRollAttribute,
-    onRollSave: handleRollSave,
+    onRollAttribute: rollAttribute,
+    onRollSave: rollSave,
     onRollSkill,
     onRollInitiative,
-    onAttack: handleAttack,
+    onAttack: attack,
     onUpdateActions,
     onEndEncounter,
     onUpdateAbilities,
@@ -169,11 +181,11 @@ function HomeContent() {
     onSpendMana,
     onRestoreMana,
     onUpdateCharacterConfiguration,
-    handleRollAttribute,
-    handleRollSave,
+    rollAttribute,
+    rollSave,
     onRollSkill,
     onRollInitiative,
-    handleAttack,
+    attack,
     onUpdateActions,
     onEndEncounter,
     onUpdateAbilities,

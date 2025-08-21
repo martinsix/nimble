@@ -2,29 +2,22 @@
 
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
-import { Character } from "@/lib/types/character";
-import { Abilities } from "@/lib/types/abilities";
-import { AbilityUsageEntry } from "@/lib/types/log-entries";
 import { Actions } from "../actions";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { useCharacterActions } from "@/lib/contexts/character-actions-context";
+import { useUIState } from "@/lib/contexts/ui-state-context";
 
-interface ActionsSectionProps {
-  character: Character;
-  isOpen: boolean;
-  onToggle: (isOpen: boolean) => void;
-  onAttack: (weaponName: string, damage: string, attributeModifier: number, advantageLevel: number) => void;
-  onUseAbility?: (abilityId: string) => void;
-  advantageLevel: number;
-}
-
-export function ActionsSection({ 
-  character, 
-  isOpen, 
-  onToggle, 
-  onAttack, 
-  onUseAbility,
-  advantageLevel 
-}: ActionsSectionProps) {
+export function ActionsSection() {
+  // Get everything we need from context - complete independence!
+  const { character, onAttack, onUseAbility } = useCharacterActions();
+  const { uiState, updateCollapsibleState } = useUIState();
+  
+  // Early return if no character (shouldn't happen in normal usage)
+  if (!character) return null;
+  
+  const isOpen = uiState.collapsibleSections.actions;
+  const advantageLevel = uiState.advantageLevel;
+  const onToggle = (isOpen: boolean) => updateCollapsibleState('actions', isOpen);
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>
       <CollapsibleTrigger asChild>

@@ -7,23 +7,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { Heart, Minus, Plus, ChevronDown, ChevronRight } from "lucide-react";
+import { Character } from "@/lib/types/character";
 import { useCharacterActions } from "@/lib/contexts/character-actions-context";
+import { useUIState } from "@/lib/contexts/ui-state-context";
 
-interface HitPointsSectionProps {
-  currentHp: number;
-  maxHp: number;
-  temporaryHp: number;
-  isOpen: boolean;
-  onToggle: (isOpen: boolean) => void;
-}
-
-export function HitPointsSection({ currentHp, maxHp, temporaryHp, isOpen, onToggle }: HitPointsSectionProps) {
+export function HitPointsSection() {
+  // Get everything we need from context - complete independence!
+  const { character, onApplyDamage, onApplyHealing, onApplyTemporaryHP } = useCharacterActions();
+  const { uiState, updateCollapsibleState } = useUIState();
+  
   const [damageAmount, setDamageAmount] = useState<string>("1");
   const [healAmount, setHealAmount] = useState<string>("1");
   const [tempHpAmount, setTempHpAmount] = useState<string>("1");
-
-  // Get actions from context
-  const { onApplyDamage, onApplyHealing, onApplyTemporaryHP } = useCharacterActions();
+  
+  // Early return if no character (shouldn't happen in normal usage)
+  if (!character) return null;
+  
+  const currentHp = character.hitPoints.current;
+  const maxHp = character.hitPoints.max;
+  const temporaryHp = character.hitPoints.temporary;
+  const isOpen = uiState.collapsibleSections.hitPoints;
+  const onToggle = (isOpen: boolean) => updateCollapsibleState('hitPoints', isOpen);
 
   const applyDamage = async (amount: number, resetInput: boolean = false) => {
     await onApplyDamage(amount);

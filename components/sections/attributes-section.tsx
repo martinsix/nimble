@@ -1,31 +1,45 @@
 "use client";
 
+import { useCallback } from "react";
 import { Input } from "../ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
-import { Character, AttributeName } from "@/lib/types/character";
+import { AttributeName } from "@/lib/types/character";
 import { ChevronDown, ChevronRight, Dice6, Shield } from "lucide-react";
+import { getCharacterService } from "@/lib/services/service-factory";
+import { useCharacterService } from "@/lib/hooks/use-character-service";
+import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
+import { useDiceActions } from "@/lib/hooks/use-dice-actions";
 
-interface AttributesSectionProps {
-  character: Character;
-  isOpen: boolean;
-  onToggle: (isOpen: boolean) => void;
-  onAttributeChange: (attributeName: AttributeName, value: string) => void;
-  onRollAttribute: (attributeName: AttributeName, value: number, advantageLevel: number) => void;
-  onRollSave: (attributeName: AttributeName, value: number, advantageLevel: number) => void;
-  advantageLevel: number;
-}
-
-export function AttributesSection({ 
-  character, 
-  isOpen, 
-  onToggle, 
-  onAttributeChange, 
-  onRollAttribute, 
-  onRollSave,
-  advantageLevel 
-}: AttributesSectionProps) {
+export function AttributesSection() {
+  // Direct singleton access with automatic re-rendering - no context needed!
+  const { character, updateCharacter } = useCharacterService();
+  const { uiState, updateCollapsibleState } = useUIStateService();
+  const { rollAttribute, rollSave } = useDiceActions();
+  
+  const isOpen = uiState.collapsibleSections.attributes;
+  const advantageLevel = uiState.advantageLevel;
+  const onToggle = (isOpen: boolean) => updateCollapsibleState('attributes', isOpen);
+  
+  const onAttributeChange = useCallback(async (attributeName: AttributeName, value: string) => {
+    if (!character) return;
+    
+    const numValue = parseInt(value) || 0;
+    if (numValue >= -2 && numValue <= 10) {
+      const updated = {
+        ...character,
+        attributes: {
+          ...character.attributes,
+          [attributeName]: numValue,
+        },
+      };
+      await updateCharacter(updated);
+    }
+  }, [character, updateCharacter]);
+  
+  // Early return if no character (shouldn't happen in normal usage)
+  if (!character) return null;
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>
       <CollapsibleTrigger asChild>
@@ -52,7 +66,7 @@ export function AttributesSection({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onRollAttribute("strength", character.attributes.strength, advantageLevel)}
+                onClick={() => rollAttribute("strength", character.attributes.strength, advantageLevel)}
                 className="w-full"
               >
                 <Dice6 className="w-4 h-4 mr-2" />
@@ -61,7 +75,7 @@ export function AttributesSection({
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => onRollSave("strength", character.attributes.strength, advantageLevel)}
+                onClick={() => rollSave("strength", character.attributes.strength, advantageLevel)}
                 className="w-full"
               >
                 <Shield className="w-4 h-4 mr-2" />
@@ -86,7 +100,7 @@ export function AttributesSection({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onRollAttribute("dexterity", character.attributes.dexterity, advantageLevel)}
+                onClick={() => rollAttribute("dexterity", character.attributes.dexterity, advantageLevel)}
                 className="w-full"
               >
                 <Dice6 className="w-4 h-4 mr-2" />
@@ -95,7 +109,7 @@ export function AttributesSection({
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => onRollSave("dexterity", character.attributes.dexterity, advantageLevel)}
+                onClick={() => rollSave("dexterity", character.attributes.dexterity, advantageLevel)}
                 className="w-full"
               >
                 <Shield className="w-4 h-4 mr-2" />
@@ -120,7 +134,7 @@ export function AttributesSection({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onRollAttribute("intelligence", character.attributes.intelligence, advantageLevel)}
+                onClick={() => rollAttribute("intelligence", character.attributes.intelligence, advantageLevel)}
                 className="w-full"
               >
                 <Dice6 className="w-4 h-4 mr-2" />
@@ -129,7 +143,7 @@ export function AttributesSection({
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => onRollSave("intelligence", character.attributes.intelligence, advantageLevel)}
+                onClick={() => rollSave("intelligence", character.attributes.intelligence, advantageLevel)}
                 className="w-full"
               >
                 <Shield className="w-4 h-4 mr-2" />
@@ -154,7 +168,7 @@ export function AttributesSection({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onRollAttribute("will", character.attributes.will, advantageLevel)}
+                onClick={() => rollAttribute("will", character.attributes.will, advantageLevel)}
                 className="w-full"
               >
                 <Dice6 className="w-4 h-4 mr-2" />
@@ -163,7 +177,7 @@ export function AttributesSection({
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => onRollSave("will", character.attributes.will, advantageLevel)}
+                onClick={() => rollSave("will", character.attributes.will, advantageLevel)}
                 className="w-full"
               >
                 <Shield className="w-4 h-4 mr-2" />

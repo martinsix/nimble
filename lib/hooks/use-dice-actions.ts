@@ -1,24 +1,29 @@
-import { useMemo } from 'react';
-import { Character, AttributeName, SkillName, ActionTracker } from '@/lib/types/character';
-import { Abilities } from '@/lib/types/abilities';
-import { LogEntry } from '@/lib/types/log-entries';
-import { getDiceService, getActivityLog, getAbilityService, getCharacterStorage } from '@/lib/services/service-factory';
+import { useCallback } from 'react';
+import { AttributeName, SkillName } from '@/lib/types/character';
+import { getDiceService, getActivityLog } from '@/lib/services/service-factory';
+import { useActivityLog } from './use-activity-log';
 
 export interface UseDiceActionsReturn {
-  handleRollAttribute: (attributeName: AttributeName, value: number, advantageLevel: number) => Promise<void>;
-  handleRollSave: (attributeName: AttributeName, value: number, advantageLevel: number) => Promise<void>;
-  handleRollSkill: (character: Character, skillName: SkillName, attributeValue: number, skillModifier: number, advantageLevel: number) => Promise<void>;
-  handleAttack: (weaponName: string, damage: string, attributeModifier: number, advantageLevel: number) => Promise<void>;
-  handleRollInitiative: (character: Character, totalModifier: number, advantageLevel: number, onCharacterUpdate: (character: Character) => void) => Promise<void>;
+  rollAttribute: (attributeName: AttributeName, value: number, advantageLevel: number) => Promise<void>;
+  rollSave: (attributeName: AttributeName, value: number, advantageLevel: number) => Promise<void>;
+  rollSkill: (skillName: SkillName, attributeValue: number, skillModifier: number, advantageLevel: number) => Promise<void>;
+  attack: (weaponName: string, damage: string, attributeModifier: number, advantageLevel: number) => Promise<void>;
+  rollInitiative: (totalModifier: number, advantageLevel: number) => Promise<{ rollTotal: number, actionsGranted: number }>;
 }
 
-export function useDiceActions(addLogEntry: (entry: LogEntry) => void): UseDiceActionsReturn {
-  // Get services from factory (memoized)
-  const diceService = useMemo(() => getDiceService(), []);
-  const activityLogService = useMemo(() => getActivityLog(), []);
-  const abilityService = useMemo(() => getAbilityService(), []);
-  const characterStorage = useMemo(() => getCharacterStorage(), []);
-  const handleRollAttribute = async (attributeName: AttributeName, value: number, advantageLevel: number) => {
+/**
+ * Custom hook that provides direct access to dice rolling functionality.
+ * Eliminates the need for React Context by using services directly.
+ * 
+ * Updated to have a cleaner API - no external parameters needed.
+ * Consolidated from duplicate implementation in use-dice-service.ts
+ */
+export function useDiceActions(): UseDiceActionsReturn {
+  const diceService = getDiceService();
+  const activityLogService = getActivityLog();
+  const { addLogEntry } = useActivityLog();
+
+  const rollAttribute = useCallback(async (attributeName: AttributeName, value: number, advantageLevel: number) => {
     try {
       const attributeLabel = attributeName.charAt(0).toUpperCase() + attributeName.slice(1);
       const rollResult = diceService.rollAttributeCheck(value, advantageLevel);
@@ -35,9 +40,9 @@ export function useDiceActions(addLogEntry: (entry: LogEntry) => void): UseDiceA
     } catch (error) {
       console.error("Failed to roll dice:", error);
     }
-  };
+  }, [diceService, activityLogService, addLogEntry]);
 
-  const handleRollSave = async (attributeName: AttributeName, value: number, advantageLevel: number) => {
+  const rollSave = useCallback(async (attributeName: AttributeName, value: number, advantageLevel: number) => {
     try {
       const attributeLabel = attributeName.charAt(0).toUpperCase() + attributeName.slice(1);
       const rollResult = diceService.rollAttributeCheck(value, advantageLevel);
@@ -52,14 +57,12 @@ export function useDiceActions(addLogEntry: (entry: LogEntry) => void): UseDiceA
       await activityLogService.addLogEntry(logEntry);
       addLogEntry(logEntry);
     } catch (error) {
-      console.error("Failed to roll save:", error);
+      console.error("Failed to roll dice:", error);
     }
-  };
+  }, [diceService, activityLogService, addLogEntry]);
 
-  const handleRollSkill = async (character: Character, skillName: SkillName, attributeValue: number, skillModifier: number, advantageLevel: number) => {
-    if (!character) return;
+  const rollSkill = useCallback(async (skillName: SkillName, attributeValue: number, skillModifier: number, advantageLevel: number) => {
     try {
-      const skill = character.skills[skillName];
       const totalModifier = attributeValue + skillModifier;
       const rollResult = diceService.rollAttributeCheck(totalModifier, advantageLevel);
       const logEntry = activityLogService.createDiceRollEntry(
@@ -67,17 +70,33 @@ export function useDiceActions(addLogEntry: (entry: LogEntry) => void): UseDiceA
         rollResult.droppedDice,
         totalModifier,
         rollResult.total,
-        skill.name,
+        `${skillName} skill check`,
         advantageLevel
       );
       await activityLogService.addLogEntry(logEntry);
       addLogEntry(logEntry);
     } catch (error) {
-      console.error("Failed to roll skill:", error);
+      console.error("Failed to roll dice:", error);
     }
-  };
+  }, [diceService, activityLogService, addLogEntry]);
 
-  const handleAttack = async (weaponName: string, damage: string, attributeModifier: number, advantageLevel: number) => {
+  const rollInitiative = useCallback(async (totalModifier: number, advantageLevel: number) => {
+    try {
+      const rollResult = diceService.rollAttributeCheck(totalModifier, advantageLevel);
+      const actionsGranted = Math.max(1, rollResult.total);
+      
+      const logEntry = activityLogService.createInitiativeEntry(rollResult.total, actionsGranted);
+      await activityLogService.addLogEntry(logEntry);
+      addLogEntry(logEntry);
+
+      return { rollTotal: rollResult.total, actionsGranted };
+    } catch (error) {
+      console.error("Failed to roll initiative:", error);
+      return { rollTotal: 1, actionsGranted: 1 };
+    }
+  }, [diceService, activityLogService, addLogEntry]);
+
+  const attack = useCallback(async (weaponName: string, damage: string, attributeModifier: number, advantageLevel: number) => {
     try {
       const rollResult = diceService.rollAttack(damage, attributeModifier, advantageLevel);
       const logEntry = activityLogService.createDiceRollEntry(
@@ -95,51 +114,13 @@ export function useDiceActions(addLogEntry: (entry: LogEntry) => void): UseDiceA
     } catch (error) {
       console.error("Failed to roll attack:", error);
     }
-  };
-
-  const handleRollInitiative = async (character: Character, totalModifier: number, advantageLevel: number, onCharacterUpdate: (character: Character) => void) => {
-    if (!character) return;
-    try {
-      // Roll initiative
-      const rollResult = diceService.rollAttributeCheck(totalModifier, advantageLevel);
-      const rollLogEntry = activityLogService.createDiceRollEntry(
-        rollResult.dice,
-        rollResult.droppedDice,
-        totalModifier,
-        rollResult.total,
-        "Initiative",
-        advantageLevel
-      );
-      await activityLogService.addLogEntry(rollLogEntry);
-      addLogEntry(rollLogEntry);
-
-      // Calculate actions granted and create initiative entry
-      const actionsGranted = abilityService.calculateInitiativeActions(rollResult.total, character.actionTracker.bonus);
-      const initiativeLogEntry = activityLogService.createInitiativeEntry(rollResult.total, actionsGranted);
-      await activityLogService.addLogEntry(initiativeLogEntry);
-      addLogEntry(initiativeLogEntry);
-      
-      // Update character's action tracker and start encounter
-      const updatedCharacter = {
-        ...character,
-        actionTracker: {
-          ...character.actionTracker,
-          current: actionsGranted,
-        },
-        inEncounter: true
-      };
-      onCharacterUpdate(updatedCharacter);
-      await characterStorage.updateCharacter(updatedCharacter);
-    } catch (error) {
-      console.error("Failed to roll initiative:", error);
-    }
-  };
+  }, [diceService, activityLogService, addLogEntry]);
 
   return {
-    handleRollAttribute,
-    handleRollSave,
-    handleRollSkill,
-    handleAttack,
-    handleRollInitiative,
+    rollAttribute,
+    rollSave,
+    rollSkill,
+    rollInitiative,
+    attack,
   };
 }

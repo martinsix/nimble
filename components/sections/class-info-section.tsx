@@ -6,15 +6,23 @@ import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { Shield, ChevronDown, ChevronRight, TrendingUp } from "lucide-react";
 import { getClassDefinition } from "@/lib/data/classes/index";
+import { useCharacterActions } from "@/lib/contexts/character-actions-context";
+import { useUIState } from "@/lib/contexts/ui-state-context";
 
 interface ClassInfoSectionProps {
-  character: Character;
-  isOpen: boolean;
-  onToggle: (isOpen: boolean) => void;
   onLevelUp?: () => void;
 }
 
-export function ClassInfoSection({ character, isOpen, onToggle, onLevelUp }: ClassInfoSectionProps) {
+export function ClassInfoSection({ onLevelUp }: ClassInfoSectionProps) {
+  // Get everything we need from context - complete independence!
+  const { character } = useCharacterActions();
+  const { uiState, updateCollapsibleState } = useUIState();
+  
+  // Early return if no character (shouldn't happen in normal usage)
+  if (!character) return null;
+  
+  const isOpen = uiState.collapsibleSections.classInfo;
+  const onToggle = (isOpen: boolean) => updateCollapsibleState('classInfo', isOpen);
   const classDefinition = getClassDefinition(character.classId);
   
   if (!classDefinition) {

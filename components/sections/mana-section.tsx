@@ -7,22 +7,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { Sparkles, Minus, Plus, ChevronDown, ChevronRight } from "lucide-react";
+import { Character } from "@/lib/types/character";
 import { useCharacterActions } from "@/lib/contexts/character-actions-context";
+import { useUIState } from "@/lib/contexts/ui-state-context";
 
-interface ManaSectionProps {
-  currentMana: number;
-  maxMana: number;
-  manaAttribute: string;
-  isOpen: boolean;
-  onToggle: (isOpen: boolean) => void;
-}
-
-export function ManaSection({ currentMana, maxMana, manaAttribute, isOpen, onToggle }: ManaSectionProps) {
+export function ManaSection() {
+  // Get everything we need from context - complete independence!
+  const { character, onSpendMana, onRestoreMana } = useCharacterActions();
+  const { uiState, updateCollapsibleState } = useUIState();
+  
   const [spendAmount, setSpendAmount] = useState<string>("1");
   const [restoreAmount, setRestoreAmount] = useState<string>("1");
-
-  // Get actions from context
-  const { onSpendMana, onRestoreMana } = useCharacterActions();
+  
+  // Early return if no character (shouldn't happen in normal usage)
+  if (!character) return null;
+  
+  const isOpen = uiState.collapsibleSections.mana;
+  const onToggle = (isOpen: boolean) => updateCollapsibleState('mana', isOpen);
+  
+  // Extract mana values from character
+  const currentMana = character.mana?.current ?? 0;
+  const maxMana = character.mana?.max ?? 0;
+  const manaAttribute = character.config?.mana?.attribute ?? 'intelligence';
 
   const applyManaSpend = async (amount: number, resetInput: boolean = false) => {
     if (onSpendMana) {

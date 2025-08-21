@@ -5,29 +5,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
-import { ActionTracker } from "@/lib/types/character";
-import { Abilities } from "@/lib/types/abilities";
+import { Character } from "@/lib/types/character";
 import { Swords, Plus, RotateCcw, Minus, ChevronDown, ChevronRight } from "lucide-react";
+import { useCharacterActions } from "@/lib/contexts/character-actions-context";
+import { useUIState } from "@/lib/contexts/ui-state-context";
 
-interface ActionTrackerSectionProps {
-  actionTracker: ActionTracker;
-  abilities: Abilities;
-  isOpen: boolean;
-  onToggle: (isOpen: boolean) => void;
-  onUpdateActions: (actionTracker: ActionTracker) => void;
-  onUpdateAbilities: (abilities: Abilities) => void;
-  onEndTurn?: (actionTracker: ActionTracker, abilities: Abilities) => void;
-}
-
-export function ActionTrackerSection({ 
-  actionTracker, 
-  abilities,
-  isOpen, 
-  onToggle, 
-  onUpdateActions,
-  onUpdateAbilities,
-  onEndTurn
-}: ActionTrackerSectionProps) {
+export function ActionTrackerSection() {
+  // Get everything we need from context - complete independence!
+  const { character, onUpdateActions, onUpdateAbilities, onEndTurn } = useCharacterActions();
+  const { uiState, updateCollapsibleState } = useUIState();
+  
+  // Early return if no character (shouldn't happen in normal usage)
+  if (!character) return null;
+  
+  const isOpen = uiState.collapsibleSections.actionTracker;
+  const onToggle = (isOpen: boolean) => updateCollapsibleState('actionTracker', isOpen);
+  
+  const actionTracker = character.actionTracker;
+  const abilities = character.abilities;
   const totalActions = actionTracker.base + actionTracker.bonus;
   
   const useAction = () => {

@@ -1,29 +1,47 @@
 "use client";
 
+import { useCallback } from "react";
 import { Input } from "../ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { Character, SkillName } from "@/lib/types/character";
 import { ChevronDown, ChevronRight, Dice6 } from "lucide-react";
+import { getCharacterService } from "@/lib/services/service-factory";
+import { useCharacterActions } from "@/lib/contexts/character-actions-context";
+import { useUIState } from "@/lib/contexts/ui-state-context";
 
-interface SkillsSectionProps {
-  character: Character;
-  isOpen: boolean;
-  onToggle: (isOpen: boolean) => void;
-  onSkillChange: (skillName: SkillName, value: string) => void;
-  onRollSkill: (skillName: SkillName, attributeValue: number, skillModifier: number, advantageLevel: number) => void;
-  advantageLevel: number;
-}
-
-export function SkillsSection({ 
-  character, 
-  isOpen, 
-  onToggle, 
-  onSkillChange, 
-  onRollSkill, 
-  advantageLevel 
-}: SkillsSectionProps) {
+export function SkillsSection() {
+  // Get everything we need from context - complete independence!
+  const { character, onRollSkill } = useCharacterActions();
+  const { uiState, updateCollapsibleState } = useUIState();
+  
+  const isOpen = uiState.collapsibleSections.skills;
+  const advantageLevel = uiState.advantageLevel;
+  const onToggle = (isOpen: boolean) => updateCollapsibleState('skills', isOpen);
+  
+  const onSkillChange = useCallback(async (skillName: SkillName, value: string) => {
+    if (!character) return;
+    
+    const numValue = parseInt(value) || 0;
+    if (numValue >= 0 && numValue <= 20) {
+      const characterService = getCharacterService();
+      const updated = {
+        ...character,
+        skills: {
+          ...character.skills,
+          [skillName]: {
+            ...character.skills[skillName],
+            modifier: numValue,
+          },
+        },
+      };
+      await characterService.updateCharacter(updated);
+    }
+  }, [character]);
+  
+  // Early return if no character (shouldn't happen in normal usage)
+  if (!character) return null;
   return (
     <Collapsible open={isOpen} onOpenChange={onToggle}>
       <CollapsibleTrigger asChild>
