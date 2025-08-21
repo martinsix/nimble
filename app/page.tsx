@@ -15,6 +15,8 @@ import { UIStateProvider } from "@/lib/contexts/ui-state-context";
 import { ToastProvider } from "@/lib/contexts/toast-context";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { getCharacterService } from "@/lib/services/service-factory";
+import { useMemo, useCallback } from "react";
+import { LoadingScreen } from "@/components/loading-screen";
 
 function HomeContent() {
   // Character and settings management
@@ -51,26 +53,140 @@ function HomeContent() {
     handleSafeRest,
   } = useCombatActions();
 
+  // All memoization hooks must be called before any conditional returns
+  // Memoize service action handlers to prevent recreation on every render
+  const onApplyDamage = useCallback(async (amount: number, targetType?: 'hp' | 'temp_hp') => {
+    const characterService = getCharacterService();
+    await characterService.applyDamage(amount, targetType);
+  }, []);
 
+  const onApplyHealing = useCallback(async (amount: number) => {
+    const characterService = getCharacterService();
+    await characterService.applyHealing(amount);
+  }, []);
+
+  const onApplyTemporaryHP = useCallback(async (amount: number) => {
+    const characterService = getCharacterService();
+    await characterService.applyTemporaryHP(amount);
+  }, []);
+
+  const onSpendMana = useCallback(async (amount: number) => {
+    const characterService = getCharacterService();
+    await characterService.spendMana(amount);
+  }, []);
+
+  const onRestoreMana = useCallback(async (amount: number) => {
+    const characterService = getCharacterService();
+    await characterService.restoreMana(amount);
+  }, []);
+
+  const onUpdateCharacterConfiguration = useCallback(async (config: CharacterConfiguration) => {
+    const characterService = getCharacterService();
+    await characterService.updateCharacterConfiguration(config);
+  }, []);
+
+  // Memoize action handlers that depend on character or other handlers
+  const onRollSkill = useCallback((skillName: SkillName, attributeValue: number, skillModifier: number, advantageLevel: number) => 
+    handleRollSkill(character!, skillName, attributeValue, skillModifier, advantageLevel),
+    [character, handleRollSkill]
+  );
+
+  const onRollInitiative = useCallback((totalModifier: number, advantageLevel: number) => 
+    handleRollInitiative(character!, totalModifier, advantageLevel, handleCharacterUpdate),
+    [character, handleRollInitiative, handleCharacterUpdate]
+  );
+
+  const onUpdateActions = useCallback((actionTracker: ActionTracker) => 
+    handleUpdateActions(character!, actionTracker),
+    [character, handleUpdateActions]
+  );
+
+  const onEndEncounter = useCallback(() => 
+    handleEndEncounter(character!, handleCharacterUpdate),
+    [character, handleEndEncounter, handleCharacterUpdate]
+  );
+
+  const onUpdateAbilities = useCallback((abilities: Abilities) => 
+    handleUpdateAbilities(character!, abilities),
+    [character, handleUpdateAbilities]
+  );
+
+  const onEndTurn = useCallback((actionTracker: ActionTracker, abilities: Abilities) => 
+    handleEndTurn(character!, actionTracker, abilities, handleCharacterUpdate),
+    [character, handleEndTurn, handleCharacterUpdate]
+  );
+
+  const onUseAbility = useCallback((abilityId: string) => 
+    handleUseAbility(character!, abilityId, handleCharacterUpdate, addLogEntry),
+    [character, handleUseAbility, handleCharacterUpdate, addLogEntry]
+  );
+
+  const onCatchBreath = useCallback(() => 
+    handleCatchBreath(character!, handleCharacterUpdate, addLogEntry),
+    [character, handleCatchBreath, handleCharacterUpdate, addLogEntry]
+  );
+
+  const onMakeCamp = useCallback(() => 
+    handleMakeCamp(character!, handleCharacterUpdate, addLogEntry),
+    [character, handleMakeCamp, handleCharacterUpdate, addLogEntry]
+  );
+
+  const onSafeRest = useCallback(() => 
+    handleSafeRest(character!, handleCharacterUpdate, addLogEntry),
+    [character, handleSafeRest, handleCharacterUpdate, addLogEntry]
+  );
+
+  // Memoize the complete character actions context value to prevent unnecessary re-renders
+  const characterActionsValue = useMemo(() => ({
+    character,
+    onCharacterUpdate: handleCharacterUpdate,
+    onApplyDamage,
+    onApplyHealing,
+    onApplyTemporaryHP,
+    onSpendMana,
+    onRestoreMana,
+    onUpdateCharacterConfiguration,
+    onRollAttribute: handleRollAttribute,
+    onRollSave: handleRollSave,
+    onRollSkill,
+    onRollInitiative,
+    onAttack: handleAttack,
+    onUpdateActions,
+    onEndEncounter,
+    onUpdateAbilities,
+    onEndTurn,
+    onUseAbility,
+    onCatchBreath,
+    onMakeCamp,
+    onSafeRest,
+    addLogEntry,
+  }), [
+    character,
+    handleCharacterUpdate,
+    onApplyDamage,
+    onApplyHealing,
+    onApplyTemporaryHP,
+    onSpendMana,
+    onRestoreMana,
+    onUpdateCharacterConfiguration,
+    handleRollAttribute,
+    handleRollSave,
+    onRollSkill,
+    onRollInitiative,
+    handleAttack,
+    onUpdateActions,
+    onEndEncounter,
+    onUpdateAbilities,
+    onEndTurn,
+    onUseAbility,
+    onCatchBreath,
+    onMakeCamp,
+    onSafeRest,
+    addLogEntry,
+  ]);
 
   if (!isLoaded) {
-    return (
-      <main className="min-h-screen bg-background flex items-center justify-center">
-        <div>Loading character...</div>
-      </main>
-    );
-  }
-
-  if (!isLoaded) {
-    return (
-      <main className="min-h-screen bg-background">
-        <div className="container mx-auto py-8">
-          <div className="flex justify-center items-center h-64">
-            <div className="text-lg">Loading...</div>
-          </div>
-        </div>
-      </main>
-    );
+    return <LoadingScreen message="Loading character data..." />;
   }
 
   if (showCharacterSelection || !character) {
@@ -86,60 +202,6 @@ function HomeContent() {
       />
     );
   }
-
-  // Character actions context value
-  const characterActionsValue = {
-    character,
-    onCharacterUpdate: handleCharacterUpdate,
-    onApplyDamage: async (amount: number, targetType?: 'hp' | 'temp_hp') => {
-      const characterService = getCharacterService();
-      await characterService.applyDamage(amount, targetType);
-    },
-    onApplyHealing: async (amount: number) => {
-      const characterService = getCharacterService();
-      await characterService.applyHealing(amount);
-    },
-    onApplyTemporaryHP: async (amount: number) => {
-      const characterService = getCharacterService();
-      await characterService.applyTemporaryHP(amount);
-    },
-    onSpendMana: async (amount: number) => {
-      const characterService = getCharacterService();
-      await characterService.spendMana(amount);
-    },
-    onRestoreMana: async (amount: number) => {
-      const characterService = getCharacterService();
-      await characterService.restoreMana(amount);
-    },
-    onUpdateCharacterConfiguration: async (config: CharacterConfiguration) => {
-      const characterService = getCharacterService();
-      await characterService.updateCharacterConfiguration(config);
-    },
-    onRollAttribute: handleRollAttribute,
-    onRollSave: handleRollSave,
-    onRollSkill: (skillName: SkillName, attributeValue: number, skillModifier: number, advantageLevel: number) => 
-      handleRollSkill(character!, skillName, attributeValue, skillModifier, advantageLevel),
-    onRollInitiative: (totalModifier: number, advantageLevel: number) => 
-      handleRollInitiative(character!, totalModifier, advantageLevel, handleCharacterUpdate),
-    onAttack: handleAttack,
-    onUpdateActions: (actionTracker: ActionTracker) => 
-      handleUpdateActions(character!, actionTracker),
-    onEndEncounter: () => 
-      handleEndEncounter(character!, handleCharacterUpdate),
-    onUpdateAbilities: (abilities: Abilities) => 
-      handleUpdateAbilities(character!, abilities),
-    onEndTurn: (actionTracker: ActionTracker, abilities: Abilities) => 
-      handleEndTurn(character!, actionTracker, abilities, handleCharacterUpdate),
-    onUseAbility: (abilityId: string) => 
-      handleUseAbility(character!, abilityId, handleCharacterUpdate, addLogEntry),
-    onCatchBreath: () => 
-      handleCatchBreath(character!, handleCharacterUpdate, addLogEntry),
-    onMakeCamp: () => 
-      handleMakeCamp(character!, handleCharacterUpdate, addLogEntry),
-    onSafeRest: () => 
-      handleSafeRest(character!, handleCharacterUpdate, addLogEntry),
-    addLogEntry,
-  };
 
   return (
     <CharacterActionsProvider value={characterActionsValue}>

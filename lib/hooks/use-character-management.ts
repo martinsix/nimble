@@ -32,11 +32,10 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [showCharacterSelection, setShowCharacterSelection] = useState(false);
 
-  // Get services from the factory (memoized to prevent recreation on each render)
-  const characterStorage = useMemo(() => getCharacterStorage(), []);
-  const characterService = useMemo(() => getCharacterService(), []);
-  const characterCreation = useMemo(() => getCharacterCreation(), []);
-  const settingsService = useMemo(() => getSettingsService(), []);
+  // Get services from the factory (services are singletons, safe to call directly)
+  const characterStorage = getCharacterStorage();
+  const characterCreation = getCharacterCreation();
+  const settingsService = getSettingsService();
   
   // Get toast notifications
   const { showError, showSuccess } = useToast();
@@ -92,16 +91,19 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
     };
 
     loadData();
-  }, [settingsService, characterStorage, characterCreation, showError]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showError]); // Services are singletons, safe to omit from dependencies
 
   // Subscribe to character updates from the service
   useEffect(() => {
-    const unsubscribe = characterService.subscribeToCharacter((updatedCharacter) => {
+    // Get service instance inside effect to avoid dependency issues
+    const service = getCharacterService();
+    const unsubscribe = service.subscribeToCharacter((updatedCharacter) => {
       setCharacter(updatedCharacter);
     });
 
     return unsubscribe;
-  }, [characterService]);
+  }, []); // Empty dependencies - service is singleton
 
   // Listen for character creation events from the character selector
   useEffect(() => {
@@ -130,10 +132,12 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
     return () => {
       window.removeEventListener('createCharacter', handleCreateCharacter as unknown as EventListener);
     };
-  }, [settings, characterCreation, characterStorage, settingsService]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings]); // Services are singletons, safe to omit from dependencies
 
   const handleCharacterUpdate = async (updatedCharacter: Character) => {
     // Update through the service, which will trigger the subscription
+    const characterService = getCharacterService();
     await characterService.updateCharacter(updatedCharacter);
     
     try {
@@ -147,6 +151,7 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
 
   const handleCharacterSwitch = useCallback(async (characterId: string) => {
     try {
+      const characterService = getCharacterService();
       const newCharacter = await characterService.loadCharacter(characterId);
       if (newCharacter) {
         // Update settings with new active character
@@ -162,7 +167,8 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
     } catch (error) {
       console.error("Failed to switch character:", error);
     }
-  }, [settings, characterService, settingsService, characterStorage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings]); // Services are singletons, only include actual dependencies
 
   const handleCharacterDelete = async (characterId: string) => {
     try {
