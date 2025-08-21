@@ -187,54 +187,6 @@ export class ResourceService {
       description: `${entry.type === 'spend' ? 'Spent' : 'Restored'} ${entry.amount} ${entry.resource.name}`,
     };
   }
-
-  /**
-   * Migrate character from old mana system to new resource system
-   */
-  migrateCharacterFromMana(character: Character): void {
-    // Check if character has old mana system
-    const oldMana = (character as any).mana;
-    if (oldMana && typeof oldMana === 'object' && 'current' in oldMana && 'max' in oldMana) {
-      // Add mana as a complete resource definition
-      const manaResource: CharacterResource = {
-        id: 'mana',
-        name: 'Mana',
-        description: 'Magical energy used to cast spells',
-        color: 'blue',
-        icon: 'sparkles',
-        resetCondition: 'safe_rest',
-        resetType: 'to_max',
-        minValue: 0,
-        maxValue: oldMana.max,
-        current: oldMana.current,
-        sortOrder: 1,
-      };
-
-      // Initialize resources array if it doesn't exist
-      if (!character.resources) {
-        character.resources = [];
-      }
-
-      // Add mana resource if not already present
-      if (!this.getCharacterResource(character, 'mana')) {
-        character.resources.push(manaResource);
-      }
-
-      // Remove old mana property
-      delete (character as any).mana;
-    }
-
-    // Ensure resources array exists
-    if (!character.resources) {
-      character.resources = [];
-    }
-
-    // Remove old mana configuration if it exists
-    const oldConfig = (character.config as any).mana;
-    if (oldConfig) {
-      delete (character.config as any).mana;
-    }
-  }
 }
 
 export const resourceService = new ResourceService();

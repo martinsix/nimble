@@ -35,8 +35,7 @@ export function useDiceActions(): UseDiceActionsReturn {
         `${attributeLabel} check`,
         advantageLevel
       );
-      await activityLogService.addLogEntry(logEntry);
-      addLogEntry(logEntry);
+      await addLogEntry(logEntry);
     } catch (error) {
       console.error("Failed to roll dice:", error);
     }
@@ -54,8 +53,7 @@ export function useDiceActions(): UseDiceActionsReturn {
         `${attributeLabel} save`,
         advantageLevel
       );
-      await activityLogService.addLogEntry(logEntry);
-      addLogEntry(logEntry);
+      await addLogEntry(logEntry);
     } catch (error) {
       console.error("Failed to roll dice:", error);
     }
@@ -73,8 +71,7 @@ export function useDiceActions(): UseDiceActionsReturn {
         `${skillName} skill check`,
         advantageLevel
       );
-      await activityLogService.addLogEntry(logEntry);
-      addLogEntry(logEntry);
+      await addLogEntry(logEntry);
     } catch (error) {
       console.error("Failed to roll dice:", error);
     }
@@ -86,8 +83,7 @@ export function useDiceActions(): UseDiceActionsReturn {
       const actionsGranted = Math.max(1, rollResult.total);
       
       const logEntry = activityLogService.createInitiativeEntry(rollResult.total, actionsGranted);
-      await activityLogService.addLogEntry(logEntry);
-      addLogEntry(logEntry);
+      await addLogEntry(logEntry);
 
       return { rollTotal: rollResult.total, actionsGranted };
     } catch (error) {
@@ -109,8 +105,7 @@ export function useDiceActions(): UseDiceActionsReturn {
         rollResult.isMiss,
         rollResult.criticalHits
       );
-      await activityLogService.addLogEntry(logEntry);
-      addLogEntry(logEntry);
+      await addLogEntry(logEntry);
     } catch (error) {
       console.error("Failed to roll attack:", error);
     }

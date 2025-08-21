@@ -46,10 +46,7 @@ export class CharacterService implements ICharacterService {
 
   async loadCharacter(characterId: string): Promise<Character | null> {
     const character = await this.storageService.getCharacter(characterId);
-    if (character) {
-      // Migrate character from old mana system to new resource system
-      resourceService.migrateCharacterFromMana(character);
-      
+    if (character) {      
       this._character = character;
       
       // Save migrated character if migration occurred

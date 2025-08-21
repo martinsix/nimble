@@ -4,7 +4,7 @@ import { getActivityLog } from '@/lib/services/service-factory';
 
 export interface UseActivityLogReturn {
   logEntries: LogEntry[];
-  addLogEntry: (entry: LogEntry) => void;
+  addLogEntry: (entry: LogEntry) => Promise<void>;
   handleClearRolls: () => Promise<void>;
 }
 
@@ -32,8 +32,15 @@ export function useActivityLog(): UseActivityLogReturn {
     return () => clearInterval(interval);
   }, [activityLogService]);
 
-  const addLogEntry = (entry: LogEntry) => {
-    setLogEntries(prevEntries => [entry, ...prevEntries.slice(0, 99)]); // Keep only 100 entries
+  const addLogEntry = async (entry: LogEntry) => {
+    try {
+      // Persist to storage
+      await activityLogService.addLogEntry(entry);
+      // Update local state
+      setLogEntries(prevEntries => [entry, ...prevEntries.slice(0, 99)]); // Keep only 100 entries
+    } catch (error) {
+      console.error("Failed to add log entry:", error);
+    }
   };
 
   const handleClearRolls = async () => {

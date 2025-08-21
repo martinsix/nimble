@@ -17,8 +17,6 @@ export interface CharacterActionsContextValue {
   onApplyDamage: (amount: number, targetType?: 'hp' | 'temp_hp') => void;
   onApplyHealing: (amount: number) => void;
   onApplyTemporaryHP: (amount: number) => void;
-  onSpendMana?: (amount: number) => void;
-  onRestoreMana?: (amount: number) => void;
   
   // Dice rolling actions
   onRollAttribute: (attributeName: AttributeName, value: number, advantageLevel: number) => void;

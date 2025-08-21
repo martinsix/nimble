@@ -37,7 +37,6 @@ export interface Proficiencies {
 
 export interface CharacterConfiguration {
   maxWounds: number; // Maximum wounds before death (default 6)
-  maxHP: number; // Maximum hit points (default 10)
   maxInventorySize: number; // Base inventory size before strength bonus (default 10)
 }
 

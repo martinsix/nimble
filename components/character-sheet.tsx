@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Character, CharacterConfiguration } from "@/lib/types/character";
+import { CharacterResource } from "@/lib/types/resources";
 import { AppMode } from "@/lib/services/settings-service";
 import { CharacterConfigDialog } from "./character-config-dialog";
 import { useCharacterActions } from "@/lib/contexts/character-actions-context";
@@ -34,8 +35,24 @@ export function CharacterSheet({ character, mode }: CharacterSheetProps) {
     setIsConfigDialogOpen(true);
   };
 
-  const handleConfigSave = async (config: CharacterConfiguration) => {
+  const handleConfigSave = async (config: CharacterConfiguration, resources: CharacterResource[], maxHP: number) => {
+    // Update character configuration
     await onUpdateCharacterConfiguration(config);
+    
+    // Update character's resources and max HP directly
+    const updatedCharacter: Character = {
+      ...character,
+      config,
+      resources,
+      hitPoints: {
+        ...character.hitPoints,
+        max: maxHP,
+        // Ensure current HP doesn't exceed new max
+        current: Math.min(character.hitPoints.current, maxHP)
+      }
+    };
+    
+    await onCharacterUpdate(updatedCharacter);
   };
 
   return (

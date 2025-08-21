@@ -71,14 +71,6 @@ export interface SafeRestEntry extends BaseLogEntry {
   abilitiesReset: number; // Number of abilities reset
 }
 
-// Mana entry (legacy - kept for backward compatibility)
-export interface ManaEntry extends BaseLogEntry {
-  type: 'mana';
-  amount: number; // Amount of mana spent or restored
-  action: 'spent' | 'restored'; // Whether mana was spent or restored
-  currentMana: number; // Current mana after the action
-  maxMana: number; // Maximum mana pool
-}
 
 // Resource usage entry (generic replacement for mana)
 export interface ResourceUsageEntry extends BaseLogEntry {
@@ -92,4 +84,4 @@ export interface ResourceUsageEntry extends BaseLogEntry {
 }
 
 // Union type for all log entries
-export type LogEntry = DiceRollEntry | DamageEntry | HealingEntry | TempHPEntry | InitiativeEntry | AbilityUsageEntry | SafeRestEntry | ManaEntry | ResourceUsageEntry;
+export type LogEntry = DiceRollEntry | DamageEntry | HealingEntry | TempHPEntry | InitiativeEntry | AbilityUsageEntry | SafeRestEntry | ResourceUsageEntry;

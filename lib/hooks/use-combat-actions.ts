@@ -109,8 +109,7 @@ export function useCombatActions(): UseCombatActionsReturn {
         result.usedAbility.currentUses || 0,
         result.usedAbility.maxUses || 0
       );
-      await activityLogService.addLogEntry(logEntry);
-      addLogEntry(logEntry);
+      await addLogEntry(logEntry);
 
       // Handle ability roll if it has one
       if (result.usedAbility.roll) {
@@ -127,8 +126,7 @@ export function useCombatActions(): UseCombatActionsReturn {
           `${result.usedAbility.name} ability roll`,
           0 // No advantage for ability rolls by default
         );
-        await activityLogService.addLogEntry(rollLogEntry);
-        addLogEntry(rollLogEntry);
+        await addLogEntry(rollLogEntry);
       }
     } catch (error) {
       console.error("Failed to use ability:", error);
@@ -184,8 +182,7 @@ export function useCombatActions(): UseCombatActionsReturn {
       // Log the healing
       if (healingAmount > 0) {
         const healingLogEntry = activityLogService.createHealingEntry(healingAmount);
-        await activityLogService.addLogEntry(healingLogEntry);
-        addLogEntry(healingLogEntry);
+        await addLogEntry(healingLogEntry);
       }
     } catch (error) {
       console.error("Failed to catch breath:", error);
@@ -212,8 +209,7 @@ export function useCombatActions(): UseCombatActionsReturn {
         `Making Camp - Max Hit Die (d${character.hitDice.size})`,
         0
       );
-      await activityLogService.addLogEntry(restLogEntry);
-      addLogEntry(restLogEntry);
+      await addLogEntry(restLogEntry);
 
       // Calculate healing (max hit die value + strength modifier, minimum 1)
       const strengthModifier = character.attributes.strength;
@@ -241,8 +237,7 @@ export function useCombatActions(): UseCombatActionsReturn {
       // Log the healing
       if (healingAmount > 0) {
         const healingLogEntry = activityLogService.createHealingEntry(healingAmount);
-        await activityLogService.addLogEntry(healingLogEntry);
-        addLogEntry(healingLogEntry);
+        await addLogEntry(healingLogEntry);
       }
     } catch (error) {
       console.error("Failed to make camp:", error);
@@ -303,8 +298,7 @@ export function useCombatActions(): UseCombatActionsReturn {
         woundsRemoved,
         abilitiesReset
       );
-      await activityLogService.addLogEntry(restLogEntry);
-      addLogEntry(restLogEntry);
+      await addLogEntry(restLogEntry);
     } catch (error) {
       console.error("Failed to perform safe rest:", error);
     }

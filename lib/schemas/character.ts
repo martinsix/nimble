@@ -88,7 +88,6 @@ export const resourceSchema = z.object({
 
 export const characterConfigurationSchema = z.object({
   maxWounds: z.number().min(1),
-  maxHP: z.number().min(1),
   maxInventorySize: z.number().min(1),
 });
 

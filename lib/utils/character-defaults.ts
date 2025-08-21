@@ -89,7 +89,6 @@ export const createDefaultWounds = (maxWounds: number = 6): Wounds => {
 export const createDefaultCharacterConfiguration = (): CharacterConfiguration => {
   return {
     maxWounds: 6, // Default to 6 max wounds before death
-    maxHP: 10, // Default to 10 max hit points
     maxInventorySize: 10, // Default to 10 base inventory slots (before strength bonus)
   };
 };
