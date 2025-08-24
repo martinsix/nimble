@@ -37,7 +37,7 @@ export function CharacterSelector({
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newCharacterName, setNewCharacterName] = useState("");
   const [selectedClass, setSelectedClass] = useState("fighter");
-  
+
   const availableClasses = getAllClasses();
 
   const handleCreateCharacter = () => {

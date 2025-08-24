@@ -28,7 +28,6 @@ export function HitPointsSection() {
   const temporaryHp = character.hitPoints.temporary;
   const isOpen = uiState.collapsibleSections.hitPoints;
   const onToggle = (isOpen: boolean) => updateCollapsibleState('hitPoints', isOpen);
-
   const applyDamage = async (amount: number, resetInput: boolean = false) => {
     await serviceDamage(amount);
     
@@ -71,19 +70,21 @@ export function HitPointsSection() {
   const healthPercentage = (currentHp / maxHp) * 100;
 
   return (
-    <Collapsible open={isOpen} onOpenChange={onToggle}>
-      <CollapsibleTrigger asChild>
-        <Button variant="ghost" className="w-full justify-between p-4 h-auto">
-          <h2 className="text-xl font-semibold flex items-center gap-2">
-            <Heart className="w-5 h-5 text-red-500" />
-            Hit Points
-          </h2>
-          {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-        </Button>
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        <Card className="w-full">
-      <CardContent className="space-y-4">
+    <Card className="w-full">
+      <Collapsible open={isOpen} onOpenChange={onToggle}>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Heart className="w-5 h-5 text-red-500" />
+                Hit Points
+              </div>
+              {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </CardTitle>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="space-y-4 pt-0">
         {/* HP Display and Bar */}
         <div className="text-center space-y-2">
           <div className="text-3xl font-bold">
@@ -250,9 +251,9 @@ export function HitPointsSection() {
             </div>
           </div>
         </div>
-        </CardContent>
-      </Card>
-      </CollapsibleContent>
-    </Collapsible>
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
   );
 }

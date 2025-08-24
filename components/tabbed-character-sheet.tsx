@@ -32,7 +32,7 @@ export function TabbedCharacterSheet() {
   return (
     <div className="relative">
       {/* Content area with bottom padding for tab bar */}
-      <div className="pb-20">
+      <div className="pb-20 sm:pb-24 min-h-[calc(100vh-8rem)]">
         {renderActiveTab()}
       </div>
       

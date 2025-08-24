@@ -359,7 +359,7 @@ export class ClassService implements IClassService {
    * Check if character needs to catch up on missing features
    */
   async syncCharacterFeatures(): Promise<ClassFeatureGrant[]> {
-    const character = this.characterService.character;
+    let character = this.characterService.character;
     if (!character) {
       throw new Error('No character loaded');
     }
@@ -370,6 +370,12 @@ export class ClassService implements IClassService {
     for (const feature of missingFeatures) {
       const featureGrant = await this.grantFeature(character, feature, feature.level);
       grantedFeatures.push(featureGrant);
+      
+      // Get the updated character after granting the feature
+      character = this.characterService.getCurrentCharacter();
+      if (!character) {
+        throw new Error('Character became null after granting feature');
+      }
     }
 
     return grantedFeatures;

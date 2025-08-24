@@ -92,7 +92,7 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
 
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showError]); // Services are singletons, safe to omit from dependencies
+  }, []); // Services are singletons, safe to omit from dependencies
 
   // Subscribe to character updates from the service
   useEffect(() => {

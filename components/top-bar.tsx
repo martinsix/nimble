@@ -111,8 +111,8 @@ export function TopBar({
           />
         </div>
 
-        {/* Center - Title */}
-        <h1 className="text-xl font-bold">Nimble Navigator</h1>
+        {/* Center - Empty space for balance */}
+        <div></div>
 
         {/* Right side - Advantage and Roll Panel */}
         <div className="flex items-center gap-3">
