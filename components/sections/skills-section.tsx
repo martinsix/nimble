@@ -62,15 +62,18 @@ export function SkillsSection() {
   // Early return if no character (shouldn't happen in normal usage)
   if (!character) return null;
   return (
-    <Collapsible open={isOpen} onOpenChange={onToggle}>
-      <CollapsibleTrigger asChild>
-        <Button variant="ghost" className="w-full justify-between p-4 h-auto">
-          <h2 className="text-xl font-semibold">Skills</h2>
-          {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-        </Button>
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        <Card className="mt-4">
+    <Card>
+      <Collapsible open={isOpen} onOpenChange={onToggle}>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl font-semibold">Skills</CardTitle>
+              {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </div>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="border-t" />
           <CardContent className="p-0">
             <div className="divide-y">
               {Object.entries(character.skills).map(([skillKey, skill], index) => {
@@ -135,8 +138,8 @@ export function SkillsSection() {
               })}
             </div>
           </CardContent>
-        </Card>
-      </CollapsibleContent>
-    </Collapsible>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
   );
 }
