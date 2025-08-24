@@ -7,7 +7,7 @@ import {
   getCharacterCreation, 
   getSettingsService 
 } from '@/lib/services/service-factory';
-import { useToast } from '@/lib/contexts/toast-context';
+import { useToastService } from './use-toast-service';
 
 export interface UseCharacterManagementReturn {
   character: Character | null;
@@ -38,7 +38,7 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
   const settingsService = getSettingsService();
   
   // Get toast notifications
-  const { showError, showSuccess } = useToast();
+  const { showError, showSuccess } = useToastService();
 
   // Initial data loading
   useEffect(() => {

@@ -5,9 +5,9 @@ import { CharacterHeader } from "@/components/character-sheet/character-header";
 import { CharacterSelector } from "@/components/character-selector";
 import { TopBar } from "@/components/top-bar";
 import { useCharacterManagement } from "@/lib/hooks/use-character-management";
-import { ToastProvider } from "@/lib/contexts/toast-context";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { LoadingScreen } from "@/components/loading-screen";
+import { ToastContainer } from "@/components/toast-container";
 import { useCallback } from "react";
 
 function HomeContent() {
@@ -76,9 +76,8 @@ function HomeContent() {
 export default function Home() {
   return (
     <ErrorBoundary>
-      <ToastProvider>
-        <HomeContent />
-      </ToastProvider>
+      <HomeContent />
+      <ToastContainer />
     </ErrorBoundary>
   );
 }
