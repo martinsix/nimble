@@ -1,6 +1,5 @@
 import { Character } from "@/lib/types/character";
 import { CharacterNameSection } from "../sections/character-name-section";
-import { AdvantageToggle } from "../advantage-toggle";
 import { ClassInfoSection } from "../sections/class-info-section";
 import { ClassFeaturesSection } from "../sections/class-features-section";
 import { useCharacterActions } from "@/lib/contexts/character-actions-context";
@@ -27,9 +26,6 @@ export function CharacterHeader({
         onNameChange={onNameChange}
         onOpenConfig={onOpenConfig}
       />
-
-      {/* Advantage/Disadvantage Toggle - Now self-contained */}
-      <AdvantageToggle />
 
       {/* Class Info Section - Now completely self-contained */}
       <ClassInfoSection />

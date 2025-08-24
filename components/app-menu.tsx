@@ -35,13 +35,12 @@ export function AppMenu({
 
   return (
     <>
-      <div className="absolute top-4 right-4 z-50">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              <Menu className="w-4 h-4" />
-            </Button>
-          </DropdownMenuTrigger>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm">
+            <Menu className="w-4 h-4" />
+          </Button>
+        </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onClick={() => setShowCharacterSelector(true)}>
               <Users className="w-4 h-4 mr-2" />
@@ -66,7 +65,6 @@ export function AppMenu({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
 
       <SettingsPanel 
         isOpen={showSettings}

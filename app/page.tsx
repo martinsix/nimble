@@ -4,9 +4,8 @@ import { CharacterSheet } from "@/components/character-sheet";
 import { ActivityLog } from "@/components/activity-log";
 import { AttributeName, SkillName, ActionTracker, CharacterConfiguration } from "@/lib/types/character";
 import { Abilities } from "@/lib/types/abilities";
-import { AppMenu } from "@/components/app-menu";
 import { CharacterSelector } from "@/components/character-selector";
-import { RollPanel } from "@/components/roll-panel";
+import { TopBar } from "@/components/top-bar";
 import { useCharacterManagement } from "@/lib/hooks/use-character-management";
 import { useDiceActions } from "@/lib/hooks/use-dice-actions";
 import { useCombatActions } from "@/lib/hooks/use-combat-actions";
@@ -207,20 +206,14 @@ function HomeContent() {
     <CharacterActionsProvider value={characterActionsValue}>
       <UIStateProvider>
         <main className="min-h-screen bg-background">
+          <TopBar 
+            settings={settings}
+            characters={characters}
+            onSettingsChange={handleSettingsChange}
+            onCharacterSwitch={handleCharacterSwitch}
+            onCharacterDelete={handleCharacterDelete}
+          />
           <div className="container mx-auto py-8 space-y-8">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <RollPanel />
-                <h1 className="text-3xl font-bold">Nimble Navigator</h1>
-              </div>
-              <AppMenu 
-                settings={settings}
-                characters={characters}
-                onSettingsChange={handleSettingsChange}
-                onCharacterSwitch={handleCharacterSwitch}
-                onCharacterDelete={handleCharacterDelete}
-              />
-            </div>
             <CharacterSheet 
               character={character}
               mode={settings.mode}
