@@ -387,7 +387,7 @@ export class CharacterService implements ICharacterService {
       actionTracker: {
         ...this._character.actionTracker,
         current: actionsGranted,
-        base: actionsGranted,
+        base: 3,
         bonus: 0,
       },
     };

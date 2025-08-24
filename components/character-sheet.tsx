@@ -32,11 +32,11 @@ export function CharacterSheet({ character, mode }: CharacterSheetProps) {
     setIsConfigDialogOpen(true);
   };
 
-  const handleConfigSave = async (config: CharacterConfiguration, resources: CharacterResource[], maxHP: number) => {
+  const handleConfigSave = async (config: CharacterConfiguration, resources: CharacterResource[], maxHP: number, maxWounds: number) => {
     // Update character configuration
     await updateCharacterConfiguration(config);
     
-    // Update character's resources and max HP directly
+    // Update character's resources, max HP, and max wounds directly
     const updatedCharacter: Character = {
       ...character,
       config,
@@ -46,6 +46,12 @@ export function CharacterSheet({ character, mode }: CharacterSheetProps) {
         max: maxHP,
         // Ensure current HP doesn't exceed new max
         current: Math.min(character.hitPoints.current, maxHP)
+      },
+      wounds: {
+        ...character.wounds,
+        max: maxWounds,
+        // Ensure current wounds don't exceed new max
+        current: Math.min(character.wounds.current, maxWounds)
       }
     };
     

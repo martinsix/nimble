@@ -57,7 +57,7 @@ export function WoundsSection() {
         bgColor: "bg-red-100", 
         icon: Skull 
       };
-    } else if (character.wounds.current >= character.wounds.max - 1) {
+    } else if (character.wounds.current >= character.wounds.max - 2) {
       return { 
         text: "CRITICAL", 
         color: "text-orange-600", 

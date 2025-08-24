@@ -50,7 +50,7 @@ function HomeContent() {
     setShowConfigDialog(false);
   }, []);
 
-  const onSaveConfig = useCallback(async (config: CharacterConfiguration, resources: CharacterResource[], maxHP: number) => {
+  const onSaveConfig = useCallback(async (config: CharacterConfiguration, resources: CharacterResource[], maxHP: number, maxWounds: number) => {
     if (character) {
       const updatedCharacter = {
         ...character,
@@ -60,6 +60,11 @@ function HomeContent() {
           ...character.hitPoints,
           max: maxHP,
           current: Math.min(character.hitPoints.current, maxHP)
+        },
+        wounds: {
+          ...character.wounds,
+          max: maxWounds,
+          current: Math.min(character.wounds.current, maxWounds)
         }
       };
       await handleCharacterUpdate(updatedCharacter);

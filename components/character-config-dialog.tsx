@@ -17,27 +17,29 @@ interface CharacterConfigDialogProps {
   character: Character;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (config: CharacterConfiguration, resources: CharacterResource[], maxHP: number) => void;
+  onSave: (config: CharacterConfiguration, resources: CharacterResource[], maxHP: number, maxWounds: number) => void;
 }
 
 export function CharacterConfigDialog({ character, isOpen, onClose, onSave }: CharacterConfigDialogProps) {
   const [config, setConfig] = useState<CharacterConfiguration>(character.config);
   const [resources, setResources] = useState<CharacterResource[]>(character.resources);
   const [maxHP, setMaxHP] = useState<number>(character.hitPoints.max);
+  const [maxWounds, setMaxWounds] = useState<number>(character.wounds.max);
   const [newResource, setNewResource] = useState<Partial<CharacterResource> | null>(null);
   const [isCreatingResource, setIsCreatingResource] = useState(false);
   const [editingResource, setEditingResource] = useState<string | null>(null);
 
   const handleSave = () => {
-    onSave(config, resources, maxHP);
+    onSave(config, resources, maxHP, maxWounds);
     onClose();
   };
 
   const handleCancel = () => {
-    // Reset to original config, resources, and maxHP
+    // Reset to original config, resources, maxHP, and maxWounds
     setConfig(character.config);
     setResources(character.resources);
     setMaxHP(character.hitPoints.max);
+    setMaxWounds(character.wounds.max);
     setIsCreatingResource(false);
     setNewResource(null);
     setEditingResource(null);
@@ -46,10 +48,7 @@ export function CharacterConfigDialog({ character, isOpen, onClose, onSave }: Ch
 
   const updateMaxWounds = (value: string) => {
     const numValue = parseInt(value) || 1;
-    setConfig(prev => ({
-      ...prev,
-      maxWounds: Math.max(1, numValue), // Minimum of 1 wound
-    }));
+    setMaxWounds(Math.max(1, numValue)); // Minimum of 1 wound
   };
 
   const updateMaxHP = (value: string) => {
@@ -162,7 +161,7 @@ export function CharacterConfigDialog({ character, isOpen, onClose, onSave }: Ch
                 type="number"
                 min="1"
                 max="20"
-                value={config.maxWounds}
+                value={maxWounds}
                 onChange={(e) => updateMaxWounds(e.target.value)}
                 className="w-full"
               />

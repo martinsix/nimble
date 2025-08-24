@@ -1,5 +1,6 @@
 "use client";
 
+import { CombatSummary } from "../sections/combat-summary";
 import { HitPointsSection } from "../sections/hit-points-section";
 import { WoundsSection } from "../sections/wounds-section";
 import { ActionTrackerSection } from "../sections/action-tracker-section";
@@ -10,6 +11,7 @@ import { ActionsSection } from "../sections/actions-section";
 export function CombatTab() {
   return (
     <div className="space-y-6">
+      <CombatSummary />
       <HitPointsSection />
       <WoundsSection />
       <ActionTrackerSection />
