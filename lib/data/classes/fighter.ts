@@ -35,7 +35,7 @@ export const fighter: ClassDefinition = {
         maxUses: 1,
         currentUses: 1,
         roll: {
-          dice: '1d10',
+          dice: { count: 1, sides: 10 },
           attribute: 'strength'
         }
       }

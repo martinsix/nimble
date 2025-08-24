@@ -39,8 +39,9 @@ export const rogue: ClassDefinition = {
         description: 'Deal extra damage when you have advantage on your attack roll.',
         type: 'action',
         frequency: 'per_turn',
+        maxUses: 1,
         roll: {
-          dice: '1d6',
+          dice: { count: 1, sides: 6 },
           modifier: 0
         }
       }

@@ -28,7 +28,7 @@ export const rogueAssassin: SubclassDefinition = {
         type: 'action',
         frequency: 'at_will',
         roll: {
-          dice: '2d6',
+          dice: { count: 2, sides: 6 },
           attribute: 'dexterity'
         }
       }
@@ -75,7 +75,7 @@ export const rogueAssassin: SubclassDefinition = {
         maxUses: 1,
         currentUses: 1,
         roll: {
-          dice: '4d6',
+          dice: { count: 4, sides: 6 },
           attribute: 'dexterity'
         }
       }

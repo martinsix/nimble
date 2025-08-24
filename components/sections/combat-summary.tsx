@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
-import { Heart, Shield, Zap, Skull, AlertTriangle, X, Dices, Swords, Dice6, Square, ChevronUp } from "lucide-react";
+import { Heart, Shield, Zap, Skull, AlertTriangle, X, Dices, Swords, Dice6, Square, ChevronUp, Bandage } from "lucide-react";
 import { useCharacterService } from "@/lib/hooks/use-character-service";
 import { useDiceActions } from "@/lib/hooks/use-dice-actions";
 import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
@@ -45,8 +45,8 @@ export function CombatSummary() {
       };
     }
     return {
-      borderColor: "border-green-200",
-      bgColor: "bg-green-50/20"
+      borderColor: "border-gray-200",
+      bgColor: "bg-transparent"
     };
   };
 
@@ -68,9 +68,9 @@ export function CombatSummary() {
     }
     return { 
       color: "text-green-600", 
-      bgColor: "bg-green-50/20", 
-      borderColor: "border-green-200",
-      icon: Heart 
+      bgColor: "bg-transparent", 
+      borderColor: "border-gray-200",
+      icon: Bandage 
     };
   };
 
@@ -86,10 +86,14 @@ export function CombatSummary() {
   
   if (shouldUseIcons) {
     for (let i = 0; i < wounds.max; i++) {
+      const isLastWound = i === wounds.max - 1;
+      const isWounded = i < wounds.current;
+      const IconComponent = isLastWound ? Skull : Bandage;
+      
       woundIcons.push(
-        <X 
+        <IconComponent
           key={i} 
-          className={`w-3 h-3 sm:w-4 sm:h-4 ${i < wounds.current ? 'text-red-500 fill-red-500' : 'text-gray-300'}`} 
+          className={`w-3 h-3 sm:w-4 sm:h-4 ${isWounded ? 'text-red-500 fill-red-500' : 'text-gray-300'}`} 
         />
       );
     }
@@ -104,10 +108,10 @@ export function CombatSummary() {
 
   return (
     <TooltipProvider>
-      <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 mb-4">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 mb-4 items-stretch">
         {/* Hit Points Card - Expandable */}
         <div className={`transition-all duration-700 ease-in-out ${isHPExpanded ? 'col-span-3' : ''}`}>
-          <Card className={`border-2 ${hpStatus.borderColor} ${hpStatus.bgColor} transition-all duration-700 ease-in-out transform ${!isHPExpanded ? 'cursor-pointer hover:shadow-md hover:scale-[1.02]' : 'shadow-lg scale-100'}`}>
+          <Card className={`border-2 ${hpStatus.borderColor} ${hpStatus.bgColor} transition-all duration-700 ease-in-out transform ${!isHPExpanded ? 'cursor-pointer hover:shadow-md hover:scale-[1.02] h-full' : 'shadow-lg scale-100'}`}>
             {!isHPExpanded ? (
               // Compact HP content
               <CardContent className="p-3 sm:p-4" onClick={() => setIsHPExpanded(true)}>
@@ -142,7 +146,7 @@ export function CombatSummary() {
         {!isHPExpanded && (
           <>
             {/* Wounds Card */}
-            <Card className={`border-2 ${woundStatus.borderColor} ${woundStatus.bgColor} transition-all duration-700 ease-in-out transform scale-100 opacity-100`}>
+            <Card className={`border-2 ${woundStatus.borderColor} ${woundStatus.bgColor} transition-all duration-700 ease-in-out transform scale-100 opacity-100 h-full`}>
               <CardContent className="p-3 sm:p-4">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -165,7 +169,7 @@ export function CombatSummary() {
             </Card>
 
             {/* Initiative Card */}
-            <Card className="border border-gray-200 transition-all duration-700 ease-in-out transform scale-100 opacity-100">
+            <Card className="border border-gray-200 transition-all duration-700 ease-in-out transform scale-100 opacity-100 h-full">
               <CardContent className="p-3 sm:p-4">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -180,33 +184,39 @@ export function CombatSummary() {
                   </div>
                   <div className="space-y-1 text-center">
                     {!inEncounter ? (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleInitiativeRoll}
-                            className="w-full text-lg font-bold tabular-nums"
-                          >
-                            <Dice6 className="w-4 h-4 mr-1" />
-                            {totalModifier > 0 ? '+' : ''}{totalModifier}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Roll Initiative: d20{totalModifier > 0 ? '+' + totalModifier : totalModifier}</p>
-                          <p>DEX {attributes.dexterity > 0 ? '+' : ''}{attributes.dexterity} + Modifier +{initiative.modifier}</p>
-                        </TooltipContent>
-                      </Tooltip>
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="text-xl font-bold tabular-nums">
+                          {totalModifier > 0 ? '+' : ''}{totalModifier}
+                        </span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleInitiativeRoll}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Dice6 className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Roll Initiative: d20{totalModifier > 0 ? '+' + totalModifier : totalModifier}</p>
+                            <p>({attributes.dexterity > 0 ? '+' + attributes.dexterity + ' DEX' : ''}{initiative.modifier > 0 ? ' + ' + initiative.modifier + ' MOD' : ''})</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
                     ) : (
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={endEncounter}
-                        className="w-full"
-                      >
-                        <Square className="w-4 h-4 mr-1" />
-                        End
-                      </Button>
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="text-xl font-bold">End</span>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={endEncounter}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Square className="w-4 h-4" />
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </div>

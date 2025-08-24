@@ -109,7 +109,8 @@ export class AbilityService {
    * Get ability roll description for display
    */
   getAbilityRollDescription(abilityRoll: AbilityRoll, character: Character): string {
-    const parts: string[] = [abilityRoll.dice];
+    const diceString = `${abilityRoll.dice.count}d${abilityRoll.dice.sides}`;
+    const parts: string[] = [diceString];
     
     if (abilityRoll.modifier) {
       parts.push(abilityRoll.modifier > 0 ? `+${abilityRoll.modifier}` : `${abilityRoll.modifier}`);

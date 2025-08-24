@@ -1,9 +1,10 @@
 import { AttributeName } from './character';
+import { DiceExpression } from './dice';
 
 export type AbilityFrequency = 'per_turn' | 'per_encounter' | 'per_safe_rest' | 'at_will';
 
 export interface AbilityRoll {
-  dice: string; // e.g., "2d4", "1d6"
+  dice: DiceExpression;
   modifier?: number; // fixed modifier, e.g., +2
   attribute?: AttributeName; // attribute to add to the roll
 }

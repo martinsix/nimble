@@ -42,7 +42,7 @@ export const clericLife: SubclassDefinition = {
         maxUses: 1,
         currentUses: 1,
         roll: {
-          dice: '5d4',
+          dice: { count: 5, sides: 4 },
           attribute: 'will'
         }
       }
@@ -71,8 +71,9 @@ export const clericLife: SubclassDefinition = {
         description: 'Once per turn, your weapon attacks deal extra radiant damage.',
         type: 'action',
         frequency: 'per_turn',
+        maxUses: 1,
         roll: {
-          dice: '1d8',
+          dice: { count: 1, sides: 8 },
           attribute: 'will'
         }
       }

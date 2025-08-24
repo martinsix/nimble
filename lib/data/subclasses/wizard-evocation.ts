@@ -41,20 +41,10 @@ export const wizardEvocation: SubclassDefinition = {
     },
     {
       level: 10,
-      type: 'ability',
+      type: 'passive_feature',
       name: 'Empowered Evocation',
       description: 'You can add your Intelligence modifier to the damage roll of any wizard evocation spell you cast.',
-      ability: {
-        id: 'evocation-empowered',
-        name: 'Empowered Evocation',
-        description: 'Add Intelligence modifier to evocation spell damage.',
-        type: 'action',
-        frequency: 'at_will',
-        roll: {
-          dice: '0d0',
-          attribute: 'intelligence'
-        }
-      }
+      category: 'combat'
     },
     {
       level: 14,

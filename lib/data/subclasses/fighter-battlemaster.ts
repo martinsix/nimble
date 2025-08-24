@@ -37,7 +37,7 @@ export const fighterBattleMaster: SubclassDefinition = {
         maxUses: 4,
         currentUses: 4,
         roll: {
-          dice: '1d8',
+          dice: { count: 1, sides: 8 },
           attribute: 'strength'
         }
       }

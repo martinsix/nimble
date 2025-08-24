@@ -114,8 +114,13 @@ export const characterConfigurationSchema = z.object({
   maxInventorySize: z.number().min(1),
 });
 
+const diceExpressionSchema = z.object({
+  count: z.number().min(1),
+  sides: z.union([z.literal(4), z.literal(6), z.literal(8), z.literal(10), z.literal(12), z.literal(20), z.literal(100)]),
+});
+
 const abilityRollSchema = z.object({
-  dice: z.string(),
+  dice: diceExpressionSchema,
   modifier: z.number().optional(),
   attribute: attributeNameSchema.optional(),
 });
@@ -136,6 +141,15 @@ export const abilitySchema = z.discriminatedUnion('type', [
     maxUses: z.number().min(1).optional(),
     currentUses: z.number().min(0).optional(),
     roll: abilityRollSchema.optional(),
+  }).refine((data) => {
+    // Non-at_will abilities must have maxUses defined
+    if (data.frequency !== 'at_will' && data.maxUses === undefined) {
+      return false;
+    }
+    return true;
+  }, {
+    message: "Abilities with frequency other than 'at_will' must specify maxUses",
+    path: ['maxUses'],
   }),
 ]);
 
