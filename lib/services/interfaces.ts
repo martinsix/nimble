@@ -50,7 +50,6 @@ export interface IActivityLog {
 export interface IAbilityService {
   resetAbilities(abilities: Abilities, frequency: 'per_turn' | 'per_encounter' | 'per_safe_rest'): Abilities;
   useAbility(abilities: Abilities, abilityId: string): { success: boolean; updatedAbilities: Abilities; usedAbility?: any };
-  calculateInitiativeActions(initiativeRoll: number, bonusActions: number): number;
   calculateAbilityRollModifier(roll: any, character: Character): number;
 }
 
@@ -71,6 +70,7 @@ export interface ICharacterService {
   updateWounds(current: number, max: number): Promise<void>;
   updateActionTracker(actionTracker: ActionTracker): Promise<void>;
   updateAbilities(abilities: Abilities): Promise<void>;
+  startEncounter(initiativeRoll: number): Promise<void>;
   performSafeRest(): Promise<void>;
   endEncounter(): Promise<void>;
   endTurn(): Promise<void>;

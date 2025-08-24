@@ -15,7 +15,7 @@ import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
 
 export function InitiativeSection() {
   // Get everything we need from service hooks
-  const { character, endEncounter, updateCharacter } = useCharacterService();
+  const { character, endEncounter, startEncounter } = useCharacterService();
   const { rollInitiative } = useDiceActions();
   const { uiState, updateCollapsibleState } = useUIStateService();
   
@@ -56,29 +56,8 @@ export function InitiativeSection() {
     
     const result = await rollInitiative(totalModifier, advantageLevel);
     
-    // Calculate actions based on initiative roll total (game rules from CLAUDE.md)
-    let actionsGranted: number;
-    if (result.rollTotal < 10) {
-      actionsGranted = 1;
-    } else if (result.rollTotal <= 20) {
-      actionsGranted = 2;
-    } else {
-      actionsGranted = 3;
-    }
-    
-    // Update character to enter encounter mode with proper action tracker
-    const updatedCharacter = {
-      ...character,
-      inEncounter: true,
-      actionTracker: {
-        ...character.actionTracker,
-        current: actionsGranted,
-        base: actionsGranted,
-        bonus: 0,
-      },
-    };
-    
-    await updateCharacter(updatedCharacter);
+    // Use the character service to handle encounter setup
+    await startEncounter(result.rollTotal);
   };
 
   return (

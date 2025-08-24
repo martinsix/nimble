@@ -363,6 +363,38 @@ export class CharacterService implements ICharacterService {
   }
 
   /**
+   * Start encounter with initiative roll result
+   */
+  async startEncounter(initiativeRoll: number): Promise<void> {
+    if (!this._character) return;
+
+    // Calculate actions based on initiative roll total (game rules)
+    let actionsGranted: number;
+    if (initiativeRoll < 10) {
+      actionsGranted = 1;
+    } else if (initiativeRoll <= 20) {
+      actionsGranted = 2;
+    } else {
+      actionsGranted = 3;
+    }
+
+    // Update character to enter encounter mode with proper action tracker
+    this._character = {
+      ...this._character,
+      inEncounter: true,
+      actionTracker: {
+        ...this._character.actionTracker,
+        current: actionsGranted,
+        base: actionsGranted,
+        bonus: 0,
+      },
+    };
+
+    await this.saveCharacter();
+    this.notifyCharacterChanged();
+  }
+
+  /**
    * End turn - reset per-turn abilities, action tracker, and resources
    */
   async endTurn(): Promise<void> {

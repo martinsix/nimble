@@ -41,6 +41,7 @@ export function useCharacterService() {
     applyTemporaryHP: characterService.applyTemporaryHP.bind(characterService),
     updateActionTracker: characterService.updateActionTracker.bind(characterService),
     updateAbilities: characterService.updateAbilities.bind(characterService),
+    startEncounter: characterService.startEncounter.bind(characterService),
     endEncounter: characterService.endEncounter.bind(characterService),
     endTurn: characterService.endTurn.bind(characterService),
     performSafeRest: characterService.performSafeRest.bind(characterService),

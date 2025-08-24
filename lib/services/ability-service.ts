@@ -124,22 +124,6 @@ export class AbilityService {
     return parts.join(' ');
   }
 
-  /**
-   * Calculate initiative actions based on roll total
-   */
-  calculateInitiativeActions(initiativeTotal: number, bonusActions: number = 0): number {
-    let baseActions: number;
-    
-    if (initiativeTotal < 10) {
-      baseActions = 1;
-    } else if (initiativeTotal < 20) {
-      baseActions = 2;
-    } else {
-      baseActions = 3;
-    }
-
-    return baseActions + bonusActions;
-  }
 }
 
 export const abilityService = new AbilityService();
