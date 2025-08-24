@@ -7,13 +7,13 @@ import { Badge } from "../ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { Character } from "@/lib/types/character";
 import { Swords, Plus, RotateCcw, Minus, ChevronDown, ChevronRight } from "lucide-react";
-import { useCharacterActions } from "@/lib/contexts/character-actions-context";
-import { useUIState } from "@/lib/contexts/ui-state-context";
+import { useCharacterService } from "@/lib/hooks/use-character-service";
+import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
 
 export function ActionTrackerSection() {
-  // Get everything we need from context - complete independence!
-  const { character, onUpdateActions, onUpdateAbilities, onEndTurn } = useCharacterActions();
-  const { uiState, updateCollapsibleState } = useUIState();
+  // Get everything we need from services
+  const { character, updateActionTracker, endTurn: serviceEndTurn } = useCharacterService();
+  const { uiState, updateCollapsibleState } = useUIStateService();
   
   // Early return if no character (shouldn't happen in normal usage)
   if (!character) return null;
@@ -27,7 +27,7 @@ export function ActionTrackerSection() {
   
   const useAction = () => {
     if (actionTracker.current > 0) {
-      onUpdateActions({
+      updateActionTracker({
         ...actionTracker,
         current: actionTracker.current - 1,
       });
@@ -35,7 +35,7 @@ export function ActionTrackerSection() {
   };
 
   const addBonusAction = () => {
-    onUpdateActions({
+    updateActionTracker({
       ...actionTracker,
       bonus: actionTracker.bonus + 1,
       current: actionTracker.current + 1,
@@ -43,30 +43,8 @@ export function ActionTrackerSection() {
   };
 
   const endTurn = () => {
-    // Reset per-turn abilities
-    const resetAbilities = {
-      abilities: abilities.abilities.map(ability => {
-        if (ability.type === 'action' && ability.frequency === 'per_turn') {
-          return { ...ability, currentUses: ability.maxUses };
-        }
-        return ability;
-      })
-    };
-
-    const resetActionTracker = {
-      ...actionTracker,
-      current: actionTracker.base, // Reset to base actions only
-      bonus: 0, // Reset bonus actions to zero
-    };
-
-    if (onEndTurn) {
-      // Use the combined handler if available
-      onEndTurn(resetActionTracker, resetAbilities);
-    } else {
-      // Fallback to separate updates
-      onUpdateActions(resetActionTracker);
-      onUpdateAbilities(resetAbilities);
-    }
+    // Use the service method which handles all the logic internally
+    serviceEndTurn();
   };
 
 
