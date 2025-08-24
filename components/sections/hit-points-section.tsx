@@ -37,7 +37,7 @@ export function HitPointsSection({ onTitleClick }: HitPointsSectionProps = {}) {
 
   const handleDamage = () => {
     const damage = parseInt(damageAmount) || 0;
-    applyDamage(damage, true);
+    applyDamage(damage, false);
   };
 
   const applyHealing = async (amount: number, resetInput: boolean = false) => {
@@ -50,7 +50,7 @@ export function HitPointsSection({ onTitleClick }: HitPointsSectionProps = {}) {
 
   const handleHeal = () => {
     const heal = parseInt(healAmount) || 0;
-    applyHealing(heal, true);
+    applyHealing(heal, false);
   };
 
   const handleTempHp = async () => {
@@ -69,189 +69,173 @@ export function HitPointsSection({ onTitleClick }: HitPointsSectionProps = {}) {
   const healthPercentage = (currentHp / maxHp) * 100;
 
   return (
-    <Card className="w-full">
-      <CardHeader 
-        className={onTitleClick ? "cursor-pointer hover:bg-muted/50 transition-colors" : ""}
-        onClick={onTitleClick}
-      >
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Heart className="w-5 h-5 text-red-500" />
-            Hit Points
-          </div>
-          {onTitleClick && (
-            <ChevronUp className="h-4 w-4" />
+    <>
+      {/* HP Display and Bar */}
+      <div className="text-center space-y-2">
+        <div className="text-3xl font-bold">
+          {currentHp} / {maxHp}
+          {currentHp === 0 && (
+            <span className="text-lg text-red-600 ml-2 font-semibold">
+              (Dying)
+            </span>
           )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* HP Display and Bar */}
-        <div className="text-center space-y-2">
-          <div className="text-3xl font-bold">
-            {currentHp} / {maxHp}
-            {currentHp === 0 && (
-              <span className="text-lg text-red-600 ml-2 font-semibold">
-                (Dying)
-              </span>
-            )}
-            {temporaryHp > 0 && (
-              <span className="text-lg text-blue-600 ml-2">
-                (+{temporaryHp} temp)
-              </span>
-            )}
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-3">
-            <div 
-              className={`h-3 rounded-full transition-all duration-300 ${getHealthBarColor()}`}
-              style={{ width: `${healthPercentage}%` }}
-            />
-          </div>
           {temporaryHp > 0 && (
-            <div className="text-sm text-blue-600 font-medium">
-              Total Effective HP: {currentHp + temporaryHp}
-            </div>
+            <span className="text-lg text-blue-600 ml-2">
+              (+{temporaryHp} temp)
+            </span>
           )}
         </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-destructive">Take Damage</Label>
-            <div className="flex gap-1">
-              <Button 
-                variant="destructive" 
-                size="sm" 
-                onClick={() => applyDamage(1)}
-                disabled={currentHp <= 0}
-              >
-                -1
-              </Button>
-              <Button 
-                variant="destructive" 
-                size="sm" 
-                onClick={() => applyDamage(5)}
-                disabled={currentHp <= 0}
-              >
-                -5
-              </Button>
-              <Button 
-                variant="destructive" 
-                size="sm" 
-                onClick={() => applyDamage(10)}
-                disabled={currentHp <= 0}
-              >
-                -10
-              </Button>
-            </div>
+        <div className="w-full bg-gray-200 rounded-full h-3">
+          <div 
+            className={`h-3 rounded-full transition-all duration-300 ${getHealthBarColor()}`}
+            style={{ width: `${healthPercentage}%` }}
+          />
+        </div>
+        {temporaryHp > 0 && (
+          <div className="text-sm text-blue-600 font-medium">
+            Total Effective HP: {currentHp + temporaryHp}
           </div>
-          
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-green-600">Heal</Label>
-            <div className="flex gap-1">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => applyHealing(1)}
-                disabled={currentHp >= maxHp}
-                className="text-green-600 border-green-600 hover:bg-green-50"
-              >
-                +1
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => applyHealing(5)}
-                disabled={currentHp >= maxHp}
-                className="text-green-600 border-green-600 hover:bg-green-50"
-              >
-                +5
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => applyHealing(10)}
-                disabled={currentHp >= maxHp}
-                className="text-green-600 border-green-600 hover:bg-green-50"
-              >
-                +10
-              </Button>
-            </div>
+        )}
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-destructive">Take Damage</Label>
+          <div className="flex gap-1">
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={() => applyDamage(1)}
+              disabled={currentHp <= 0}
+            >
+              -1
+            </Button>
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={() => applyDamage(5)}
+              disabled={currentHp <= 0}
+            >
+              -5
+            </Button>
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={() => applyDamage(10)}
+              disabled={currentHp <= 0}
+            >
+              -10
+            </Button>
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-green-600">Heal</Label>
+          <div className="flex gap-1">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => applyHealing(1)}
+              disabled={currentHp >= maxHp}
+              className="text-green-600 border-green-600 hover:bg-green-50"
+            >
+              +1
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => applyHealing(5)}
+              disabled={currentHp >= maxHp}
+              className="text-green-600 border-green-600 hover:bg-green-50"
+            >
+              +5
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => applyHealing(10)}
+              disabled={currentHp >= maxHp}
+              className="text-green-600 border-green-600 hover:bg-green-50"
+            >
+              +10
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Custom Amount Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="damage-amount" className="text-sm">Custom Damage</Label>
+          <div className="flex gap-2">
+            <Input
+              id="damage-amount"
+              type="number"
+              min="1"
+              value={damageAmount}
+              onChange={(e) => setDamageAmount(e.target.value)}
+              className="flex-1"
+              placeholder="Amount"
+            />
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={handleDamage}
+              disabled={currentHp <= 0}
+            >
+              <Minus className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="heal-amount" className="text-sm">Custom Heal</Label>
+          <div className="flex gap-2">
+            <Input
+              id="heal-amount"
+              type="number"
+              min="1"
+              value={healAmount}
+              onChange={(e) => setHealAmount(e.target.value)}
+              className="flex-1"
+              placeholder="Amount"
+            />
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleHeal}
+              disabled={currentHp >= maxHp}
+              className="text-green-600 border-green-600 hover:bg-green-50"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
           </div>
         </div>
 
-        {/* Custom Amount Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="damage-amount" className="text-sm">Custom Damage</Label>
-            <div className="flex gap-2">
-              <Input
-                id="damage-amount"
-                type="number"
-                min="1"
-                value={damageAmount}
-                onChange={(e) => setDamageAmount(e.target.value)}
-                className="flex-1"
-                placeholder="Amount"
-              />
-              <Button 
-                variant="destructive" 
-                size="sm" 
-                onClick={handleDamage}
-                disabled={currentHp <= 0}
-              >
-                <Minus className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="heal-amount" className="text-sm">Custom Heal</Label>
-            <div className="flex gap-2">
-              <Input
-                id="heal-amount"
-                type="number"
-                min="1"
-                value={healAmount}
-                onChange={(e) => setHealAmount(e.target.value)}
-                className="flex-1"
-                placeholder="Amount"
-              />
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleHeal}
-                disabled={currentHp >= maxHp}
-                className="text-green-600 border-green-600 hover:bg-green-50"
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="temp-hp-amount" className="text-sm">Temporary HP</Label>
-            <div className="flex gap-2">
-              <Input
-                id="temp-hp-amount"
-                type="number"
-                min="0"
-                value={tempHpAmount}
-                onChange={(e) => setTempHpAmount(e.target.value)}
-                className="flex-1"
-                placeholder="Amount"
-              />
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleTempHp}
-                className="text-blue-600 border-blue-600 hover:bg-blue-50"
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
+        <div className="space-y-2">
+          <Label htmlFor="temp-hp-amount" className="text-sm">Temporary HP</Label>
+          <div className="flex gap-2">
+            <Input
+              id="temp-hp-amount"
+              type="number"
+              min="0"
+              value={tempHpAmount}
+              onChange={(e) => setTempHpAmount(e.target.value)}
+              className="flex-1"
+              placeholder="Amount"
+            />
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleTempHp}
+              className="text-blue-600 border-blue-600 hover:bg-blue-50"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </>
   );
 }
