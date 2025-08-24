@@ -4,13 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { getEquippedArmor, getEquippedMainArmor, getEquippedSupplementaryArmor } from "@/lib/utils/equipment";
 import { Shield, ChevronDown, ChevronRight, Shirt } from "lucide-react";
-import { useCharacterActions } from "@/lib/contexts/character-actions-context";
-import { useUIState } from "@/lib/contexts/ui-state-context";
+import { useCharacterService } from "@/lib/hooks/use-character-service";
+import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
 
 export function ArmorSection() {
-  // Get everything we need from context - complete independence!
-  const { character } = useCharacterActions();
-  const { uiState, updateCollapsibleState } = useUIState();
+  // Get everything we need from service hooks
+  const { character } = useCharacterService();
+  const { uiState, updateCollapsibleState } = useUIStateService();
   
   // Early return if no character (shouldn't happen in normal usage)
   if (!character) return null;

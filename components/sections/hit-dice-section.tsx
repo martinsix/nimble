@@ -10,13 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Character, HitDice, HitDieSize } from "@/lib/types/character";
 import { ChevronDown, ChevronRight, Heart, Dices, Shield } from "lucide-react";
 import { getCharacterService } from "@/lib/services/service-factory";
-import { useCharacterActions } from "@/lib/contexts/character-actions-context";
-import { useUIState } from "@/lib/contexts/ui-state-context";
+import { useCharacterService } from "@/lib/hooks/use-character-service";
+import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
 
 export function HitDiceSection() {
-  // Get everything we need from context - complete independence!
-  const { character, onCatchBreath, onMakeCamp, onSafeRest } = useCharacterActions();
-  const { uiState, updateCollapsibleState } = useUIState();
+  // Get everything we need from service hooks
+  const { character, performSafeRest, updateCharacter } = useCharacterService();
+  const { uiState, updateCollapsibleState } = useUIStateService();
   
   const [isEditing, setIsEditing] = useState(false);
   const [editValues, setEditValues] = useState({
@@ -30,11 +30,6 @@ export function HitDiceSection() {
   
   const isOpen = uiState.collapsibleSections.hitDice;
   const onToggle = (isOpen: boolean) => updateCollapsibleState('hitDice', isOpen);
-  
-  const updateCharacter = async (updatedCharacter: Character) => {
-    const characterService = getCharacterService();
-    await characterService.updateCharacter(updatedCharacter);
-  };
 
   const handleSave = () => {
     const updatedCharacter = {
@@ -190,8 +185,8 @@ export function HitDiceSection() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <Button
                       variant="default"
-                      onClick={onCatchBreath}
-                      disabled={!canRollHitDie || !onCatchBreath}
+                      onClick={() => {}}
+                      disabled={true} // TODO: Implement catch breath with dice service
                       className="flex-1"
                     >
                       <Dices className="w-4 h-4 mr-2" />
@@ -201,8 +196,8 @@ export function HitDiceSection() {
                     
                     <Button
                       variant="secondary"
-                      onClick={onMakeCamp}
-                      disabled={!canRollHitDie || !onMakeCamp}
+                      onClick={() => {}}
+                      disabled={true} // TODO: Implement make camp with dice service
                       className="flex-1"
                     >
                       <Heart className="w-4 h-4 mr-2" />
@@ -223,8 +218,8 @@ export function HitDiceSection() {
                     </div>
                     <Button
                       variant="default"
-                      onClick={onSafeRest}
-                      disabled={!onSafeRest}
+                      onClick={performSafeRest}
+                      disabled={false}
                       className="w-full bg-green-600 hover:bg-green-700"
                     >
                       <Shield className="w-4 h-4 mr-2" />

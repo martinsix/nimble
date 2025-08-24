@@ -5,8 +5,7 @@ import { Character, CharacterConfiguration } from "@/lib/types/character";
 import { CharacterResource } from "@/lib/types/resources";
 import { AppMode } from "@/lib/services/settings-service";
 import { CharacterConfigDialog } from "./character-config-dialog";
-import { useCharacterActions } from "@/lib/contexts/character-actions-context";
-import { useCharacterUpdates } from "@/lib/hooks/use-character-updates";
+import { useCharacterService } from "@/lib/hooks/use-character-service";
 import { CharacterSheetLayout } from "./character-sheet/character-sheet-layout";
 import { CharacterHeader } from "./character-sheet/character-header";
 import { BasicMode } from "./character-sheet/basic-mode";
@@ -20,16 +19,14 @@ interface CharacterSheetProps {
 export function CharacterSheet({ character, mode }: CharacterSheetProps) {
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
 
-  // Get context values
-  const {
-    onCharacterUpdate,
-    onUpdateCharacterConfiguration,
-  } = useCharacterActions();
+  // Get service methods for character updates
+  const { updateCharacter, updateCharacterConfiguration } = useCharacterService();
 
-  // Extract character update logic to custom hook
-  const {
-    updateName,
-  } = useCharacterUpdates({ character, onCharacterUpdate });
+  // Simple name update function
+  const updateName = (name: string) => {
+    const updated = { ...character, name };
+    updateCharacter(updated);
+  };
 
   const handleOpenConfig = () => {
     setIsConfigDialogOpen(true);
@@ -37,7 +34,7 @@ export function CharacterSheet({ character, mode }: CharacterSheetProps) {
 
   const handleConfigSave = async (config: CharacterConfiguration, resources: CharacterResource[], maxHP: number) => {
     // Update character configuration
-    await onUpdateCharacterConfiguration(config);
+    await updateCharacterConfiguration(config);
     
     // Update character's resources and max HP directly
     const updatedCharacter: Character = {
@@ -52,7 +49,7 @@ export function CharacterSheet({ character, mode }: CharacterSheetProps) {
       }
     };
     
-    await onCharacterUpdate(updatedCharacter);
+    await updateCharacter(updatedCharacter);
   };
 
   return (

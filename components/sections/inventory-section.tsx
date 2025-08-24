@@ -5,25 +5,23 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/colla
 import { Inventory as InventoryType } from "@/lib/types/inventory";
 import { Inventory } from "../inventory";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { useCharacterActions } from "@/lib/contexts/character-actions-context";
-import { useUIState } from "@/lib/contexts/ui-state-context";
-import { getCharacterService } from "@/lib/services/service-factory";
+import { useCharacterService } from "@/lib/hooks/use-character-service";
+import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
 import { useCallback } from "react";
 
 export function InventorySection() {
-  // Get everything we need from context - complete independence!
-  const { character } = useCharacterActions();
-  const { uiState, updateCollapsibleState } = useUIState();
+  // Get everything we need from service hooks
+  const { character, updateCharacter } = useCharacterService();
+  const { uiState, updateCollapsibleState } = useUIStateService();
   
   const onUpdateInventory = useCallback(async (inventory: InventoryType) => {
     if (!character) return;
-    const characterService = getCharacterService();
     const updated = {
       ...character,
       inventory,
     };
-    await characterService.updateCharacter(updated);
-  }, [character]);
+    await updateCharacter(updated);
+  }, [character, updateCharacter]);
   
   // Early return if no character (shouldn't happen in normal usage)
   if (!character) return null;

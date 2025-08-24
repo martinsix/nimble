@@ -1,10 +1,10 @@
 import { InitiativeSection } from "../sections/initiative-section";
 import { ActionTrackerSection } from "../sections/action-tracker-section";
-import { useCharacterActions } from "@/lib/contexts/character-actions-context";
+import { useCharacterService } from "@/lib/hooks/use-character-service";
 
 export function CombatSection() {
-  // Get character from context to check encounter state
-  const { character } = useCharacterActions();
+  // Get character from service hook to check encounter state
+  const { character } = useCharacterService();
   
   // Early return if no character (shouldn't happen in normal usage)
   if (!character) return null;

@@ -8,8 +8,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/colla
 import { Character, SkillName } from "@/lib/types/character";
 import { ChevronDown, ChevronRight, Dice6, Plus, Minus, Sparkles, Search, Target, MessageCircle, Brain, Dumbbell, BookOpen, Leaf, Radar, EyeOff } from "lucide-react";
 import { getCharacterService } from "@/lib/services/service-factory";
-import { useCharacterActions } from "@/lib/contexts/character-actions-context";
-import { useUIState } from "@/lib/contexts/ui-state-context";
+import { useCharacterService } from "@/lib/hooks/use-character-service";
+import { useDiceActions } from "@/lib/hooks/use-dice-actions";
+import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
 
 function getSkillIcon(skillName: SkillName) {
   const iconMap = {
@@ -29,9 +30,10 @@ function getSkillIcon(skillName: SkillName) {
 }
 
 export function SkillsSection() {
-  // Get everything we need from context - complete independence!
-  const { character, onRollSkill } = useCharacterActions();
-  const { uiState, updateCollapsibleState } = useUIState();
+  // Get everything we need from service hooks
+  const { character } = useCharacterService();
+  const { rollSkill } = useDiceActions();
+  const { uiState, updateCollapsibleState } = useUIStateService();
   
   const isOpen = uiState.collapsibleSections.skills;
   const advantageLevel = uiState.advantageLevel;
@@ -124,7 +126,7 @@ export function SkillsSection() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => onRollSkill(skillName, attributeValue, skill.modifier, advantageLevel)}
+                            onClick={() => rollSkill(skillName, attributeValue, skill.modifier, advantageLevel)}
                             className="h-8 px-3"
                           >
                             <Dice6 className="w-3 h-3 mr-1" />

@@ -9,13 +9,15 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/colla
 import { Character } from "@/lib/types/character";
 import { Zap, Dice6, ChevronDown, ChevronRight, Swords } from "lucide-react";
 import { getCharacterService } from "@/lib/services/service-factory";
-import { useCharacterActions } from "@/lib/contexts/character-actions-context";
-import { useUIState } from "@/lib/contexts/ui-state-context";
+import { useCharacterService } from "@/lib/hooks/use-character-service";
+import { useDiceActions } from "@/lib/hooks/use-dice-actions";
+import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
 
 export function InitiativeSection() {
-  // Get everything we need from context - complete independence!
-  const { character, onRollInitiative, onEndEncounter } = useCharacterActions();
-  const { uiState, updateCollapsibleState } = useUIState();
+  // Get everything we need from service hooks
+  const { character, endEncounter } = useCharacterService();
+  const { rollInitiative } = useDiceActions();
+  const { uiState, updateCollapsibleState } = useUIStateService();
   
   const onInitiativeChange = useCallback(async (modifier: number) => {
     if (!character) return;
@@ -49,8 +51,9 @@ export function InitiativeSection() {
     }
   };
 
-  const handleRoll = () => {
-    onRollInitiative(totalModifier, advantageLevel);
+  const handleRoll = async () => {
+    const result = await rollInitiative(totalModifier, advantageLevel);
+    // Initiative roll automatically sets up for encounter
   };
 
   return (
@@ -116,7 +119,7 @@ export function InitiativeSection() {
             <Button
               variant="destructive"
               size="lg"
-              onClick={onEndEncounter}
+              onClick={endEncounter}
               className="w-full"
             >
               <Swords className="w-5 h-5 mr-2" />

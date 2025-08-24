@@ -1,6 +1,5 @@
-import { Character } from "@/lib/types/character";
 import { CharacterNameSection } from "../sections/character-name-section";
-import { useCharacterActions } from "@/lib/contexts/character-actions-context";
+import { useCharacterService } from "@/lib/hooks/use-character-service";
 
 interface CharacterHeaderProps {
   onNameChange: (name: string) => void;
@@ -11,8 +10,8 @@ export function CharacterHeader({
   onNameChange,
   onOpenConfig,
 }: CharacterHeaderProps) {
-  // Get character from context
-  const { character } = useCharacterActions();
+  // Get character from service hook
+  const { character } = useCharacterService();
   
   // Early return if no character (shouldn't happen in normal usage)
   if (!character) return null;

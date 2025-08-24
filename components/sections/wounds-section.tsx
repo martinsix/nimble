@@ -9,18 +9,13 @@ import { Label } from "../ui/label";
 import { Character, Wounds } from "@/lib/types/character";
 import { ChevronDown, ChevronRight, Heart, Skull, AlertTriangle } from "lucide-react";
 import { getCharacterService } from "@/lib/services/service-factory";
-import { useCharacterActions } from "@/lib/contexts/character-actions-context";
-import { useUIState } from "@/lib/contexts/ui-state-context";
+import { useCharacterService } from "@/lib/hooks/use-character-service";
+import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
 
 export function WoundsSection() {
-  // Get everything we need from context - complete independence!
-  const { character } = useCharacterActions();
-  const { uiState, updateCollapsibleState } = useUIState();
-  
-  const onUpdate = useCallback(async (updatedCharacter: Character) => {
-    const characterService = getCharacterService();
-    await characterService.updateCharacter(updatedCharacter);
-  }, []);
+  // Get everything we need from service hooks
+  const { character, updateCharacter } = useCharacterService();
+  const { uiState, updateCollapsibleState } = useUIStateService();
   
   // Early return if no character (shouldn't happen in normal usage)
   if (!character) return null;
@@ -37,7 +32,7 @@ export function WoundsSection() {
           current: character.wounds.current + 1,
         },
       };
-      onUpdate(updatedCharacter);
+      updateCharacter(updatedCharacter);
     }
   };
 
@@ -50,7 +45,7 @@ export function WoundsSection() {
           current: character.wounds.current - 1,
         },
       };
-      onUpdate(updatedCharacter);
+      updateCharacter(updatedCharacter);
     }
   };
 

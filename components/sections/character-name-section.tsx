@@ -3,7 +3,7 @@
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Settings, TrendingUp } from "lucide-react";
-import { useCharacterActions } from "@/lib/contexts/character-actions-context";
+import { useCharacterService } from "@/lib/hooks/use-character-service";
 import { getClassDefinition } from "@/lib/data/classes/index";
 import { getCharacterService, getClassService } from "@/lib/services/service-factory";
 
@@ -14,7 +14,7 @@ interface CharacterNameSectionProps {
 }
 
 export function CharacterNameSection({ name, onNameChange, onOpenConfig }: CharacterNameSectionProps) {
-  const { character } = useCharacterActions();
+  const { character } = useCharacterService();
   
   if (!character) return null;
   

@@ -8,13 +8,13 @@ import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { Heart, Minus, Plus, ChevronDown, ChevronRight } from "lucide-react";
 import { Character } from "@/lib/types/character";
-import { useCharacterActions } from "@/lib/contexts/character-actions-context";
-import { useUIState } from "@/lib/contexts/ui-state-context";
+import { useCharacterService } from "@/lib/hooks/use-character-service";
+import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
 
 export function HitPointsSection() {
-  // Get everything we need from context - complete independence!
-  const { character, onApplyDamage, onApplyHealing, onApplyTemporaryHP } = useCharacterActions();
-  const { uiState, updateCollapsibleState } = useUIState();
+  // Get everything we need from service hooks
+  const { character, applyDamage: serviceDamage, applyHealing: serviceHealing, applyTemporaryHP: serviceTempHP } = useCharacterService();
+  const { uiState, updateCollapsibleState } = useUIStateService();
   
   const [damageAmount, setDamageAmount] = useState<string>("1");
   const [healAmount, setHealAmount] = useState<string>("1");
@@ -30,7 +30,7 @@ export function HitPointsSection() {
   const onToggle = (isOpen: boolean) => updateCollapsibleState('hitPoints', isOpen);
 
   const applyDamage = async (amount: number, resetInput: boolean = false) => {
-    await onApplyDamage(amount);
+    await serviceDamage(amount);
     
     if (resetInput) {
       setDamageAmount("1");
@@ -43,7 +43,7 @@ export function HitPointsSection() {
   };
 
   const applyHealing = async (amount: number, resetInput: boolean = false) => {
-    await onApplyHealing(amount);
+    await serviceHealing(amount);
     
     if (resetInput) {
       setHealAmount("1");
@@ -57,7 +57,7 @@ export function HitPointsSection() {
 
   const handleTempHp = async () => {
     const tempAmount = parseInt(tempHpAmount) || 0;
-    await onApplyTemporaryHP(tempAmount);
+    await serviceTempHP(tempAmount);
     setTempHpAmount("1");
   };
 

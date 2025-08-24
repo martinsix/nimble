@@ -13,8 +13,8 @@ import { Abilities, Ability, ActionAbility, FreeformAbility, AbilityFrequency, A
 import { AttributeName } from "@/lib/types/character";
 import { abilityService } from "@/lib/services/ability-service";
 import { Sparkles, Plus, Trash2, Edit, ChevronDown, ChevronRight, Zap, FileText } from "lucide-react";
-import { useCharacterActions } from "@/lib/contexts/character-actions-context";
-import { useUIState } from "@/lib/contexts/ui-state-context";
+import { useCharacterService } from "@/lib/hooks/use-character-service";
+import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
 
 interface NewAbilityForm {
   name: string;
@@ -30,9 +30,9 @@ interface NewAbilityForm {
 }
 
 export function AbilitySection() {
-  // Get everything we need from context - complete independence!
-  const { character, onUpdateAbilities, onUseAbility } = useCharacterActions();
-  const { uiState, updateCollapsibleState } = useUIState();
+  // Get everything we need from service hooks
+  const { character, updateAbilities } = useCharacterService();
+  const { uiState, updateCollapsibleState } = useUIStateService();
   
   const [isAddingAbility, setIsAddingAbility] = useState(false);
   const [editingAbility, setEditingAbility] = useState<string | null>(null);
@@ -51,9 +51,12 @@ export function AbilitySection() {
   const onToggle = (isOpen: boolean) => updateCollapsibleState('abilities', isOpen);
   const abilities = character.abilities;
 
-  const handleUseAbility = (abilityId: string) => {
-    if (onUseAbility) {
-      onUseAbility(abilityId);
+  const handleUseAbility = async (abilityId: string) => {
+    if (!character) return;
+    
+    const result = abilityService.useAbility(character.abilities, abilityId);
+    if (result.success) {
+      await updateAbilities(result.updatedAbilities);
     }
   };
 
@@ -80,7 +83,7 @@ export function AbilitySection() {
           ...(newAbility.roll && newAbility.roll.dice ? { roll: newAbility.roll } : {}),
         };
 
-    onUpdateAbilities({
+    updateAbilities({
       abilities: [...abilities.abilities, ability],
     });
 
@@ -95,7 +98,7 @@ export function AbilitySection() {
   };
 
   const deleteAbility = (abilityId: string) => {
-    onUpdateAbilities({
+    updateAbilities({
       abilities: abilities.abilities.filter(ability => ability.id !== abilityId),
     });
   };
@@ -180,7 +183,7 @@ export function AbilitySection() {
                 variant={isUsed ? "outline" : "default"}
                 size="sm"
                 onClick={() => handleUseAbility(ability.id)}
-                disabled={isUsed || !onUseAbility}
+                disabled={isUsed}
               >
                 {isUsed ? "Used" : "Use Ability"}
               </Button>
