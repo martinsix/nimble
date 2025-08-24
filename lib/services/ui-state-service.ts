@@ -4,7 +4,6 @@ export interface UIState {
   collapsibleSections: {
     classInfo: boolean;
     classFeatures: boolean;
-    hitPoints: boolean;
     hitDice: boolean;
     wounds: boolean;
     initiative: boolean;
@@ -114,7 +113,6 @@ export class UIStateService {
       collapsibleSections: {
         classInfo: sections.classInfo ?? true,
         classFeatures: sections.classFeatures ?? true,
-        hitPoints: sections.hitPoints ?? true,
         hitDice: sections.hitDice ?? true,
         wounds: sections.wounds ?? true,
         initiative: sections.initiative ?? true,
@@ -137,7 +135,6 @@ export class UIStateService {
       collapsibleSections: {
         classInfo: true,
         classFeatures: true,
-        hitPoints: true,
         hitDice: true,
         wounds: true,
         initiative: true,

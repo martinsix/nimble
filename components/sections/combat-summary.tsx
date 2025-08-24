@@ -1,17 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
-import { Heart, Shield, Zap, Skull, AlertTriangle, X, Dices, Swords, Dice6, Square } from "lucide-react";
+import { Heart, Shield, Zap, Skull, AlertTriangle, X, Dices, Swords, Dice6, Square, ChevronUp } from "lucide-react";
 import { useCharacterService } from "@/lib/hooks/use-character-service";
 import { useDiceActions } from "@/lib/hooks/use-dice-actions";
 import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
+import { HitPointsSection } from "./hit-points-section";
 
 export function CombatSummary() {
   const { character, endEncounter, startEncounter } = useCharacterService();
   const { rollInitiative } = useDiceActions();
   const { uiState } = useUIStateService();
+  const [isHPExpanded, setIsHPExpanded] = useState(false);
   
   if (!character) return null;
 
@@ -102,100 +105,115 @@ export function CombatSummary() {
   return (
     <TooltipProvider>
       <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 mb-4">
-        {/* Hit Points Card - Red emphasis for critical information */}
-        <Card className={`border-2 ${hpStatus.borderColor} ${hpStatus.bgColor}`}>
-          <CardContent className="p-3 sm:p-4">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Heart className="w-4 h-4 text-red-500" />
-                <span className="text-xs sm:text-sm font-medium">Hit Points</span>
-              </div>
-              <div className="space-y-1 text-center">
-                <div className="text-[4vw] sm:text-[2.5vw] md:text-xl font-bold tabular-nums">
-                  {currentHp} / {maxHp} {temporaryHp > 0 && (<span className="text-blue-600">+{temporaryHp}</span>)}
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className={`h-2 rounded-full transition-all duration-300 ${getHealthBarColor()}`}
-                    style={{ width: `${healthPercentage}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Wounds Card */}
-        <Card className={`border-2 ${woundStatus.borderColor} ${woundStatus.bgColor}`}>
-          <CardContent className="p-3 sm:p-4">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <StatusIcon className={`w-4 h-4 ${woundStatus.color}`} />
-                <span className="text-xs sm:text-sm font-medium">Wounds</span>
-              </div>
-              <div className="flex items-center justify-center min-h-[2.5rem]">
-                {shouldUseIcons ? (
-                  <div className="flex items-center justify-center gap-0.5">
-                    {woundIcons}
+        {/* Hit Points Card - Expandable */}
+        <div className={`transition-all duration-700 ease-in-out ${isHPExpanded ? 'col-span-3' : ''}`}>
+          <Card className={`border-2 ${hpStatus.borderColor} ${hpStatus.bgColor} transition-all duration-700 ease-in-out transform ${!isHPExpanded ? 'cursor-pointer hover:shadow-md hover:scale-[1.02]' : 'shadow-lg scale-100'}`}>
+            {!isHPExpanded ? (
+              // Compact HP content
+              <CardContent className="p-3 sm:p-4" onClick={() => setIsHPExpanded(true)}>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Heart className="w-4 h-4 text-red-500" />
+                    <span className="text-xs sm:text-sm font-medium">Hit Points</span>
                   </div>
-                ) : (
-                  <div className="text-xl sm:text-2xl font-bold tabular-nums">
-                    {wounds.current} / {wounds.max}
+                  <div className="space-y-1 text-center">
+                    <div className="text-[4vw] sm:text-[2.5vw] md:text-xl font-bold tabular-nums">
+                      {currentHp} / {maxHp} {temporaryHp > 0 && (<span className="text-blue-600">+{temporaryHp}</span>)}
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full transition-all duration-300 ${getHealthBarColor()}`}
+                        style={{ width: `${healthPercentage}%` }}
+                      />
+                    </div>
                   </div>
-                )}
+                </div>
+              </CardContent>
+            ) : (
+              // Expanded HP content
+              <div className="transition-all duration-700 ease-in-out transform scale-100 opacity-100">
+                <HitPointsSection onTitleClick={() => setIsHPExpanded(false)} />
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            )}
+          </Card>
+        </div>
 
-        {/* Initiative Card */}
-        <Card className="border border-gray-200">
-          <CardContent className="p-3 sm:p-4">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                {inEncounter ? (
-                  <Swords className="w-4 h-4 text-red-500" />
-                ) : (
-                  <Zap className="w-4 h-4 text-yellow-500" />
-                )}
-                <span className="text-xs sm:text-sm font-medium">
-                  {inEncounter ? "Combat" : "Initiative"}
-                </span>
-              </div>
-              <div className="space-y-1 text-center">
-                {!inEncounter ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
+        {/* Show other cards only when HP is not expanded */}
+        {!isHPExpanded && (
+          <>
+            {/* Wounds Card */}
+            <Card className={`border-2 ${woundStatus.borderColor} ${woundStatus.bgColor} transition-all duration-700 ease-in-out transform scale-100 opacity-100`}>
+              <CardContent className="p-3 sm:p-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <StatusIcon className={`w-4 h-4 ${woundStatus.color}`} />
+                    <span className="text-xs sm:text-sm font-medium">Wounds</span>
+                  </div>
+                  <div className="flex items-center justify-center min-h-[2.5rem]">
+                    {shouldUseIcons ? (
+                      <div className="flex items-center justify-center gap-0.5">
+                        {woundIcons}
+                      </div>
+                    ) : (
+                      <div className="text-xl sm:text-2xl font-bold tabular-nums">
+                        {wounds.current} / {wounds.max}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Initiative Card */}
+            <Card className="border border-gray-200 transition-all duration-700 ease-in-out transform scale-100 opacity-100">
+              <CardContent className="p-3 sm:p-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    {inEncounter ? (
+                      <Swords className="w-4 h-4 text-red-500" />
+                    ) : (
+                      <Zap className="w-4 h-4 text-yellow-500" />
+                    )}
+                    <span className="text-xs sm:text-sm font-medium">
+                      {inEncounter ? "Combat" : "Initiative"}
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-center">
+                    {!inEncounter ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleInitiativeRoll}
+                            className="w-full text-lg font-bold tabular-nums"
+                          >
+                            <Dice6 className="w-4 h-4 mr-1" />
+                            {totalModifier > 0 ? '+' : ''}{totalModifier}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Roll Initiative: d20{totalModifier > 0 ? '+' + totalModifier : totalModifier}</p>
+                          <p>DEX {attributes.dexterity > 0 ? '+' : ''}{attributes.dexterity} + Modifier +{initiative.modifier}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
                       <Button
-                        variant="outline"
+                        variant="destructive"
                         size="sm"
-                        onClick={handleInitiativeRoll}
-                        className="w-full text-lg font-bold tabular-nums"
+                        onClick={endEncounter}
+                        className="w-full"
                       >
-                        <Dice6 className="w-4 h-4 mr-1" />
-                        {totalModifier > 0 ? '+' : ''}{totalModifier}
+                        <Square className="w-4 h-4 mr-1" />
+                        End
                       </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Roll Initiative: d20{totalModifier > 0 ? '+' + totalModifier : totalModifier}</p>
-                      <p>DEX {attributes.dexterity > 0 ? '+' : ''}{attributes.dexterity} + Modifier +{initiative.modifier}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                ) : (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={endEncounter}
-                    className="w-full"
-                  >
-                    <Square className="w-4 h-4 mr-1" />
-                    End
-                  </Button>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
     </TooltipProvider>
   );

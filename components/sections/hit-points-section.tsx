@@ -5,16 +5,17 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
-import { Heart, Minus, Plus, ChevronDown, ChevronRight } from "lucide-react";
+import { Heart, Minus, Plus, ChevronUp } from "lucide-react";
 import { Character } from "@/lib/types/character";
 import { useCharacterService } from "@/lib/hooks/use-character-service";
-import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
 
-export function HitPointsSection() {
+interface HitPointsSectionProps {
+  onTitleClick?: () => void;
+}
+
+export function HitPointsSection({ onTitleClick }: HitPointsSectionProps = {}) {
   // Get everything we need from service hooks
   const { character, applyDamage: serviceDamage, applyHealing: serviceHealing, applyTemporaryHP: serviceTempHP } = useCharacterService();
-  const { uiState, updateCollapsibleState } = useUIStateService();
   
   const [damageAmount, setDamageAmount] = useState<string>("1");
   const [healAmount, setHealAmount] = useState<string>("1");
@@ -26,8 +27,6 @@ export function HitPointsSection() {
   const currentHp = character.hitPoints.current;
   const maxHp = character.hitPoints.max;
   const temporaryHp = character.hitPoints.temporary;
-  const isOpen = uiState.collapsibleSections.hitPoints;
-  const onToggle = (isOpen: boolean) => updateCollapsibleState('hitPoints', isOpen);
   const applyDamage = async (amount: number, resetInput: boolean = false) => {
     await serviceDamage(amount);
     
@@ -71,20 +70,21 @@ export function HitPointsSection() {
 
   return (
     <Card className="w-full">
-      <Collapsible open={isOpen} onOpenChange={onToggle}>
-        <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Heart className="w-5 h-5 text-red-500" />
-                Hit Points
-              </div>
-              {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-            </CardTitle>
-          </CardHeader>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <CardContent className="space-y-4 pt-0">
+      <CardHeader 
+        className={onTitleClick ? "cursor-pointer hover:bg-muted/50 transition-colors" : ""}
+        onClick={onTitleClick}
+      >
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Heart className="w-5 h-5 text-red-500" />
+            Hit Points
+          </div>
+          {onTitleClick && (
+            <ChevronUp className="h-4 w-4" />
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
         {/* HP Display and Bar */}
         <div className="text-center space-y-2">
           <div className="text-3xl font-bold">
@@ -251,9 +251,7 @@ export function HitPointsSection() {
             </div>
           </div>
         </div>
-          </CardContent>
-        </CollapsibleContent>
-      </Collapsible>
+      </CardContent>
     </Card>
   );
 }
