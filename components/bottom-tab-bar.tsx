@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Sword, Target, User, Package, ScrollText } from "lucide-react";
-
-export type TabType = 'combat' | 'skills' | 'character' | 'equipment' | 'log';
+import { TabType } from "@/lib/services/ui-state-service";
 
 interface BottomTabBarProps {
   activeTab: TabType;

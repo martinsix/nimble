@@ -1,3 +1,5 @@
+export type TabType = 'combat' | 'skills' | 'character' | 'equipment' | 'log';
+
 export interface UIState {
   collapsibleSections: {
     classInfo: boolean;
@@ -16,6 +18,7 @@ export interface UIState {
     inventory: boolean;
   };
   advantageLevel: number; // Positive for advantage, negative for disadvantage, 0 for normal
+  activeTab: TabType; // Currently selected tab in the character sheet
 }
 
 export class UIStateService {
@@ -94,6 +97,15 @@ export class UIStateService {
     await this.saveUIState(newState);
   }
 
+  async updateActiveTab(activeTab: TabType): Promise<void> {
+    const currentState = await this.getUIState();
+    const newState = {
+      ...currentState,
+      activeTab,
+    };
+    await this.saveUIState(newState);
+  }
+
   private migrateUIState(stored: any): UIState {
     // Handle migration from old mana-based UI state
     const sections = stored.collapsibleSections || {};
@@ -116,6 +128,7 @@ export class UIStateService {
         inventory: sections.inventory ?? true,
       },
       advantageLevel: stored.advantageLevel ?? 0,
+      activeTab: stored.activeTab ?? 'combat',
     };
   }
 
@@ -138,6 +151,7 @@ export class UIStateService {
         inventory: true,
       },
       advantageLevel: 0,
+      activeTab: 'combat',
     };
   }
 }

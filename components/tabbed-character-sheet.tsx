@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { BottomTabBar, TabType } from "./bottom-tab-bar";
+import { BottomTabBar } from "./bottom-tab-bar";
 import { CombatTab } from "./tabs/combat-tab";
 import { SkillsTab } from "./tabs/skills-tab";
 import { CharacterTab } from "./tabs/character-tab";
 import { EquipmentTab } from "./tabs/equipment-tab";
 import { LogTab } from "./tabs/log-tab";
+import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
 
 export function TabbedCharacterSheet() {
-  const [activeTab, setActiveTab] = useState<TabType>('combat');
+  const { uiState, updateActiveTab } = useUIStateService();
+  const activeTab = uiState.activeTab;
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -36,7 +37,7 @@ export function TabbedCharacterSheet() {
       </div>
       
       {/* Bottom tab navigation */}
-      <BottomTabBar activeTab={activeTab} onTabChange={setActiveTab} />
+      <BottomTabBar activeTab={activeTab} onTabChange={updateActiveTab} />
     </div>
   );
 }

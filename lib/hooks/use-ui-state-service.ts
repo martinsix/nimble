@@ -45,10 +45,12 @@ export function useUIStateService() {
         inventory: true,
       },
       advantageLevel: 0,
+      activeTab: 'combat',
     },
     
     // Service methods - direct access to all UI state operations
     updateCollapsibleState: uiStateService.updateCollapsibleState.bind(uiStateService),
     updateAdvantageLevel: uiStateService.updateAdvantageLevel.bind(uiStateService),
+    updateActiveTab: uiStateService.updateActiveTab.bind(uiStateService),
   };
 }
