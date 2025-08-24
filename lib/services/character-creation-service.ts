@@ -17,6 +17,7 @@ import {
 
 export interface CreateCharacterOptions {
   name: string;
+  ancestry?: string;
   classId: string;
   level?: number;
   attributes?: {
@@ -44,6 +45,7 @@ export class CharacterCreationService implements ICharacterCreation {
   async createCharacterWithClass(options: CreateCharacterOptions): Promise<Character> {
     const {
       name,
+      ancestry = 'Human',
       classId,
       level = 1,
       attributes = { strength: 0, dexterity: 0, intelligence: 0, will: 0 }
@@ -65,6 +67,7 @@ export class CharacterCreationService implements ICharacterCreation {
     const characterId = `character-${Date.now()}`;
     const baseCharacter = await this.characterStorage.createCharacter({
       name,
+      ancestry,
       level,
       classId,
       grantedFeatures: [], // Start with no features

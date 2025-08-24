@@ -1,6 +1,5 @@
 import { Character } from "@/lib/types/character";
 import { CharacterNameSection } from "../sections/character-name-section";
-import { ClassInfoSection } from "../sections/class-info-section";
 import { ClassFeaturesSection } from "../sections/class-features-section";
 import { useCharacterActions } from "@/lib/contexts/character-actions-context";
 
@@ -20,15 +19,12 @@ export function CharacterHeader({
   if (!character) return null;
   return (
     <>
-      {/* Character Name */}
+      {/* Character Name and Summary */}
       <CharacterNameSection 
         name={character.name}
         onNameChange={onNameChange}
         onOpenConfig={onOpenConfig}
       />
-
-      {/* Class Info Section - Now completely self-contained */}
-      <ClassInfoSection />
 
       {/* Class Features Section - Now completely self-contained */}
       <ClassFeaturesSection />

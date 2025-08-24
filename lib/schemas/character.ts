@@ -165,6 +165,7 @@ export const proficienciesSchema = z.object({
 
 export const createCharacterSchema = z.object({
   name: z.string().min(1).max(50),
+  ancestry: z.string().min(1).max(50),
   level: z.number().min(1).max(20),
   classId: z.string().min(1),
   subclassId: z.string().optional(),
@@ -188,6 +189,7 @@ export const createCharacterSchema = z.object({
 export const characterSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1).max(50),
+  ancestry: z.string().min(1).max(50),
   level: z.number().min(1).max(20),
   classId: z.string().min(1),
   subclassId: z.string().optional(),

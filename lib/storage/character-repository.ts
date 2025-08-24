@@ -54,6 +54,8 @@ export class LocalStorageCharacterRepository implements ICharacterRepository {
           grantedFeatures: char.grantedFeatures || [], // Start with no granted features
           // Migrate characters missing proficiencies field
           proficiencies: char.proficiencies || createDefaultProficiencies(classDefinition || undefined),
+          // Migrate characters missing ancestry field
+          ancestry: char.ancestry || 'Human',
         };
       });
     } catch {

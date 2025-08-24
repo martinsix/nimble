@@ -47,6 +47,7 @@ export interface CharacterConfiguration {
 export interface Character {
   id: string;
   name: string;
+  ancestry: string; // Character's ancestry/race (e.g., 'Human', 'Elf', 'Dwarf')
   level: number; // Character level (starting at 1)
   classId: string; // Character's class (e.g., 'fighter', 'wizard')
   subclassId?: string; // Character's subclass (e.g., 'fighter-champion', 'wizard-evocation')
@@ -91,6 +92,7 @@ export interface Character {
 
 export interface CreateCharacterData {
   name: string;
+  ancestry: string;
   level: number;
   classId: string;
   subclassId?: string;
