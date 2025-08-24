@@ -17,6 +17,6 @@ export function combineAdvantages(globalAdvantageLevel: number, saveAdvantage: S
       permanentAdvantage = 0;
   }
   
-  // Combine global and permanent advantages (clamped between -1 and 1)
-  return Math.max(-1, Math.min(1, globalAdvantageLevel + permanentAdvantage));
+  // Combine global and permanent advantages (no clamping to allow advantage 2+)
+  return globalAdvantageLevel + permanentAdvantage;
 }
