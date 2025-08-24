@@ -108,7 +108,7 @@ export interface ClassDefinition {
   name: string; // Display name (e.g., "Fighter", "Wizard")
   description: string; // Brief description of the class
   hitDieSize: HitDieSize; // Hit die size for this class (d6, d8, d10, etc.)
-  keyAttributes: [AttributeName, AttributeName]; // Two primary attributes for the class
+  keyAttributes: AttributeName[]; // Primary attributes for the class
   startingHP: number; // Fixed starting hit points at level 1
   armorProficiencies: ArmorProficiency[]; // Armor types the class is proficient with
   weaponProficiencies: WeaponProficiency[]; // Weapon categories the class is proficient with
