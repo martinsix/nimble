@@ -5,7 +5,6 @@ import { CharacterHeader } from "@/components/character-sheet/character-header";
 import { CharacterSelector } from "@/components/character-selector";
 import { TopBar } from "@/components/top-bar";
 import { useCharacterManagement } from "@/lib/hooks/use-character-management";
-import { UIStateProvider } from "@/lib/contexts/ui-state-context";
 import { ToastProvider } from "@/lib/contexts/toast-context";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { LoadingScreen } from "@/components/loading-screen";
@@ -55,24 +54,22 @@ function HomeContent() {
   }
 
   return (
-    <UIStateProvider>
-      <main className="min-h-screen bg-background">
-        <TopBar 
-          settings={settings}
-          characters={characters}
-          onSettingsChange={handleSettingsChange}
-          onCharacterSwitch={handleCharacterSwitch}
-          onCharacterDelete={handleCharacterDelete}
+    <main className="min-h-screen bg-background">
+      <TopBar 
+        settings={settings}
+        characters={characters}
+        onSettingsChange={handleSettingsChange}
+        onCharacterSwitch={handleCharacterSwitch}
+        onCharacterDelete={handleCharacterDelete}
+      />
+      <div className="container mx-auto py-6 px-4 space-y-6">
+        <CharacterHeader 
+          onNameChange={onNameChange}
+          onOpenConfig={() => {/* TODO: implement config modal */}}
         />
-        <div className="container mx-auto py-6 px-4 space-y-6">
-          <CharacterHeader 
-            onNameChange={onNameChange}
-            onOpenConfig={() => {/* TODO: implement config modal */}}
-          />
-          <TabbedCharacterSheet />
-        </div>
-      </main>
-    </UIStateProvider>
+        <TabbedCharacterSheet />
+      </div>
+    </main>
   );
 }
 

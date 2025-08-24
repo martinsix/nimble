@@ -2,7 +2,7 @@
 
 import { Button } from "./ui/button";
 import { ChevronUp, ChevronDown, Equal, Menu } from "lucide-react";
-import { useUIState } from "@/lib/contexts/ui-state-context";
+import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
 import { RollPanel } from "./roll-panel";
 import { AppMenu } from "./app-menu";
 import { AppSettings } from "@/lib/services/settings-service";
@@ -17,7 +17,7 @@ interface TopBarProps {
 }
 
 function CompactAdvantageToggle() {
-  const { uiState, updateAdvantageLevel } = useUIState();
+  const { uiState, updateAdvantageLevel } = useUIStateService();
   const advantageLevel = uiState.advantageLevel;
 
   const getDisplayText = () => {
