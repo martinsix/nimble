@@ -76,6 +76,7 @@ export function CombatSummary() {
   const woundStatus = getWoundStatus();
   const StatusIcon = woundStatus.icon;
 
+
   // Create wound display - icons for 7 or fewer, text for more
   const shouldUseIcons = wounds.max <= 7;
   const woundIcons = [];
@@ -110,14 +111,9 @@ export function CombatSummary() {
                 <span className="text-xs sm:text-sm font-medium">Hit Points</span>
               </div>
               <div className="space-y-1 text-center">
-                <div className="text-xl sm:text-2xl font-bold tabular-nums">
-                  {currentHp} / {maxHp}
+                <div className="text-[4vw] sm:text-[2.5vw] md:text-xl font-bold tabular-nums">
+                  {currentHp} / {maxHp} {temporaryHp > 0 && (<span className="text-blue-600">+{temporaryHp}</span>)}
                 </div>
-                {temporaryHp > 0 && (
-                  <div className="text-xs sm:text-sm text-blue-600 tabular-nums text-center">
-                    +{temporaryHp} temp
-                  </div>
-                )}
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
                     className={`h-2 rounded-full transition-all duration-300 ${getHealthBarColor()}`}
