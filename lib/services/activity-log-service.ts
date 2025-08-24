@@ -1,6 +1,7 @@
 import { LogEntry, DiceRollEntry, DamageEntry, HealingEntry, TempHPEntry, InitiativeEntry, AbilityUsageEntry, SafeRestEntry, ResourceUsageEntry } from '../types/log-entries';
 import { logEntrySchema } from '../schemas/dice';
 import { gameConfig } from '../config/game-config';
+import { toast } from 'sonner';
 
 export class ActivityLogService {
   private readonly storageKey = 'nimble-navigator-activity-log';
@@ -44,6 +45,63 @@ export class ActivityLogService {
     const existingEntries = await this.getLogEntries();
     const updatedEntries = [newEntry, ...existingEntries].slice(0, this.maxEntries);
     localStorage.setItem(this.storageKey, JSON.stringify(updatedEntries));
+    
+    // Show toast notification
+    this.showToastForLogEntry(newEntry);
+  }
+
+  private showToastForLogEntry(entry: LogEntry): void {
+    const { description } = entry;
+    
+    switch (entry.type) {
+      case 'roll':
+        const rollEntry = entry as DiceRollEntry;
+        const resultText = `${description}: ${rollEntry.total}`;
+        if (rollEntry.isMiss) {
+          toast.error(resultText, { description: 'Critical miss!' });
+        } else if (rollEntry.criticalHits && rollEntry.criticalHits > 0) {
+          toast.success(resultText, { description: `${rollEntry.criticalHits} critical hit${rollEntry.criticalHits > 1 ? 's' : ''}!` });
+        } else {
+          toast.info(resultText);
+        }
+        break;
+        
+      case 'damage':
+        toast.error(description);
+        break;
+        
+      case 'healing':
+        toast.success(description);
+        break;
+        
+      case 'temp_hp':
+        toast.info(description);
+        break;
+        
+      case 'initiative':
+        toast.info(description);
+        break;
+        
+      case 'ability_usage':
+        toast.info(description);
+        break;
+        
+      case 'safe_rest':
+        toast.success(description);
+        break;
+        
+      case 'resource':
+        const resourceEntry = entry as ResourceUsageEntry;
+        if (resourceEntry.action === 'spent') {
+          toast.warning(description);
+        } else {
+          toast.success(description);
+        }
+        break;
+        
+      default:
+        toast(description);
+    }
   }
 
   async clearLogEntries(): Promise<void> {
