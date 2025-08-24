@@ -6,10 +6,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { Character, SkillName } from "@/lib/types/character";
-import { ChevronDown, ChevronRight, Dice6, Plus, Minus } from "lucide-react";
+import { ChevronDown, ChevronRight, Dice6, Plus, Minus, Sparkles, Search, Target, MessageCircle, Brain, Dumbbell, BookOpen, Leaf, Radar, EyeOff } from "lucide-react";
 import { getCharacterService } from "@/lib/services/service-factory";
 import { useCharacterActions } from "@/lib/contexts/character-actions-context";
 import { useUIState } from "@/lib/contexts/ui-state-context";
+
+function getSkillIcon(skillName: SkillName) {
+  const iconMap = {
+    arcana: Sparkles,
+    examination: Search,
+    finesse: Target,
+    influence: MessageCircle,
+    insight: Brain,
+    might: Dumbbell,
+    lore: BookOpen,
+    naturecraft: Leaf,
+    perception: Radar,
+    stealth: EyeOff,
+  };
+  
+  return iconMap[skillName] || Dice6;
+}
 
 export function SkillsSection() {
   // Get everything we need from context - complete independence!
@@ -62,9 +79,13 @@ export function SkillsSection() {
                 const totalModifier = attributeValue + skill.modifier;
                 
                 return (
-                  <div key={skillKey} className="p-4 flex items-center justify-between">
+                  <div key={skillKey} className="p-3 flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3">
+                        {(() => {
+                          const IconComponent = getSkillIcon(skillName);
+                          return <IconComponent className="w-6 h-6 text-muted-foreground flex-shrink-0" />;
+                        })()}
                         <div className="min-w-0 flex-1">
                           <h3 className="font-medium text-sm">
                             {skill.name} ({skill.associatedAttribute.slice(0, 3).toUpperCase()})
