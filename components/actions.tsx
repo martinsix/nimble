@@ -9,17 +9,17 @@ import { Action, WeaponAction, AbilityAction } from "@/lib/types/actions";
 import { abilityService } from "@/lib/services/ability-service";
 import { AbilityUsageEntry } from "@/lib/types/log-entries";
 import { getEquippedWeapons } from "@/lib/utils/equipment";
+import { getCharacterService, getActivityLog } from "@/lib/services/service-factory";
 import { Sword, Zap } from "lucide-react";
 import { Badge } from "./ui/badge";
 
 interface ActionsProps {
   character: Character;
   onAttack: (weaponName: string, damage: string, attributeModifier: number, advantageLevel: number) => void;
-  onUseAbility?: (abilityId: string) => void;
   advantageLevel: number;
 }
 
-export function Actions({ character, onAttack, onUseAbility, advantageLevel }: ActionsProps) {
+export function Actions({ character, onAttack, advantageLevel }: ActionsProps) {
   const weapons = getEquippedWeapons(character.inventory.items);
   const actionAbilities = character.abilities.abilities.filter(
     (ability): ability is ActionAbility => ability.type === 'action'
@@ -37,16 +37,44 @@ export function Actions({ character, onAttack, onUseAbility, advantageLevel }: A
     onAttack(weapon.name, weapon.damage, attributeModifier, advantageLevel);
   };
 
-  const handleUseAbility = (ability: ActionAbility) => {
-    if (!onUseAbility) return;
-    
+  const handleUseAbility = async (ability: ActionAbility) => {
     // For at-will abilities, allow usage regardless of currentUses
     // For other abilities, check if they have remaining uses
     if (ability.frequency !== 'at_will' && (ability.currentUses === undefined || ability.currentUses <= 0)) {
       return;
     }
     
-    onUseAbility(ability.id);
+    try {
+      const result = abilityService.useAbility(character.abilities, ability.id);
+      
+      if (!result.success || !result.usedAbility) {
+        console.error("Failed to use ability: ability not found or no uses remaining");
+        return;
+      }
+
+      // Update character with new abilities state
+      const characterService = getCharacterService();
+      const updatedCharacter = { ...character, abilities: result.updatedAbilities };
+      await characterService.updateCharacter(updatedCharacter);
+
+      // Log the ability usage
+      const activityLogService = getActivityLog();
+      const logEntry = activityLogService.createAbilityUsageEntry(
+        result.usedAbility.name,
+        result.usedAbility.frequency,
+        result.usedAbility.currentUses || 0,
+        result.usedAbility.maxUses || 0
+      );
+      await activityLogService.addLogEntry(logEntry);
+
+      // If ability has a roll, execute it
+      if (result.usedAbility.roll) {
+        const rollDescription = abilityService.getAbilityRollDescription(result.usedAbility.roll, character);
+        // Here we could add dice rolling logic if needed
+      }
+    } catch (error) {
+      console.error("Failed to use ability:", error);
+    }
   };
 
   const getFrequencyBadge = (frequency: AbilityFrequency) => {
@@ -180,7 +208,7 @@ export function Actions({ character, onAttack, onUseAbility, advantageLevel }: A
                       variant={isUsed ? "outline" : "default"}
                       size="sm"
                       onClick={() => handleUseAbility(ability)}
-                      disabled={isUsed || !onUseAbility}
+                      disabled={isUsed}
                       className="w-full"
                     >
                       <Zap className="w-4 h-4 mr-2" />

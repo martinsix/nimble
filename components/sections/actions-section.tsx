@@ -9,7 +9,7 @@ import { useUIState } from "@/lib/contexts/ui-state-context";
 
 export function ActionsSection() {
   // Get everything we need from context - complete independence!
-  const { character, onAttack, onUseAbility } = useCharacterActions();
+  const { character, onAttack } = useCharacterActions();
   const { uiState, updateCollapsibleState } = useUIState();
   
   // Early return if no character (shouldn't happen in normal usage)
@@ -31,7 +31,6 @@ export function ActionsSection() {
           <Actions 
             character={character} 
             onAttack={onAttack} 
-            onUseAbility={onUseAbility}
             advantageLevel={advantageLevel} 
           />
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
-import { CharacterSheet } from "@/components/character-sheet";
-import { ActivityLog } from "@/components/activity-log";
+import { TabbedCharacterSheet } from "@/components/tabbed-character-sheet";
+import { CharacterHeader } from "@/components/character-sheet/character-header";
 import { AttributeName, SkillName, ActionTracker, CharacterConfiguration } from "@/lib/types/character";
 import { Abilities } from "@/lib/types/abilities";
 import { CharacterSelector } from "@/components/character-selector";
@@ -9,7 +9,6 @@ import { TopBar } from "@/components/top-bar";
 import { useCharacterManagement } from "@/lib/hooks/use-character-management";
 import { useDiceActions } from "@/lib/hooks/use-dice-actions";
 import { useCombatActions } from "@/lib/hooks/use-combat-actions";
-import { useActivityLog } from "@/lib/hooks/use-activity-log";
 import { CharacterActionsProvider } from "@/lib/contexts/character-actions-context";
 import { UIStateProvider } from "@/lib/contexts/ui-state-context";
 import { ToastProvider } from "@/lib/contexts/toast-context";
@@ -35,8 +34,7 @@ function HomeContent() {
     handleSettingsChange,
   } = useCharacterManagement();
 
-  // Activity log management
-  const { logEntries, addLogEntry, handleClearRolls } = useActivityLog();
+  // Activity log management (handled by individual components via hooks)
 
   // Dice rolling actions
   const { rollAttribute, rollSave, rollSkill, attack, rollInitiative } = useDiceActions();
@@ -59,6 +57,13 @@ function HomeContent() {
     const characterService = getCharacterService();
     await characterService.applyDamage(amount, targetType);
   }, []);
+
+  const onNameChange = useCallback(async (name: string) => {
+    if (character) {
+      const updatedCharacter = { ...character, name };
+      await handleCharacterUpdate(updatedCharacter);
+    }
+  }, [character, handleCharacterUpdate]);
 
   const onApplyHealing = useCallback(async (amount: number) => {
     const characterService = getCharacterService();
@@ -120,23 +125,23 @@ function HomeContent() {
   );
 
   const onUseAbility = useCallback((abilityId: string) => 
-    handleUseAbility(character!, abilityId, handleCharacterUpdate, addLogEntry),
-    [character, handleUseAbility, handleCharacterUpdate, addLogEntry]
+    handleUseAbility(character!, abilityId, handleCharacterUpdate, () => {}),
+    [character, handleUseAbility, handleCharacterUpdate]
   );
 
   const onCatchBreath = useCallback(() => 
-    handleCatchBreath(character!, handleCharacterUpdate, addLogEntry),
-    [character, handleCatchBreath, handleCharacterUpdate, addLogEntry]
+    handleCatchBreath(character!, handleCharacterUpdate, () => {}),
+    [character, handleCatchBreath, handleCharacterUpdate]
   );
 
   const onMakeCamp = useCallback(() => 
-    handleMakeCamp(character!, handleCharacterUpdate, addLogEntry),
-    [character, handleMakeCamp, handleCharacterUpdate, addLogEntry]
+    handleMakeCamp(character!, handleCharacterUpdate, () => {}),
+    [character, handleMakeCamp, handleCharacterUpdate]
   );
 
   const onSafeRest = useCallback(() => 
-    handleSafeRest(character!, handleCharacterUpdate, addLogEntry),
-    [character, handleSafeRest, handleCharacterUpdate, addLogEntry]
+    handleSafeRest(character!, handleCharacterUpdate, () => {}),
+    [character, handleSafeRest, handleCharacterUpdate]
   );
 
   // Memoize the complete character actions context value to prevent unnecessary re-renders
@@ -160,7 +165,6 @@ function HomeContent() {
     onCatchBreath,
     onMakeCamp,
     onSafeRest,
-    addLogEntry,
   }), [
     character,
     handleCharacterUpdate,
@@ -181,7 +185,6 @@ function HomeContent() {
     onCatchBreath,
     onMakeCamp,
     onSafeRest,
-    addLogEntry,
   ]);
 
   if (!isLoaded) {
@@ -213,12 +216,12 @@ function HomeContent() {
             onCharacterSwitch={handleCharacterSwitch}
             onCharacterDelete={handleCharacterDelete}
           />
-          <div className="container mx-auto py-8 space-y-8">
-            <CharacterSheet 
-              character={character}
-              mode={settings.mode}
+          <div className="container mx-auto py-6 px-4 space-y-6">
+            <CharacterHeader 
+              onNameChange={onNameChange}
+              onOpenConfig={() => {/* TODO: implement config modal */}}
             />
-            <ActivityLog entries={logEntries} onClearRolls={handleClearRolls} />
+            <TabbedCharacterSheet />
           </div>
         </main>
       </UIStateProvider>

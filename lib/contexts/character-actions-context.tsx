@@ -3,7 +3,6 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { Character, AttributeName, SkillName, ActionTracker, CharacterConfiguration } from '../types/character';
 import { Abilities } from '../types/abilities';
-import { LogEntry } from '../types/log-entries';
 
 export interface CharacterActionsContextValue {
   // Character state
@@ -36,9 +35,6 @@ export interface CharacterActionsContextValue {
   onCatchBreath: () => void;
   onMakeCamp: () => void;
   onSafeRest: () => void;
-  
-  // Activity log
-  addLogEntry: (entry: LogEntry) => void;
 }
 
 const CharacterActionsContext = createContext<CharacterActionsContextValue | undefined>(undefined);

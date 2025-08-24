@@ -1,6 +1,5 @@
 import { Character } from "@/lib/types/character";
 import { CharacterNameSection } from "../sections/character-name-section";
-import { ClassFeaturesSection } from "../sections/class-features-section";
 import { useCharacterActions } from "@/lib/contexts/character-actions-context";
 
 interface CharacterHeaderProps {
@@ -25,9 +24,6 @@ export function CharacterHeader({
         onNameChange={onNameChange}
         onOpenConfig={onOpenConfig}
       />
-
-      {/* Class Features Section - Now completely self-contained */}
-      <ClassFeaturesSection />
     </>
   );
 }
