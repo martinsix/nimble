@@ -390,3 +390,10 @@ All game rules are centralized in `lib/config/game-config.ts`:
 - **Character Name**: 1-50 characters
 - **Inventory Size**: Non-negative numbers
 - **Item Names**: Required, non-empty strings
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
+KEEP THINGS SHORT AND CONCISE - avoid verbose explanations, long commit messages, and unnecessary details.
