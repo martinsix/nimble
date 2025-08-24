@@ -105,35 +105,6 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
     return unsubscribe;
   }, []); // Empty dependencies - service is singleton
 
-  // Listen for character creation events from the character selector
-  useEffect(() => {
-    const handleCreateCharacter = async (event: CustomEvent<string>) => {
-      try {
-        const characterName = event.detail;
-        // Use the new character creation service with default fighter class
-        const newCharacter = await characterCreation.createSampleCharacter(characterName, 'fighter');
-        
-        const updatedCharacterList = await characterStorage.getAllCharacters();
-        setCharacters(updatedCharacterList);
-        
-        // Switch to the new character (it's already initialized)
-        setCharacter(newCharacter);
-        
-        // Update settings
-        const newSettings = { ...settings, activeCharacterId: newCharacter.id };
-        await settingsService.saveSettings(newSettings);
-        setSettings(newSettings);
-      } catch (error) {
-        console.error("Failed to create character:", error);
-      }
-    };
-
-    window.addEventListener('createCharacter', handleCreateCharacter as unknown as EventListener);
-    return () => {
-      window.removeEventListener('createCharacter', handleCreateCharacter as unknown as EventListener);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings]); // Services are singletons, safe to omit from dependencies
 
   const handleCharacterUpdate = async (updatedCharacter: Character) => {
     // Update through the service, which will trigger the subscription

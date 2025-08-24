@@ -48,10 +48,6 @@ export function CharacterSelector({
       
       if (onCharacterCreate) {
         onCharacterCreate(name, selectedClass);
-      } else {
-        // Fallback to custom event for backward compatibility
-        const event = new CustomEvent('createCharacter', { detail: name });
-        window.dispatchEvent(event);
       }
     }
   };

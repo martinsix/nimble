@@ -172,8 +172,11 @@ export class ResourceService {
 
   /**
    * Migrate resources from old color field to colorScheme field
+   * Returns true if any migration was performed
    */
-  migrateResourceColorSchemes(character: Character): void {
+  migrateResourceColorSchemes(character: Character): boolean {
+    let hasChanges = false;
+    
     character.resources.forEach(resource => {
       // Check if resource has old 'color' field but no 'colorScheme'
       const resourceAny = resource as any;
@@ -192,13 +195,17 @@ export class ResourceService {
         
         resource.colorScheme = colorMapping[resourceAny.color] || 'blue-magic';
         delete resourceAny.color; // Remove old field
+        hasChanges = true;
       }
       
       // Ensure colorScheme exists
       if (!resource.colorScheme) {
         resource.colorScheme = 'blue-magic';
+        hasChanges = true;
       }
     });
+    
+    return hasChanges;
   }
 
   /**

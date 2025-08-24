@@ -50,10 +50,12 @@ export class CharacterService implements ICharacterService {
       this._character = character;
       
       // Migrate resources from old color field to colorScheme field
-      resourceService.migrateResourceColorSchemes(character);
+      const migrationNeeded = resourceService.migrateResourceColorSchemes(character);
       
-      // Save migrated character if migration occurred
-      await this.saveCharacter();
+      // Save migrated character only if migration occurred
+      if (migrationNeeded) {
+        await this.saveCharacter();
+      }
       
       this.notifyCharacterChanged();
     }
