@@ -13,6 +13,9 @@ export const wizard: ClassDefinition = {
   weaponProficiencies: [
     { type: 'freeform', name: 'Staves and Wands' }
   ],
+  saveAdvantages: {
+    intelligence: 'advantage'
+  },
   features: [
     {
       level: 1,

@@ -1,4 +1,4 @@
-import { HitDieSize, AttributeName } from './character';
+import { HitDieSize, AttributeName, SaveAdvantageMap } from './character';
 import { Ability } from './abilities';
 import { ResourceDefinition } from './resources';
 
@@ -112,6 +112,7 @@ export interface ClassDefinition {
   startingHP: number; // Fixed starting hit points at level 1
   armorProficiencies: ArmorProficiency[]; // Armor types the class is proficient with
   weaponProficiencies: WeaponProficiency[]; // Weapon categories the class is proficient with
+  saveAdvantages: SaveAdvantageMap; // Default save advantages/disadvantages for this class
   features: ClassFeature[]; // All features available to this class
   subclasses?: SubclassDefinition[]; // Available subclasses for this class
 }

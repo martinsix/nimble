@@ -17,6 +17,9 @@ export const fighter: ClassDefinition = {
     { type: 'strength_weapons' },
     { type: 'dexterity_weapons' }
   ],
+  saveAdvantages: {
+    strength: 'advantage'
+  },
   features: [
     {
       level: 1,

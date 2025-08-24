@@ -87,6 +87,7 @@ export class CharacterStorageService {
       grantedFeatures: [], // No features granted yet
       proficiencies,
       attributes: { strength: 0, dexterity: 0, intelligence: 0, will: 0 },
+      saveAdvantages: { ...classDefinition.saveAdvantages },
       hitPoints,
       hitDice,
       wounds: { current: 0, max: config.maxWounds },

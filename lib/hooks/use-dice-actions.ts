@@ -59,6 +59,7 @@ export function useDiceActions(): UseDiceActionsReturn {
     }
   }, [diceService, activityLogService, addLogEntry]);
 
+
   const rollSkill = useCallback(async (skillName: SkillName, attributeValue: number, skillModifier: number, advantageLevel: number) => {
     try {
       const totalModifier = attributeValue + skillModifier;

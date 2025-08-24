@@ -16,6 +16,9 @@ export const cleric: ClassDefinition = {
   weaponProficiencies: [
     { type: 'strength_weapons' }
   ],
+  saveAdvantages: {
+    will: 'advantage'
+  },
   features: [
     {
       level: 1,

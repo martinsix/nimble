@@ -1,0 +1,22 @@
+import { SaveAdvantageType } from '../types/character';
+
+/**
+ * Helper function to combine global advantage level with permanent save advantage
+ */
+export function combineAdvantages(globalAdvantageLevel: number, saveAdvantage: SaveAdvantageType): number {
+  let permanentAdvantage = 0;
+  
+  switch (saveAdvantage) {
+    case 'advantage':
+      permanentAdvantage = 1;
+      break;
+    case 'disadvantage':
+      permanentAdvantage = -1;
+      break;
+    default:
+      permanentAdvantage = 0;
+  }
+  
+  // Combine global and permanent advantages (clamped between -1 and 1)
+  return Math.max(-1, Math.min(1, globalAdvantageLevel + permanentAdvantage));
+}

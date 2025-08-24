@@ -70,6 +70,7 @@ export class CharacterCreationService implements ICharacterCreation {
       grantedFeatures: [], // Start with no features
       proficiencies,
       attributes,
+      saveAdvantages: { ...classDefinition.saveAdvantages }, // Initialize from class defaults
       hitPoints,
       hitDice,
       wounds: createDefaultWounds(config.maxWounds),

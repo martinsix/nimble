@@ -3,6 +3,15 @@ import { gameConfig } from '../config/game-config';
 
 const attributeNameSchema = z.enum(['strength', 'dexterity', 'intelligence', 'will']);
 
+const saveAdvantageTypeSchema = z.enum(['advantage', 'disadvantage', 'normal']);
+
+const saveAdvantageMapSchema = z.object({
+  strength: saveAdvantageTypeSchema.optional(),
+  dexterity: saveAdvantageTypeSchema.optional(),
+  intelligence: saveAdvantageTypeSchema.optional(),
+  will: saveAdvantageTypeSchema.optional(),
+}).default({});
+
 export const itemSchema = z.object({
   id: z.string(),
   name: z.string().min(1),
@@ -162,6 +171,7 @@ export const createCharacterSchema = z.object({
   grantedFeatures: z.array(z.string()),
   proficiencies: proficienciesSchema,
   attributes: attributeSchema,
+  saveAdvantages: saveAdvantageMapSchema,
   hitPoints: hitPointsSchema,
   hitDice: hitDiceSchema,
   wounds: woundsSchema,
@@ -184,6 +194,7 @@ export const characterSchema = z.object({
   grantedFeatures: z.array(z.string()),
   proficiencies: proficienciesSchema,
   attributes: attributeSchema,
+  saveAdvantages: saveAdvantageMapSchema,
   hitPoints: hitPointsSchema,
   hitDice: hitDiceSchema,
   wounds: woundsSchema,

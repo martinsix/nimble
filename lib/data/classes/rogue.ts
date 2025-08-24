@@ -14,6 +14,9 @@ export const rogue: ClassDefinition = {
   weaponProficiencies: [
     { type: 'dexterity_weapons' }
   ],
+  saveAdvantages: {
+    dexterity: 'advantage'
+  },
   features: [
     {
       level: 1,

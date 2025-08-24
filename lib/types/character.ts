@@ -1,5 +1,9 @@
 export type AttributeName = 'strength' | 'dexterity' | 'intelligence' | 'will';
 
+export type SaveAdvantageType = 'advantage' | 'disadvantage' | 'normal';
+
+export type SaveAdvantageMap = Partial<Record<AttributeName, SaveAdvantageType>>;
+
 export interface Skill {
   name: string;
   associatedAttribute: AttributeName;
@@ -54,6 +58,7 @@ export interface Character {
     intelligence: number;
     will: number;
   };
+  saveAdvantages: SaveAdvantageMap; // Permanent advantage/disadvantage on saves
   hitPoints: {
     current: number;
     max: number;
@@ -97,6 +102,7 @@ export interface CreateCharacterData {
     intelligence: number;
     will: number;
   };
+  saveAdvantages: SaveAdvantageMap;
   hitPoints: {
     current: number;
     max: number;
