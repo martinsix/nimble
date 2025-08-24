@@ -17,9 +17,7 @@ export function HitPointsSection({ onTitleClick }: HitPointsSectionProps = {}) {
   // Get everything we need from service hooks
   const { character, applyDamage: serviceDamage, applyHealing: serviceHealing, applyTemporaryHP: serviceTempHP } = useCharacterService();
   
-  const [damageAmount, setDamageAmount] = useState<string>("1");
-  const [healAmount, setHealAmount] = useState<string>("1");
-  const [tempHpAmount, setTempHpAmount] = useState<string>("1");
+  const [customAmount, setCustomAmount] = useState<string>("1");
   
   // Early return if no character (shouldn't happen in normal usage)
   if (!character) return null;
@@ -35,28 +33,23 @@ export function HitPointsSection({ onTitleClick }: HitPointsSectionProps = {}) {
     }
   };
 
-  const handleDamage = () => {
-    const damage = parseInt(damageAmount) || 0;
+  const handleCustomDamage = () => {
+    const damage = parseInt(customAmount) || 0;
     applyDamage(damage, false);
   };
 
   const applyHealing = async (amount: number, resetInput: boolean = false) => {
     await serviceHealing(amount);
-    
-    if (resetInput) {
-      setHealAmount("1");
-    }
   };
 
-  const handleHeal = () => {
-    const heal = parseInt(healAmount) || 0;
+  const handleCustomHeal = () => {
+    const heal = parseInt(customAmount) || 0;
     applyHealing(heal, false);
   };
 
-  const handleTempHp = async () => {
-    const tempAmount = parseInt(tempHpAmount) || 0;
+  const handleCustomTempHp = async () => {
+    const tempAmount = parseInt(customAmount) || 0;
     await serviceTempHP(tempAmount);
-    setTempHpAmount("1");
   };
 
   const getHealthBarColor = () => {
@@ -165,75 +158,46 @@ export function HitPointsSection({ onTitleClick }: HitPointsSectionProps = {}) {
       </div>
 
       {/* Custom Amount Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="damage-amount" className="text-sm">Custom Damage</Label>
-          <div className="flex gap-2">
-            <Input
-              id="damage-amount"
-              type="number"
-              min="1"
-              value={damageAmount}
-              onChange={(e) => setDamageAmount(e.target.value)}
-              className="flex-1"
-              placeholder="Amount"
-            />
-            <Button 
-              variant="destructive" 
-              size="sm" 
-              onClick={handleDamage}
-              disabled={currentHp <= 0}
-            >
-              <Minus className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="heal-amount" className="text-sm">Custom Heal</Label>
-          <div className="flex gap-2">
-            <Input
-              id="heal-amount"
-              type="number"
-              min="1"
-              value={healAmount}
-              onChange={(e) => setHealAmount(e.target.value)}
-              className="flex-1"
-              placeholder="Amount"
-            />
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleHeal}
-              disabled={currentHp >= maxHp}
-              className="text-green-600 border-green-600 hover:bg-green-50"
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="temp-hp-amount" className="text-sm">Temporary HP</Label>
-          <div className="flex gap-2">
-            <Input
-              id="temp-hp-amount"
-              type="number"
-              min="0"
-              value={tempHpAmount}
-              onChange={(e) => setTempHpAmount(e.target.value)}
-              className="flex-1"
-              placeholder="Amount"
-            />
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleTempHp}
-              className="text-blue-600 border-blue-600 hover:bg-blue-50"
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
+      <div className="space-y-2">
+        <Label htmlFor="custom-amount" className="text-sm">Custom Amount</Label>
+        <div className="flex gap-2">
+          <Input
+            id="custom-amount"
+            type="number"
+            min="1"
+            value={customAmount}
+            onChange={(e) => setCustomAmount(e.target.value)}
+            className="flex-1"
+            placeholder="Amount"
+          />
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={handleCustomDamage}
+            disabled={currentHp <= 0}
+            title="Apply Damage"
+          >
+            <Minus className="w-4 h-4" />
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleCustomHeal}
+            disabled={currentHp >= maxHp}
+            className="text-green-600 border-green-600 hover:bg-green-50"
+            title="Apply Healing"
+          >
+            <Plus className="w-4 h-4" />
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleCustomTempHp}
+            className="text-blue-600 border-blue-600 hover:bg-blue-50"
+            title="Add Temporary HP"
+          >
+            <Plus className="w-4 h-4" />
+          </Button>
         </div>
       </div>
     </>
