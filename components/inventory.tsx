@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Inventory as InventoryType, Item, ItemType, CreateItemData, WeaponItem, ArmorItem } from "@/lib/types/inventory";
 import { canEquipWeapon, canEquipArmor, getEquipmentValidationMessage, equipMainArmorWithReplacement } from "@/lib/utils/equipment";
-import { Plus, Trash2, Package, Sword, Shield, Shirt, Crown } from "lucide-react";
+import { Plus, Trash2, Package, Sword, Shield, Shirt, Crown, Edit2 } from "lucide-react";
 
 interface InventoryProps {
   inventory: InventoryType;
@@ -19,7 +19,14 @@ interface InventoryProps {
 
 export function Inventory({ inventory, characterDexterity, onUpdateInventory }: InventoryProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [newItem, setNewItem] = useState<CreateItemData>({
+    name: "",
+    size: 1,
+    type: "freeform",
+  });
+  const [editItem, setEditItem] = useState<CreateItemData>({
     name: "",
     size: 1,
     type: "freeform",
@@ -68,6 +75,70 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
       ...inventory,
       items: inventory.items.filter(item => item.id !== itemId),
     });
+  };
+
+  const startEditItem = (item: Item) => {
+    setEditingItemId(item.id);
+    
+    // Convert item to edit format
+    const editData: CreateItemData = {
+      name: item.name,
+      size: item.size,
+      type: item.type,
+    };
+
+    if (item.type === 'weapon') {
+      editData.attribute = item.attribute;
+      editData.damage = item.damage;
+      editData.properties = item.properties;
+    } else if (item.type === 'armor') {
+      const armor = item as ArmorItem;
+      editData.armor = armor.armor;
+      editData.maxDexBonus = armor.maxDexBonus;
+      editData.isMainArmor = armor.isMainArmor;
+      editData.properties = armor.properties;
+    } else if (item.type === 'freeform') {
+      editData.description = item.description;
+    }
+
+    setEditItem(editData);
+    setIsEditDialogOpen(true);
+  };
+
+  const saveEditItem = () => {
+    if (!editItem.name.trim() || !editingItemId) return;
+
+    const updatedItem: Item = {
+      id: editingItemId,
+      name: editItem.name,
+      size: editItem.size,
+      type: editItem.type,
+      ...(editItem.type === 'weapon' && { 
+        attribute: editItem.attribute, 
+        damage: editItem.damage, 
+        properties: editItem.properties,
+        equipped: inventory.items.find(i => i.id === editingItemId)?.equipped || false
+      }),
+      ...(editItem.type === 'armor' && { 
+        armor: editItem.armor, 
+        maxDexBonus: editItem.maxDexBonus, 
+        isMainArmor: editItem.isMainArmor, 
+        properties: editItem.properties,
+        equipped: inventory.items.find(i => i.id === editingItemId)?.equipped || false
+      }),
+      ...(editItem.type === 'freeform' && { description: editItem.description }),
+    };
+
+    onUpdateInventory({
+      ...inventory,
+      items: inventory.items.map(item => 
+        item.id === editingItemId ? updatedItem : item
+      ),
+    });
+
+    setEditItem({ name: "", size: 1, type: "freeform" });
+    setEditingItemId(null);
+    setIsEditDialogOpen(false);
   };
 
   const toggleEquipped = (itemId: string) => {
@@ -339,6 +410,143 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Edit Item Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Item</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-item-name">Name</Label>
+                <Input
+                  id="edit-item-name"
+                  value={editItem.name}
+                  onChange={(e) => setEditItem({ ...editItem, name: e.target.value })}
+                  placeholder="Item name"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-item-size">Size</Label>
+                  <Input
+                    id="edit-item-size"
+                    type="number"
+                    min="0"
+                    value={editItem.size}
+                    onChange={(e) => setEditItem({ ...editItem, size: parseInt(e.target.value) || 1 })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-item-type">Type</Label>
+                  <Select value={editItem.type} onValueChange={(value: ItemType) => setEditItem({ ...editItem, type: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="freeform">Freeform</SelectItem>
+                      <SelectItem value="weapon">Weapon</SelectItem>
+                      <SelectItem value="armor">Armor</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {editItem.type === 'weapon' && (
+                <>
+                  <div>
+                    <Label htmlFor="edit-weapon-attribute">Attribute</Label>
+                    <Select 
+                      value={editItem.attribute || ""} 
+                      onValueChange={(value) => setEditItem({ ...editItem, attribute: value as any })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select attribute" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="strength">Strength</SelectItem>
+                        <SelectItem value="dexterity">Dexterity</SelectItem>
+                        <SelectItem value="intelligence">Intelligence</SelectItem>
+                        <SelectItem value="will">Will</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-weapon-damage">Damage</Label>
+                    <Input
+                      id="edit-weapon-damage"
+                      value={editItem.damage || ""}
+                      onChange={(e) => setEditItem({ ...editItem, damage: e.target.value })}
+                      placeholder="e.g., 1d8"
+                    />
+                  </div>
+                </>
+              )}
+
+              {editItem.type === 'armor' && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="edit-armor-value">Armor</Label>
+                      <Input
+                        id="edit-armor-value"
+                        type="number"
+                        value={editItem.armor || ""}
+                        onChange={(e) => setEditItem({ ...editItem, armor: parseInt(e.target.value) || undefined })}
+                        placeholder="Armor value"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-max-dex-bonus">Max Dex Bonus</Label>
+                      <Input
+                        id="edit-max-dex-bonus"
+                        type="number"
+                        value={editItem.maxDexBonus ?? ""}
+                        onChange={(e) => setEditItem({ ...editItem, maxDexBonus: e.target.value === "" ? undefined : parseInt(e.target.value) || 0 })}
+                        placeholder="No limit"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      id="edit-is-main-armor"
+                      type="checkbox"
+                      checked={editItem.isMainArmor || false}
+                      onChange={(e) => setEditItem({ ...editItem, isMainArmor: e.target.checked })}
+                      className="rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <Label htmlFor="edit-is-main-armor" className="text-sm">
+                      Main Armor (suits of armor, not helmets or shields)
+                    </Label>
+                  </div>
+                </>
+              )}
+
+              {editItem.type === 'freeform' && (
+                <div>
+                  <Label htmlFor="edit-item-description">Description</Label>
+                  <Input
+                    id="edit-item-description"
+                    value={editItem.description || ""}
+                    onChange={(e) => setEditItem({ ...editItem, description: e.target.value })}
+                    placeholder="Item description"
+                  />
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={saveEditItem} disabled={!editItem.name.trim()}>
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Size Bar */}
@@ -406,6 +614,14 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
                         {item.equipped ? "Equipped" : "Equip"}
                       </Button>
                     )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => startEditItem(item)}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
