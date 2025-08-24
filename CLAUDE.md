@@ -11,7 +11,6 @@ Nimble Navigator: A comprehensive digital character sheet application for the Ni
 - **TypeScript** for type safety
 - **Tailwind CSS** for responsive styling
 - **shadcn/ui** component library (built on Radix UI)
-- **Zustand** for client state management (future enhancement)
 - **Zod** for runtime data validation
 
 ### Storage
@@ -46,7 +45,8 @@ interface Character {
   timestamps: { createdAt, updatedAt }
 }
 
-interface CharacterResource {
+// Resource System - Separates pure definitions from runtime state
+interface ResourceDefinition {
   id: string
   name: string
   description?: string
@@ -57,6 +57,10 @@ interface CharacterResource {
   resetValue?: number
   minValue: number
   maxValue: number
+}
+
+interface ResourceInstance {
+  definition: ResourceDefinition
   current: number
   sortOrder: number
 }
@@ -86,23 +90,24 @@ interface CharacterResource {
 app/page.tsx (main orchestrator)
 ├── AppMenu (settings, character selector)
 ├── CharacterSheet (main form component, mode-aware)
-│   ├── CharacterHeader (name, class info, advantage toggle)
+│   ├── CharacterNameSection (editable character name)
+│   ├── AdvantageToggle (global advantage/disadvantage)
 │   ├── BasicMode (simplified interface)
 │   │   ├── HitPointsSection (HP, temporary HP, wounds)
 │   │   ├── ActionTrackerSection (encounter actions)
-│   │   ├── AttributesSection (attributes and saving throws)
+│   │   ├── AttributesSection (key attribute highlighting + tooltips)
 │   │   └── SkillsSection (skill checks)
 │   └── FullMode (complete interface)
 │       ├── All BasicMode sections
-│       ├── ResourceSection (generic resource management with color schemes)
+│       ├── ResourceSection (generic resource management)
 │       ├── InitiativeSection (initiative rolls)
 │       ├── ArmorSection (main vs supplementary armor)
 │       ├── ActionsSection (equipped weapons and abilities)
 │       ├── AbilitySection (ability management with usage tracking)
 │       └── InventorySection (equipment management)
-├── CharacterConfigDialog (comprehensive character configuration)
-│   ├── Wounds/HP/Inventory settings
-│   └── Resource Management (create, edit, delete resources)
+├── CharacterConfigDialog (comprehensive configuration)
+│   ├── Basic settings (wounds, HP, inventory size)
+│   └── Advanced resource management (CRUD with color schemes & icons)
 └── ActivityLog (character activity, dice results, resource usage)
 ```
 
@@ -141,9 +146,12 @@ app/page.tsx (main orchestrator)
 
 4. **Attribute & Saving Throws**
    - Four core attributes (Strength, Dexterity, Intelligence, Will)
+   - **Key Attribute Highlighting**: Class key attributes shown with bold, underlined text and ring borders
+   - **Compact Design**: Icon-only roll/save buttons with hover tooltips
    - Separate roll buttons for attribute checks and saving throws
    - Different roll mechanics: checks/saves vs attacks
-   - Visual distinction with different icons
+   - Visual distinction with different icons (dice for rolls, shield for saves)
+   - **Smart Layout**: Responsive grid with tighter spacing for mobile-friendly design
 
 5. **Skills System**
    - 10 predefined skills with attribute associations
@@ -270,29 +278,39 @@ lib/
 │   └── subclasses/  # Subclass definitions with parent class associations
 ├── types/           # TypeScript interfaces
 │   ├── character.ts
-│   ├── class.ts
+│   ├── class.ts (keyAttributes: AttributeName[] for flexibility)
 │   ├── inventory.ts
 │   ├── abilities.ts
+│   ├── resources.ts (ResourceDefinition + ResourceInstance)
 │   ├── actions.ts
 │   └── dice.ts
 ├── schemas/         # Zod validation schemas
 │   └── character.ts
 ├── services/        # Business logic layer
-│   ├── character-storage-service.ts
 │   ├── character-service.ts
-│   ├── class-service.ts
-│   ├── dice-service-clean.ts
+│   ├── class-service.ts (ResourceFeature integration)
+│   ├── resource-service.ts (generic resource management)
+│   ├── dice-service.ts
 │   ├── activity-log-service.ts
 │   ├── ability-service.ts
-│   └── settings-service.ts
+│   ├── settings-service.ts
+│   ├── ui-state-service.ts
+│   ├── service-factory.ts (singleton access)
+│   └── interfaces.ts
+├── hooks/           # Custom React hooks
+│   ├── use-character-service.ts
+│   ├── use-dice-actions.ts
+│   ├── use-activity-log.ts
+│   └── use-ui-state-service.ts
 └── utils/           # Helper functions
     ├── character-defaults.ts
-    └── equipment.ts
+    ├── equipment.ts
+    └── resource-config.ts (color schemes & icons)
 
 components/
 ├── ui/              # shadcn/ui components
 ├── sections/        # Character sheet sections
-│   ├── attributes-section.tsx
+│   ├── attributes-section.tsx (key attribute highlighting, tooltips)
 │   ├── skills-section.tsx
 │   ├── actions-section.tsx
 │   ├── action-tracker-section.tsx
@@ -301,12 +319,18 @@ components/
 │   ├── hit-points-section.tsx
 │   ├── initiative-section.tsx
 │   ├── inventory-section.tsx
-│   └── character-name-section.tsx
+│   ├── resource-section.tsx (generic resource management)
+│   ├── character-name-section.tsx
+│   └── class-features-section.tsx
+├── character-sheet/
+│   ├── basic-mode.tsx
+│   ├── full-mode.tsx
+│   └── character-stats.tsx
 ├── character-sheet.tsx
 ├── advantage-toggle.tsx
 ├── activity-log.tsx
-├── actions.tsx
 ├── app-menu.tsx
+├── character-config-dialog.tsx (comprehensive configuration)
 ├── settings-panel.tsx
 └── character-selector.tsx
 
@@ -316,31 +340,25 @@ app/
 
 ## Data Flow
 
-1. **Initialization**: Load character and UI state from localStorage
-2. **User Interaction**: Update local state and trigger persistence
+1. **Initialization**: Load character and UI state from localStorage via service factory
+2. **User Interaction**: Direct service calls update state and trigger persistence
 3. **Validation**: Zod schemas validate all data before storage
-4. **Storage**: Repository pattern abstracts storage implementation
-5. **UI Updates**: React state changes trigger re-renders
+4. **Storage**: Service layer abstracts localStorage operations
+5. **UI Updates**: Service hooks trigger automatic re-renders without Context overhead
 
-## Future Enhancements
+## Key Technical Achievements
 
-### Server Integration
-- Replace LocalStorageRepository with ServerRepository
-- Add authentication and user accounts
-- Sync data across devices
-- Backup and restore functionality
+### Architecture Improvements
+- **Eliminated React Context**: Direct service access via singleton pattern
+- **ResourceFeature Integration**: Class features automatically grant resources
+- **Pure Resource Definitions**: Separated immutable templates from runtime state
+- **Type Safety**: Comprehensive TypeScript coverage with runtime validation
 
-### Rule Engine
-- Modular rules system for Nimble mechanics
-- Automatic calculations and bonuses
-- Custom rule definitions
-- Import/export rule sets
-
-### Advanced Features
-- Character templates and presets
-- Campaign management
-- Shared character access
-- Dice roll history analytics
+### UI/UX Enhancements
+- **Key Attribute Highlighting**: Visual emphasis on class-specific attributes
+- **Compact Design**: Space-efficient mobile-first interface
+- **Tooltip System**: Icon-only buttons with informative hover tooltips
+- **Generic Resource System**: Flexible resource management with color schemes
 
 ## Development Commands
 
