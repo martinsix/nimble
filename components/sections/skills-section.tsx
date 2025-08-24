@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { Character, SkillName } from "@/lib/types/character";
-import { ChevronDown, ChevronRight, Dice6 } from "lucide-react";
+import { ChevronDown, ChevronRight, Dice6, Plus, Minus } from "lucide-react";
 import { getCharacterService } from "@/lib/services/service-factory";
 import { useCharacterActions } from "@/lib/contexts/character-actions-context";
 import { useUIState } from "@/lib/contexts/ui-state-context";
@@ -20,11 +20,13 @@ export function SkillsSection() {
   const advantageLevel = uiState.advantageLevel;
   const onToggle = (isOpen: boolean) => updateCollapsibleState('skills', isOpen);
   
-  const onSkillChange = useCallback(async (skillName: SkillName, value: string) => {
+  const onSkillChange = useCallback(async (skillName: SkillName, delta: number) => {
     if (!character) return;
     
-    const numValue = parseInt(value) || 0;
-    if (numValue >= 0 && numValue <= 20) {
+    const currentValue = character.skills[skillName].modifier;
+    const newValue = Math.max(0, Math.min(20, currentValue + delta));
+    
+    if (newValue !== currentValue) {
       const characterService = getCharacterService();
       const updated = {
         ...character,
@@ -32,7 +34,7 @@ export function SkillsSection() {
           ...character.skills,
           [skillName]: {
             ...character.skills[skillName],
-            modifier: numValue,
+            modifier: newValue,
           },
         },
       };
@@ -51,48 +53,68 @@ export function SkillsSection() {
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-          {Object.entries(character.skills).map(([skillKey, skill]) => {
-            const skillName = skillKey as SkillName;
-            const attributeValue = character.attributes[skill.associatedAttribute];
-            const totalModifier = attributeValue + skill.modifier;
-            
-            return (
-              <Card key={skillKey}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-center text-base">
-                    {skill.name} ({skill.associatedAttribute.slice(0, 3).toUpperCase()})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="text-center text-sm text-muted-foreground">
-                    Base: {attributeValue > 0 ? '+' : ''}{attributeValue} | 
-                    Skill: +{skill.modifier} | 
-                    Total: {totalModifier > 0 ? '+' : ''}{totalModifier}
+        <Card className="mt-4">
+          <CardContent className="p-0">
+            <div className="divide-y">
+              {Object.entries(character.skills).map(([skillKey, skill], index) => {
+                const skillName = skillKey as SkillName;
+                const attributeValue = character.attributes[skill.associatedAttribute];
+                const totalModifier = attributeValue + skill.modifier;
+                
+                return (
+                  <div key={skillKey} className="p-4 flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-medium text-sm">
+                            {skill.name} ({skill.associatedAttribute.slice(0, 3).toUpperCase()})
+                          </h3>
+                          <p className="text-xs text-muted-foreground">
+                            {attributeValue > 0 ? '+' : ''}{attributeValue} ({skill.associatedAttribute.slice(0, 3).toUpperCase()}) + {skill.modifier} (Skill) = {totalModifier > 0 ? '+' : ''}{totalModifier}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center border rounded">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => onSkillChange(skillName, -1)}
+                              disabled={skill.modifier <= 0}
+                              className="h-8 w-8 p-0 rounded-none border-r"
+                            >
+                              <Minus className="w-3 h-3" />
+                            </Button>
+                            <span className="w-8 h-8 flex items-center justify-center text-sm font-medium bg-background">
+                              {skill.modifier}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => onSkillChange(skillName, 1)}
+                              disabled={skill.modifier >= 20}
+                              className="h-8 w-8 p-0 rounded-none border-l"
+                            >
+                              <Plus className="w-3 h-3" />
+                            </Button>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onRollSkill(skillName, attributeValue, skill.modifier, advantageLevel)}
+                            className="h-8 px-3"
+                          >
+                            <Dice6 className="w-3 h-3 mr-1" />
+                            Roll
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="20"
-                    value={skill.modifier}
-                    onChange={(e) => onSkillChange(skillName, e.target.value)}
-                    className="text-center font-semibold"
-                    placeholder="Skill modifier"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onRollSkill(skillName, attributeValue, skill.modifier, advantageLevel)}
-                    className="w-full"
-                  >
-                    <Dice6 className="w-4 h-4 mr-2" />
-                    Roll
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
       </CollapsibleContent>
     </Collapsible>
   );
