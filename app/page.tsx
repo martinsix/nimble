@@ -10,8 +10,6 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import { LoadingScreen } from "@/components/loading-screen";
 import { ToastContainer } from "@/components/toast-container";
 import { useCallback, useEffect, useState } from "react";
-import { CharacterConfiguration } from "@/lib/types/character";
-import { CharacterResource } from "@/lib/types/resources";
 
 function HomeContent() {
   // Character and settings management
@@ -50,27 +48,6 @@ function HomeContent() {
     setShowConfigDialog(false);
   }, []);
 
-  const onSaveConfig = useCallback(async (config: CharacterConfiguration, resources: CharacterResource[], maxHP: number, maxWounds: number) => {
-    if (character) {
-      const updatedCharacter = {
-        ...character,
-        config,
-        resources,
-        hitPoints: {
-          ...character.hitPoints,
-          max: maxHP,
-          current: Math.min(character.hitPoints.current, maxHP)
-        },
-        wounds: {
-          ...character.wounds,
-          max: maxWounds,
-          current: Math.min(character.wounds.current, maxWounds)
-        }
-      };
-      await handleCharacterUpdate(updatedCharacter);
-      setShowConfigDialog(false);
-    }
-  }, [character, handleCharacterUpdate]);
 
   // Update page title based on character name
   useEffect(() => {
@@ -117,14 +94,10 @@ function HomeContent() {
       </div>
       
       {/* Character Config Dialog */}
-      {character && (
-        <CharacterConfigDialog
-          character={character}
-          isOpen={showConfigDialog}
-          onClose={onCloseConfig}
-          onSave={onSaveConfig}
-        />
-      )}
+      <CharacterConfigDialog
+        isOpen={showConfigDialog}
+        onClose={onCloseConfig}
+      />
     </main>
   );
 }

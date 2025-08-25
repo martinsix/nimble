@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Character, CharacterConfiguration } from "@/lib/types/character";
 import { CharacterResource, ResourceResetCondition, ResourceResetType } from "@/lib/types/resources";
+import { useCharacterService } from "@/lib/hooks/use-character-service";
 import { RESOURCE_COLOR_SCHEMES, RESOURCE_ICONS, getIconById, getColorSchemeById, getDefaultColorSchemeForIcon } from "@/lib/utils/resource-config";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
@@ -14,32 +15,56 @@ import { Textarea } from "./ui/textarea";
 import { Trash2, Plus } from "lucide-react";
 
 interface CharacterConfigDialogProps {
-  character: Character;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (config: CharacterConfiguration, resources: CharacterResource[], maxHP: number, maxWounds: number) => void;
 }
 
-export function CharacterConfigDialog({ character, isOpen, onClose, onSave }: CharacterConfigDialogProps) {
-  const [config, setConfig] = useState<CharacterConfiguration>(character.config);
-  const [resources, setResources] = useState<CharacterResource[]>(character.resources);
-  const [maxHP, setMaxHP] = useState<number>(character.hitPoints.max);
-  const [maxWounds, setMaxWounds] = useState<number>(character.wounds.max);
+export function CharacterConfigDialog({ isOpen, onClose }: CharacterConfigDialogProps) {
+  const { character, updateCharacter } = useCharacterService();
+  
+  // Assert character is non-null - dialog should only be rendered when character exists
+  const currentCharacter = character!;
+  
+  const [config, setConfig] = useState<CharacterConfiguration>(currentCharacter.config);
+  const [resources, setResources] = useState<CharacterResource[]>(currentCharacter.resources);
+  const [maxHP, setMaxHP] = useState<number>(currentCharacter.hitPoints.max);
+  const [maxWounds, setMaxWounds] = useState<number>(currentCharacter.wounds.max);
+  const [initiativeModifier, setInitiativeModifier] = useState<number>(currentCharacter.initiative.modifier);
   const [newResource, setNewResource] = useState<Partial<CharacterResource> | null>(null);
   const [isCreatingResource, setIsCreatingResource] = useState(false);
   const [editingResource, setEditingResource] = useState<string | null>(null);
 
-  const handleSave = () => {
-    onSave(config, resources, maxHP, maxWounds);
+  const handleSave = async () => {
+    const updatedCharacter = {
+      ...currentCharacter,
+      config,
+      resources,
+      hitPoints: {
+        ...currentCharacter.hitPoints,
+        max: maxHP,
+        current: Math.min(currentCharacter.hitPoints.current, maxHP)
+      },
+      wounds: {
+        ...currentCharacter.wounds,
+        max: maxWounds,
+        current: Math.min(currentCharacter.wounds.current, maxWounds)
+      },
+      initiative: {
+        ...currentCharacter.initiative,
+        modifier: initiativeModifier
+      }
+    };
+    await updateCharacter(updatedCharacter);
     onClose();
   };
 
   const handleCancel = () => {
-    // Reset to original config, resources, maxHP, and maxWounds
-    setConfig(character.config);
-    setResources(character.resources);
-    setMaxHP(character.hitPoints.max);
-    setMaxWounds(character.wounds.max);
+    // Reset to original config, resources, maxHP, maxWounds, and initiativeModifier
+    setConfig(currentCharacter.config);
+    setResources(currentCharacter.resources);
+    setMaxHP(currentCharacter.hitPoints.max);
+    setMaxWounds(currentCharacter.wounds.max);
+    setInitiativeModifier(currentCharacter.initiative.modifier);
     setIsCreatingResource(false);
     setNewResource(null);
     setEditingResource(null);
@@ -62,6 +87,11 @@ export function CharacterConfigDialog({ character, isOpen, onClose, onSave }: Ch
       ...prev,
       maxInventorySize: Math.max(1, numValue), // Minimum of 1 inventory slot
     }));
+  };
+
+  const updateInitiativeModifier = (value: string) => {
+    const numValue = parseInt(value) || 0;
+    setInitiativeModifier(Math.max(-10, Math.min(10, numValue))); // Range from -10 to +10
   };
 
   // Resource Management Functions
@@ -145,7 +175,7 @@ export function CharacterConfigDialog({ character, isOpen, onClose, onSave }: Ch
         <DialogHeader>
           <DialogTitle>Character Configuration</DialogTitle>
           <DialogDescription>
-            Configure advanced settings for {character.name}.
+            Configure advanced settings for {currentCharacter.name}.
           </DialogDescription>
         </DialogHeader>
         
@@ -192,6 +222,27 @@ export function CharacterConfigDialog({ character, isOpen, onClose, onSave }: Ch
             </div>
           </div>
 
+          {/* Initiative Modifier Configuration */}
+          <div className="space-y-2">
+            <Label htmlFor="initiative-modifier" className="text-sm font-medium">
+              Initiative Modifier
+            </Label>
+            <div className="space-y-1">
+              <Input
+                id="initiative-modifier"
+                type="number"
+                min="-10"
+                max="10"
+                value={initiativeModifier}
+                onChange={(e) => updateInitiativeModifier(e.target.value)}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">
+                Additional modifier for initiative rolls (added to Dexterity). Current total: {currentCharacter.attributes.dexterity + initiativeModifier >= 0 ? '+' : ''}{currentCharacter.attributes.dexterity + initiativeModifier}.
+              </p>
+            </div>
+          </div>
+
           {/* Max Inventory Size Configuration */}
           <div className="space-y-2">
             <Label htmlFor="max-inventory" className="text-sm font-medium">
@@ -208,7 +259,7 @@ export function CharacterConfigDialog({ character, isOpen, onClose, onSave }: Ch
                 className="w-full"
               />
               <p className="text-xs text-muted-foreground">
-                Base inventory slots (before strength bonus). Final size = {config.maxInventorySize} + {character.attributes.strength} (strength) = {config.maxInventorySize + character.attributes.strength}.
+                Base inventory slots (before strength bonus). Final size = {config.maxInventorySize} + {currentCharacter.attributes.strength} (strength) = {config.maxInventorySize + currentCharacter.attributes.strength}.
               </p>
             </div>
           </div>

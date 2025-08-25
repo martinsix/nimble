@@ -12,6 +12,8 @@ import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
 // Health Bar Subcomponent
 function HealthBar() {
   const { character } = useCharacterService();
+  
+  // All hooks called first, then safety check
   if (!character) return null;
   
   const { current, max, temporary } = character.hitPoints;
@@ -62,6 +64,8 @@ function HealthBar() {
 // Wounds Display Subcomponent
 function WoundsDisplay() {
   const { character } = useCharacterService();
+  
+  // All hooks called first, then safety check
   if (!character) return null;
   
   const { wounds } = character;
@@ -108,9 +112,10 @@ function QuickActionsBar() {
   const [showCustomPanel, setShowCustomPanel] = useState(false);
   const [customAmount, setCustomAmount] = useState("1");
   
+  // All hooks called first, then safety check
   if (!character) return null;
   
-  const { currentHp, maxHp } = character.hitPoints;
+  const { current: currentHp, max: maxHp } = character.hitPoints;
   
   const handleQuickDamage = (amount: number) => {
     applyDamage(amount);
@@ -270,6 +275,7 @@ function QuickActionsBar() {
 function ActionTracker() {
   const { character, updateActionTracker, endTurn: serviceEndTurn } = useCharacterService();
   
+  // All hooks called first, then safety check
   if (!character) return null;
   
   const { actionTracker } = character;
@@ -346,10 +352,9 @@ function ActionTracker() {
               variant="outline"
               size="sm"
               className="text-xs h-7"
-              title="Add bonus action"
+              title="Grant additional action"
             >
-              <Plus className="w-3 h-3 mr-1" />
-              Bonus
+              <Plus className="w-3 h-3" />
             </Button>
             <Button 
               onClick={endTurn}
@@ -392,13 +397,13 @@ function CombatStatusBar() {
   const { rollInitiative } = useDiceActions();
   const { uiState } = useUIStateService();
   
+  // All hooks called first, then safety check
   if (!character) return null;
   
   const { inEncounter, initiative, attributes } = character;
   const totalModifier = attributes.dexterity + initiative.modifier;
   
   const handleInitiativeRoll = async () => {
-    if (!character) return;
     const result = await rollInitiative(totalModifier, uiState.advantageLevel);
     await startEncounter(result.rollTotal);
   };

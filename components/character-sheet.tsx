@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Character, CharacterConfiguration } from "@/lib/types/character";
-import { CharacterResource } from "@/lib/types/resources";
+import { Character } from "@/lib/types/character";
 import { AppMode } from "@/lib/services/settings-service";
 import { CharacterConfigDialog } from "./character-config-dialog";
 import { useCharacterService } from "@/lib/hooks/use-character-service";
@@ -18,9 +17,7 @@ interface CharacterSheetProps {
 
 export function CharacterSheet({ character, mode }: CharacterSheetProps) {
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
-
-  // Get service methods for character updates
-  const { updateCharacter, updateCharacterConfiguration } = useCharacterService();
+  const { updateCharacter } = useCharacterService();
 
   // Simple name update function
   const updateName = (name: string) => {
@@ -32,31 +29,6 @@ export function CharacterSheet({ character, mode }: CharacterSheetProps) {
     setIsConfigDialogOpen(true);
   };
 
-  const handleConfigSave = async (config: CharacterConfiguration, resources: CharacterResource[], maxHP: number, maxWounds: number) => {
-    // Update character configuration
-    await updateCharacterConfiguration(config);
-    
-    // Update character's resources, max HP, and max wounds directly
-    const updatedCharacter: Character = {
-      ...character,
-      config,
-      resources,
-      hitPoints: {
-        ...character.hitPoints,
-        max: maxHP,
-        // Ensure current HP doesn't exceed new max
-        current: Math.min(character.hitPoints.current, maxHP)
-      },
-      wounds: {
-        ...character.wounds,
-        max: maxWounds,
-        // Ensure current wounds don't exceed new max
-        current: Math.min(character.wounds.current, maxWounds)
-      }
-    };
-    
-    await updateCharacter(updatedCharacter);
-  };
 
   return (
     <CharacterSheetLayout>
@@ -75,10 +47,8 @@ export function CharacterSheet({ character, mode }: CharacterSheetProps) {
 
       {/* Character Configuration Dialog */}
       <CharacterConfigDialog
-        character={character}
         isOpen={isConfigDialogOpen}
         onClose={() => setIsConfigDialogOpen(false)}
-        onSave={handleConfigSave}
       />
     </CharacterSheetLayout>
   );
