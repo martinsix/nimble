@@ -4,16 +4,17 @@ import { useState } from "react";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
-import { Heart, Minus, Plus, Zap, Swords, Dice6, Square, ChevronDown, ChevronUp, Bandage, Skull } from "lucide-react";
+import { Heart, Minus, Plus, Zap, Swords, Dice6, Square, ChevronDown, ChevronUp, Bandage, Skull, Circle, RotateCcw, Settings, HelpCircle } from "lucide-react";
 import { useCharacterService } from "@/lib/hooks/use-character-service";
 import { useDiceActions } from "@/lib/hooks/use-dice-actions";
 import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
 
 export function CombatSummary() {
-  const { character, endEncounter, startEncounter, applyDamage, applyHealing, applyTemporaryHP } = useCharacterService();
+  const { character, endEncounter, startEncounter, applyDamage, applyHealing, applyTemporaryHP, updateActionTracker, endTurn: serviceEndTurn } = useCharacterService();
   const { rollInitiative } = useDiceActions();
   const { uiState } = useUIStateService();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [showCustomPanel, setShowCustomPanel] = useState(false);
+  const [customAmount, setCustomAmount] = useState("1");
   
   if (!character) return null;
 
@@ -38,7 +39,7 @@ export function CombatSummary() {
   };
 
   // Wound display logic
-  const shouldUseIcons = wounds.max <= 7;
+  const shouldUseIcons = wounds.max <= 8;
   const woundIcons = [];
   
   if (shouldUseIcons) {
@@ -70,6 +71,78 @@ export function CombatSummary() {
     applyHealing(amount);
   };
 
+  const handleCustomDamage = () => {
+    const damage = parseInt(customAmount) || 0;
+    applyDamage(damage);
+    setShowCustomPanel(false);
+  };
+
+  const handleCustomHeal = () => {
+    const heal = parseInt(customAmount) || 0;
+    applyHealing(heal);
+    setShowCustomPanel(false);
+  };
+
+  const handleCustomTempHp = () => {
+    const tempAmount = parseInt(customAmount) || 0;
+    applyTemporaryHP(tempAmount);
+    setShowCustomPanel(false);
+  };
+
+  const useAction = () => {
+    if (actionTracker.current > 0) {
+      updateActionTracker({
+        ...actionTracker,
+        current: actionTracker.current - 1,
+      });
+    }
+  };
+
+  const addBonusAction = () => {
+    updateActionTracker({
+      ...actionTracker,
+      bonus: actionTracker.bonus + 1,
+      current: actionTracker.current + 1,
+    });
+  };
+
+  const endTurn = () => {
+    serviceEndTurn();
+  };
+
+  const getActionDots = () => {
+    const dots = [];
+    const totalActions = actionTracker.base + actionTracker.bonus;
+    
+    for (let i = 0; i < totalActions; i++) {
+      const isBonus = i >= actionTracker.base;
+      const isAvailable = i < actionTracker.current;
+      
+      dots.push(
+        <Button
+          key={i}
+          variant="ghost"
+          size="sm"
+          className={`w-8 h-8 p-0 rounded-full ${
+            isAvailable 
+              ? isBonus 
+                ? 'bg-blue-500 hover:bg-blue-600 text-white' 
+                : 'bg-green-500 hover:bg-green-600 text-white'
+              : isBonus
+                ? 'bg-gray-200 hover:bg-gray-300 text-gray-500' 
+                : 'bg-gray-200 hover:bg-gray-300 text-gray-500'
+          }`}
+          onClick={isAvailable ? useAction : undefined}
+          disabled={!isAvailable}
+          title={`${isBonus ? 'Bonus' : 'Base'} Action ${isAvailable ? '(Click to use)' : '(Used)'}`}
+        >
+          <Circle className="w-4 h-4" fill="currentColor" />
+        </Button>
+      );
+    }
+    return dots;
+  };
+
   const status = getCombatStatus();
 
   return (
@@ -83,19 +156,9 @@ export function CombatSummary() {
                 <Heart className="w-4 h-4 text-red-500" />
                 <span className="text-sm font-medium">Combat Summary</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className={`text-sm font-medium ${status.color}`}>
-                  {status.text}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className="h-6 w-6 p-0"
-                >
-                  {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </Button>
-              </div>
+              <span className={`text-sm font-medium ${status.color}`}>
+                {status.text}
+              </span>
             </div>
 
             {/* Health Bar */}
@@ -138,28 +201,27 @@ export function CombatSummary() {
               </div>
             </div>
 
-            {/* Action Economy & Initiative */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Action Trackers */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <div className="text-center">
-                    <div className="bg-blue-500 text-white rounded px-2 py-1 text-sm font-bold min-w-[2rem]">
-                      {actionTracker.current}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">Base</div>
+            {/* Wounds and Combat Status */}
+            <div className="flex items-center justify-between">
+              {/* Wounds Bar */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-600">Wounds:</span>
+                {shouldUseIcons ? (
+                  <div className="flex items-center gap-0.5">
+                    {woundIcons}
                   </div>
-                  <div className="text-center">
-                    <div className="bg-orange-500 text-white rounded px-2 py-1 text-sm font-bold min-w-[2rem]">
-                      {actionTracker.bonus}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">Bonus</div>
-                  </div>
-                </div>
+                ) : (
+                  <span className="text-sm font-medium text-gray-600">
+                    {wounds.current}/{wounds.max}
+                  </span>
+                )}
               </div>
-
-              {/* Initiative & Combat Controls */}
-              <div className="flex items-center justify-end gap-2">
+              
+              {/* Combat Status and Initiative */}
+              <div className="flex items-center gap-3">
+                <span className={`text-sm font-medium ${status.color}`}>
+                  {status.text}
+                </span>
                 {!inEncounter ? (
                   <>
                     <span className="text-sm text-gray-600">Init: {totalModifier > 0 ? '+' : ''}{totalModifier}</span>
@@ -199,8 +261,6 @@ export function CombatSummary() {
         <Card className="border border-gray-200">
           <CardContent className="p-3">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs text-gray-500 mr-2">Quick Actions:</span>
-              
               {/* Damage Buttons */}
               <Button 
                 variant="destructive" 
@@ -260,84 +320,39 @@ export function CombatSummary() {
               >
                 +10
               </Button>
+
+              <div className="w-px h-6 bg-gray-300 mx-1" />
+
+              {/* Custom Button */}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowCustomPanel(!showCustomPanel)}
+                className="text-xs h-7"
+              >
+                <Settings className="w-3 h-3 mr-1" />
+                Custom
+              </Button>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Wound Status Strip */}
-        <Card className="border border-gray-200">
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500">Wounds:</span>
-                {shouldUseIcons ? (
-                  <div className="flex items-center gap-0.5">
-                    {woundIcons}
-                  </div>
-                ) : (
-                  <span className="text-sm font-medium">
-                    {wounds.current}/{wounds.max}
-                  </span>
-                )}
-              </div>
-              {wounds.current > 0 && (
-                <span className="text-xs text-red-600 font-medium">
-                  {wounds.current === wounds.max ? "Critical!" : "Wounded"}
-                </span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Expandable Details Section */}
-        {isExpanded && (
-          <Card className="border border-gray-200">
-            <CardContent className="p-4">
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium text-gray-700">Advanced HP Management</h3>
-                
-                {/* HP Display with larger text */}
-                <div className="text-center space-y-2">
-                  <div className="text-2xl font-bold">
-                    {currentHp} / {maxHp}
-                    {currentHp === 0 && (
-                      <span className="text-lg text-red-600 ml-2 font-semibold">
-                        (Dying)
-                      </span>
-                    )}
-                    {temporaryHp > 0 && (
-                      <span className="text-lg text-blue-600 ml-2">
-                        (+{temporaryHp} temp)
-                      </span>
-                    )}
-                  </div>
-                  {temporaryHp > 0 && (
-                    <div className="text-sm text-blue-600 font-medium">
-                      Total Effective HP: {currentHp + temporaryHp}
-                    </div>
-                  )}
-                </div>
-
-                {/* Custom Amount Input */}
+            
+            {/* Custom Panel */}
+            {showCustomPanel && (
+              <div className="mt-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700">Custom Amount</label>
                   <div className="flex gap-2">
                     <input
                       type="number"
                       min="1"
-                      defaultValue="1"
+                      value={customAmount}
+                      onChange={(e) => setCustomAmount(e.target.value)}
                       className="flex-1 px-3 py-1 border border-gray-300 rounded text-sm"
                       placeholder="Amount"
-                      id="custom-hp-amount"
                     />
                     <Button 
                       variant="destructive" 
                       size="sm" 
-                      onClick={() => {
-                        const input = document.getElementById('custom-hp-amount') as HTMLInputElement;
-                        const amount = parseInt(input.value) || 0;
-                        handleQuickDamage(amount);
-                      }}
+                      onClick={handleCustomDamage}
                       disabled={currentHp <= 0}
                       title="Apply Damage"
                     >
@@ -346,11 +361,7 @@ export function CombatSummary() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => {
-                        const input = document.getElementById('custom-hp-amount') as HTMLInputElement;
-                        const amount = parseInt(input.value) || 0;
-                        handleQuickHeal(amount);
-                      }}
+                      onClick={handleCustomHeal}
                       disabled={currentHp >= maxHp}
                       className="text-green-600 border-green-600 hover:bg-green-50"
                       title="Apply Healing"
@@ -360,11 +371,7 @@ export function CombatSummary() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => {
-                        const input = document.getElementById('custom-hp-amount') as HTMLInputElement;
-                        const amount = parseInt(input.value) || 0;
-                        applyTemporaryHP(amount);
-                      }}
+                      onClick={handleCustomTempHp}
                       className="text-blue-600 border-blue-600 hover:bg-blue-50"
                       title="Add Temporary HP"
                     >
@@ -373,9 +380,67 @@ export function CombatSummary() {
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Action Tracker */}
+        <Card className="border border-gray-200">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              {/* Action Dots */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-600 mr-2">Actions:</span>
+                <div className="flex items-center gap-1">
+                  {getActionDots()}
+                </div>
+              </div>
+              
+              {/* Action Controls */}
+              <div className="flex items-center gap-2">
+                <Button 
+                  onClick={addBonusAction}
+                  variant="outline"
+                  size="sm"
+                  className="text-xs h-7"
+                  title="Add bonus action"
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  Bonus
+                </Button>
+                <Button 
+                  onClick={endTurn}
+                  variant="default"
+                  size="sm"
+                  className="text-xs h-7"
+                >
+                  <RotateCcw className="w-3 h-3 mr-1" />
+                  End Turn
+                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0"
+                    >
+                      <HelpCircle className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="text-xs">
+                      <p><strong>Initiative Rules:</strong></p>
+                      <p>&lt;10: 1 action • 10-20: 2 actions • &gt;20: 3 actions</p>
+                      <p><span className="text-green-600">Green</span> = base actions, <span className="text-blue-600">Blue</span> = bonus actions</p>
+                      <p>Click actions to use them</p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
       </div>
     </TooltipProvider>
   );
