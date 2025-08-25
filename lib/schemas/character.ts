@@ -80,7 +80,7 @@ export const woundsSchema = z.object({
   max: z.number().min(1),
 });
 
-export const resourceSchema = z.object({
+export const resourceDefinitionSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   description: z.string().optional(),
@@ -105,6 +105,10 @@ export const resourceSchema = z.object({
   resetValue: z.number().optional(),
   minValue: z.number().min(0),
   maxValue: z.number().min(1),
+});
+
+export const resourceInstanceSchema = z.object({
+  definition: resourceDefinitionSchema,
   current: z.number().min(0),
   sortOrder: z.number().min(0),
 });
@@ -190,7 +194,7 @@ export const createCharacterSchema = z.object({
   hitPoints: hitPointsSchema,
   hitDice: hitDiceSchema,
   wounds: woundsSchema,
-  resources: z.array(resourceSchema),
+  resources: z.array(resourceInstanceSchema),
   config: characterConfigurationSchema,
   initiative: skillSchema,
   actionTracker: actionTrackerSchema,
@@ -214,7 +218,7 @@ export const characterSchema = z.object({
   hitPoints: hitPointsSchema,
   hitDice: hitDiceSchema,
   wounds: woundsSchema,
-  resources: z.array(resourceSchema),
+  resources: z.array(resourceInstanceSchema),
   config: characterConfigurationSchema,
   initiative: skillSchema,
   actionTracker: actionTrackerSchema,

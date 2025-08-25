@@ -44,24 +44,6 @@ export interface ResourceInstance {
   sortOrder: number;                    // Display order in UI
 }
 
-/**
- * Legacy interface for backward compatibility
- * @deprecated Use ResourceInstance instead
- */
-export interface CharacterResource {
-  id: string;                           // Unique identifier (e.g., 'mana', 'fury')
-  name: string;                         // Display name (e.g., 'Mana', 'Fury')
-  description?: string;                 // Optional description
-  colorScheme: string;                  // Color scheme ID (e.g., 'blue-magic', 'red-fury')
-  icon?: string;                        // Icon identifier (e.g., 'sparkles', 'fire')
-  resetCondition: ResourceResetCondition;
-  resetType: ResourceResetType;
-  resetValue?: number;                  // Used with 'to_default' reset type
-  minValue: number;                     // Minimum value (usually 0)
-  maxValue: number;                     // Maximum value
-  current: number;                      // Current amount
-  sortOrder: number;                    // Display order in UI
-}
 
 // Default resource definitions for character creation
 export const DEFAULT_RESOURCE_DEFINITIONS: ResourceDefinition[] = [
@@ -91,21 +73,3 @@ export function createResourceInstance(
   };
 }
 
-// Helper function to convert ResourceInstance to legacy CharacterResource format
-export function resourceInstanceToCharacterResource(instance: ResourceInstance): CharacterResource {
-  return {
-    ...instance.definition,
-    current: instance.current,
-    sortOrder: instance.sortOrder,
-  };
-}
-
-// Helper function to convert legacy CharacterResource to ResourceInstance format
-export function characterResourceToResourceInstance(characterResource: CharacterResource): ResourceInstance {
-  const { current, sortOrder, ...definition } = characterResource;
-  return {
-    definition,
-    current,
-    sortOrder,
-  };
-}

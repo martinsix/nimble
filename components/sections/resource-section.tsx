@@ -17,7 +17,7 @@ export function ResourceSection() {
   // Direct singleton access with automatic re-rendering - no context needed!
   const { character } = useCharacterService();
   const { uiState, updateCollapsibleState } = useUIStateService();
-  const { activeResources, spendResource, restoreResource, getResourceDefinition } = useResourceService();
+  const { activeResources, spendResource, restoreResource, getResourceInstance } = useResourceService();
   
   const [spendAmounts, setSpendAmounts] = useState<Record<string, string>>({});
   const [restoreAmounts, setRestoreAmounts] = useState<Record<string, string>>({});
@@ -54,11 +54,10 @@ export function ResourceSection() {
     applyRestore(resourceId, amount, true);
   };
 
-  const getResourceBarColor = (resourceId: string, current: number, max: number) => {
-    const definition = getResourceDefinition(resourceId);
-    if (definition && definition.colorScheme) {
+  const getResourceBarColor = (resourceInstance: import('@/lib/types/resources').ResourceInstance, current: number, max: number) => {
+    if (resourceInstance.definition.colorScheme) {
       const percentage = (current / max) * 100;
-      const color = getResourceColor(definition.colorScheme, percentage);
+      const color = getResourceColor(resourceInstance.definition.colorScheme, percentage);
       return { backgroundColor: color };
     }
     
@@ -69,10 +68,9 @@ export function ResourceSection() {
     return { backgroundColor: '#3b82f6' }; // blue-500
   };
 
-  const getResourceIcon = (resourceId: string) => {
-    const definition = getResourceDefinition(resourceId);
-    if (definition?.icon) {
-      const iconOption = getIconById(definition.icon);
+  const getResourceIcon = (resourceInstance: import('@/lib/types/resources').ResourceInstance) => {
+    if (resourceInstance.definition.icon) {
+      const iconOption = getIconById(resourceInstance.definition.icon);
       if (iconOption) {
         return iconOption.icon;
       }
@@ -94,16 +92,15 @@ export function ResourceSection() {
       <CollapsibleContent>
         <div className="space-y-4">
           {activeResources.map((resource) => {
-            const definition = getResourceDefinition(resource.id);
-            const resourceIcon = getResourceIcon(resource.id);
-            const resourceBarColor = getResourceBarColor(resource.id, resource.current, resource.maxValue);
-            const resourcePercentage = (resource.current / resource.maxValue) * 100;
-            const resourceName = definition?.name || resource.id;
-            const spendAmount = spendAmounts[resource.id] || "1";
-            const restoreAmount = restoreAmounts[resource.id] || "1";
+            const resourceIcon = getResourceIcon(resource);
+            const resourceBarColor = getResourceBarColor(resource, resource.current, resource.definition.maxValue);
+            const resourcePercentage = (resource.current / resource.definition.maxValue) * 100;
+            const resourceName = resource.definition.name;
+            const spendAmount = spendAmounts[resource.definition.id] || "1";
+            const restoreAmount = restoreAmounts[resource.definition.id] || "1";
             
             return (
-              <Card key={resource.id} className="w-full">
+              <Card key={resource.definition.id} className="w-full">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2">
                     <span className="text-lg">{resourceIcon}</span>
@@ -114,7 +111,7 @@ export function ResourceSection() {
                   {/* Resource Display and Bar */}
                   <div className="text-center space-y-2">
                     <div className="text-3xl font-bold">
-                      {resource.current} / {resource.maxValue}
+                      {resource.current} / {resource.definition.maxValue}
                       {resource.current === 0 && (
                         <span className="text-lg text-red-600 ml-2 font-semibold">
                           (Depleted)
@@ -145,7 +142,7 @@ export function ResourceSection() {
                         <Button 
                           variant="destructive" 
                           size="sm" 
-                          onClick={() => applySpend(resource.id, 1)}
+                          onClick={() => applySpend(resource.definition.id, 1)}
                           disabled={resource.current <= 0}
                         >
                           -1
@@ -153,7 +150,7 @@ export function ResourceSection() {
                         <Button 
                           variant="destructive" 
                           size="sm" 
-                          onClick={() => applySpend(resource.id, 3)}
+                          onClick={() => applySpend(resource.definition.id, 3)}
                           disabled={resource.current <= 0}
                         >
                           -3
@@ -161,7 +158,7 @@ export function ResourceSection() {
                         <Button 
                           variant="destructive" 
                           size="sm" 
-                          onClick={() => applySpend(resource.id, 5)}
+                          onClick={() => applySpend(resource.definition.id, 5)}
                           disabled={resource.current <= 0}
                         >
                           -5
@@ -175,8 +172,8 @@ export function ResourceSection() {
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          onClick={() => applyRestore(resource.id, 1)}
-                          disabled={resource.current >= resource.maxValue}
+                          onClick={() => applyRestore(resource.definition.id, 1)}
+                          disabled={resource.current >= resource.definition.maxValue}
                           className="text-blue-600 border-blue-600 hover:bg-blue-50"
                         >
                           +1
@@ -184,8 +181,8 @@ export function ResourceSection() {
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          onClick={() => applyRestore(resource.id, 3)}
-                          disabled={resource.current >= resource.maxValue}
+                          onClick={() => applyRestore(resource.definition.id, 3)}
+                          disabled={resource.current >= resource.definition.maxValue}
                           className="text-blue-600 border-blue-600 hover:bg-blue-50"
                         >
                           +3
@@ -193,8 +190,8 @@ export function ResourceSection() {
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          onClick={() => applyRestore(resource.id, 5)}
-                          disabled={resource.current >= resource.maxValue}
+                          onClick={() => applyRestore(resource.definition.id, 5)}
+                          disabled={resource.current >= resource.definition.maxValue}
                           className="text-blue-600 border-blue-600 hover:bg-blue-50"
                         >
                           +5
@@ -206,21 +203,21 @@ export function ResourceSection() {
                   {/* Custom Amount Actions */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor={`spend-${resource.id}`} className="text-sm">Custom Spend</Label>
+                      <Label htmlFor={`spend-${resource.definition.id}`} className="text-sm">Custom Spend</Label>
                       <div className="flex gap-2">
                         <Input
-                          id={`spend-${resource.id}`}
+                          id={`spend-${resource.definition.id}`}
                           type="number"
                           min="1"
                           value={spendAmount}
-                          onChange={(e) => setSpendAmounts(prev => ({ ...prev, [resource.id]: e.target.value }))}
+                          onChange={(e) => setSpendAmounts(prev => ({ ...prev, [resource.definition.id]: e.target.value }))}
                           className="flex-1"
                           placeholder="Amount"
                         />
                         <Button 
                           variant="destructive" 
                           size="sm" 
-                          onClick={() => handleSpend(resource.id)}
+                          onClick={() => handleSpend(resource.definition.id)}
                           disabled={resource.current <= 0}
                         >
                           <Minus className="w-4 h-4" />
@@ -229,22 +226,22 @@ export function ResourceSection() {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor={`restore-${resource.id}`} className="text-sm">Custom Restore</Label>
+                      <Label htmlFor={`restore-${resource.definition.id}`} className="text-sm">Custom Restore</Label>
                       <div className="flex gap-2">
                         <Input
-                          id={`restore-${resource.id}`}
+                          id={`restore-${resource.definition.id}`}
                           type="number"
                           min="1"
                           value={restoreAmount}
-                          onChange={(e) => setRestoreAmounts(prev => ({ ...prev, [resource.id]: e.target.value }))}
+                          onChange={(e) => setRestoreAmounts(prev => ({ ...prev, [resource.definition.id]: e.target.value }))}
                           className="flex-1"
                           placeholder="Amount"
                         />
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          onClick={() => handleRestore(resource.id)}
-                          disabled={resource.current >= resource.maxValue}
+                          onClick={() => handleRestore(resource.definition.id)}
+                          disabled={resource.current >= resource.definition.maxValue}
                           className="text-blue-600 border-blue-600 hover:bg-blue-50"
                         >
                           <Plus className="w-4 h-4" />

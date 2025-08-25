@@ -46,7 +46,7 @@ export function useResourceService() {
     }
   }, [character, updateCharacter]);
 
-  const addResourceToCharacter = useCallback(async (resource: import('../types/resources').CharacterResource) => {
+  const addResourceToCharacter = useCallback(async (resource: import('../types/resources').ResourceInstance) => {
     if (!character) return;
 
     resourceService.addResourceToCharacter(character, resource);
@@ -126,9 +126,7 @@ export function useResourceService() {
     resetResourcesOnTurnEnd,
     
     // Utility functions
-    getResourceDefinition: (resourceId: string) => 
-      character ? resourceService.getCharacterResource(character, resourceId) : null,
-    getCharacterResource: (resourceId: string) => 
-      character ? resourceService.getCharacterResource(character, resourceId) : null,
+    getResourceInstance: (resourceId: string) => 
+      character ? resourceService.getResourceInstance(character, resourceId) : null,
   };
 }

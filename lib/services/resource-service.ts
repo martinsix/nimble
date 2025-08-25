@@ -1,7 +1,7 @@
 import { Character } from '../types/character';
 import { 
-  CharacterResource, 
-  ResourceResetCondition 
+  ResourceInstance,
+  ResourceResetCondition
 } from '../types/resources';
 import { ResourceUsageEntry } from '../types/log-entries';
 
@@ -15,23 +15,23 @@ export class ResourceService {
   /**
    * Get a character's resource by ID
    */
-  getCharacterResource(character: Character, resourceId: string): CharacterResource | null {
-    return character.resources.find(r => r.id === resourceId) || null;
+  getResourceInstance(character: Character, resourceId: string): ResourceInstance | null {
+    return character.resources.find(r => r.definition.id === resourceId) || null;
   }
 
   /**
    * Get all resources for a character
    */
-  getActiveResources(character: Character): CharacterResource[] {
+  getActiveResources(character: Character): ResourceInstance[] {
     return character.resources;
   }
 
   /**
    * Add a resource to a character
    */
-  addResourceToCharacter(character: Character, resource: CharacterResource): CharacterResource {
+  addResourceToCharacter(character: Character, resource: ResourceInstance): ResourceInstance {
     // Check if character already has this resource
-    const existing = this.getCharacterResource(character, resource.id);
+    const existing = this.getResourceInstance(character, resource.definition.id);
     if (existing) {
       return existing;
     }
@@ -44,7 +44,7 @@ export class ResourceService {
    * Remove a resource from a character
    */
   removeResourceFromCharacter(character: Character, resourceId: string): boolean {
-    const index = character.resources.findIndex(r => r.id === resourceId);
+    const index = character.resources.findIndex(r => r.definition.id === resourceId);
     if (index === -1) {
       return false;
     }
@@ -56,40 +56,40 @@ export class ResourceService {
   /**
    * Spend resource points
    */
-  spendResource(character: Character, resourceId: string, amount: number): { resourceId: string; amount: number; type: 'spend' | 'restore'; resource: CharacterResource } | null {
-    const resource = this.getCharacterResource(character, resourceId);
-    if (!resource) {
+  spendResource(character: Character, resourceId: string, amount: number): { resourceId: string; amount: number; type: 'spend' | 'restore'; resource: ResourceInstance } | null {
+    const resourceInstance = character.resources.find(r => r.definition.id === resourceId);
+    if (!resourceInstance) {
       return null;
     }
 
-    const actualAmount = Math.min(amount, resource.current);
-    resource.current = Math.max(resource.minValue, resource.current - actualAmount);
+    const actualAmount = Math.min(amount, resourceInstance.current);
+    resourceInstance.current = Math.max(resourceInstance.definition.minValue, resourceInstance.current - actualAmount);
 
     return {
       resourceId,
       amount: actualAmount,
       type: 'spend',
-      resource,
+      resource: resourceInstance,
     };
   }
 
   /**
    * Restore resource points
    */
-  restoreResource(character: Character, resourceId: string, amount: number): { resourceId: string; amount: number; type: 'spend' | 'restore'; resource: CharacterResource } | null {
-    const resource = this.getCharacterResource(character, resourceId);
-    if (!resource) {
+  restoreResource(character: Character, resourceId: string, amount: number): { resourceId: string; amount: number; type: 'spend' | 'restore'; resource: ResourceInstance } | null {
+    const resourceInstance = character.resources.find(r => r.definition.id === resourceId);
+    if (!resourceInstance) {
       return null;
     }
 
-    const actualAmount = Math.min(amount, resource.maxValue - resource.current);
-    resource.current = Math.min(resource.maxValue, resource.current + actualAmount);
+    const actualAmount = Math.min(amount, resourceInstance.definition.maxValue - resourceInstance.current);
+    resourceInstance.current = Math.min(resourceInstance.definition.maxValue, resourceInstance.current + actualAmount);
 
     return {
       resourceId,
       amount: actualAmount,
       type: 'restore',
-      resource,
+      resource: resourceInstance,
     };
   }
 
@@ -97,51 +97,51 @@ export class ResourceService {
    * Set resource to a specific value
    */
   setResource(character: Character, resourceId: string, value: number): boolean {
-    const resource = this.getCharacterResource(character, resourceId);
-    if (!resource) {
+    const resourceInstance = character.resources.find(r => r.definition.id === resourceId);
+    if (!resourceInstance) {
       return false;
     }
 
-    resource.current = Math.max(resource.minValue, Math.min(value, resource.maxValue));
+    resourceInstance.current = Math.max(resourceInstance.definition.minValue, Math.min(value, resourceInstance.definition.maxValue));
     return true;
   }
 
   /**
    * Reset resources based on condition
    */
-  resetResourcesByCondition(character: Character, condition: ResourceResetCondition): { resourceId: string; amount: number; type: 'spend' | 'restore'; resource: CharacterResource }[] {
-    const entries: { resourceId: string; amount: number; type: 'spend' | 'restore'; resource: CharacterResource }[] = [];
+  resetResourcesByCondition(character: Character, condition: ResourceResetCondition): { resourceId: string; amount: number; type: 'spend' | 'restore'; resource: ResourceInstance }[] {
+    const entries: { resourceId: string; amount: number; type: 'spend' | 'restore'; resource: ResourceInstance }[] = [];
 
-    for (const resource of character.resources) {
-      if (resource.resetCondition !== condition) continue;
+    for (const resourceInstance of character.resources) {
+      if (resourceInstance.definition.resetCondition !== condition) continue;
 
       let newValue: number;
 
-      switch (resource.resetType) {
+      switch (resourceInstance.definition.resetType) {
         case 'to_max':
-          newValue = resource.maxValue;
+          newValue = resourceInstance.definition.maxValue;
           break;
         case 'to_zero':
-          newValue = resource.minValue;
+          newValue = resourceInstance.definition.minValue;
           break;
         case 'to_default':
-          newValue = resource.resetValue || resource.maxValue; // Default to max if no resetValue specified
+          newValue = resourceInstance.definition.resetValue || resourceInstance.definition.maxValue; // Default to max if no resetValue specified
           break;
         default:
           continue;
       }
 
-      if (resource.current !== newValue) {
-        const amount = Math.abs(newValue - resource.current);
-        const type = newValue > resource.current ? 'restore' : 'spend';
+      if (resourceInstance.current !== newValue) {
+        const amount = Math.abs(newValue - resourceInstance.current);
+        const type = newValue > resourceInstance.current ? 'restore' : 'spend';
         
-        resource.current = newValue;
+        resourceInstance.current = newValue;
         
         entries.push({
-          resourceId: resource.id,
+          resourceId: resourceInstance.definition.id,
           amount,
           type,
-          resource,
+          resource: resourceInstance,
         });
       }
     }
@@ -177,10 +177,10 @@ export class ResourceService {
   migrateResourceColorSchemes(character: Character): boolean {
     let hasChanges = false;
     
-    character.resources.forEach(resource => {
+    character.resources.forEach(resourceInstance => {
       // Check if resource has old 'color' field but no 'colorScheme'
-      const resourceAny = resource as any;
-      if (resourceAny.color && !resource.colorScheme) {
+      const resourceAny = resourceInstance.definition as any;
+      if (resourceAny.color && !resourceInstance.definition.colorScheme) {
         // Map old colors to new color schemes
         const colorMapping: Record<string, string> = {
           'blue': 'blue-magic',
@@ -193,14 +193,14 @@ export class ResourceService {
           'gray': 'gray-stamina'
         };
         
-        resource.colorScheme = colorMapping[resourceAny.color] || 'blue-magic';
+        resourceInstance.definition.colorScheme = colorMapping[resourceAny.color] || 'blue-magic';
         delete resourceAny.color; // Remove old field
         hasChanges = true;
       }
       
       // Ensure colorScheme exists
-      if (!resource.colorScheme) {
-        resource.colorScheme = 'blue-magic';
+      if (!resourceInstance.definition.colorScheme) {
+        resourceInstance.definition.colorScheme = 'blue-magic';
         hasChanges = true;
       }
     });
@@ -211,18 +211,18 @@ export class ResourceService {
   /**
    * Create a log entry for resource usage
    */
-  createResourceLogEntry(entry: { resourceId: string; amount: number; type: 'spend' | 'restore'; resource: CharacterResource }): ResourceUsageEntry {
+  createResourceLogEntry(entry: { resourceId: string; amount: number; type: 'spend' | 'restore'; resource: ResourceInstance }): ResourceUsageEntry {
     return {
       id: `${Date.now()}-${Math.random()}`,
       timestamp: new Date(),
       type: 'resource',
       resourceId: entry.resourceId,
-      resourceName: entry.resource.name,
+      resourceName: entry.resource.definition.name,
       amount: entry.amount,
       action: entry.type === 'spend' ? 'spent' : 'restored',
       currentAmount: entry.resource.current,
-      maxAmount: entry.resource.maxValue,
-      description: `${entry.type === 'spend' ? 'Spent' : 'Restored'} ${entry.amount} ${entry.resource.name}`,
+      maxAmount: entry.resource.definition.maxValue,
+      description: `${entry.type === 'spend' ? 'Spent' : 'Restored'} ${entry.amount} ${entry.resource.definition.name}`,
     };
   }
 }

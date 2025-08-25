@@ -1,6 +1,6 @@
 import { Character } from '../types/character';
 import { ClassDefinition, ClassFeature, ClassFeatureGrant, AbilityFeature, StatBoostFeature, ProficiencyFeature, SpellAccessFeature, ResourceFeature, SubclassChoiceFeature, SubclassDefinition } from '../types/class';
-import { CharacterResource, createResourceInstance, resourceInstanceToCharacterResource } from '../types/resources';
+import { ResourceInstance, createResourceInstance } from '../types/resources';
 import { getClassDefinition, getClassFeaturesForLevel, getAllClassFeaturesUpToLevel } from '../data/classes/index';
 import { getSubclassDefinition, getSubclassFeaturesForLevel, getAllSubclassFeaturesUpToLevel } from '../data/subclasses/index';
 import { IClassService, ICharacterService } from './interfaces';
@@ -260,7 +260,7 @@ export class ClassService implements IClassService {
     const { resourceDefinition, startingAmount } = feature;
     
     // Check if resource already exists to avoid duplicates
-    const existingResource = character.resources.find(r => r.id === resourceDefinition.id);
+    const existingResource = character.resources.find(r => r.definition.id === resourceDefinition.id);
     if (existingResource) {
       // If resource already exists, don't add it again
       return character;
@@ -273,11 +273,8 @@ export class ClassService implements IClassService {
       character.resources.length + 1 // Sort order
     );
 
-    // Convert to legacy CharacterResource format for storage
-    const newResource = resourceInstanceToCharacterResource(resourceInstance);
-
     // Add the resource to character's resources
-    const updatedResources = [...character.resources, newResource];
+    const updatedResources = [...character.resources, resourceInstance];
 
     return {
       ...character,

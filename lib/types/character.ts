@@ -13,7 +13,7 @@ export interface Skill {
 import { Inventory } from './inventory';
 import { Abilities } from './abilities';
 import { ArmorProficiency, WeaponProficiency } from './class';
-import { CharacterResource } from './resources';
+import { ResourceInstance } from './resources';
 
 export interface ActionTracker {
   current: number; // Currently available actions
@@ -67,7 +67,7 @@ export interface Character {
   };
   hitDice: HitDice; // Hit dice for healing and recovery
   wounds: Wounds; // Wounds sustained from reaching 0 HP
-  resources: CharacterResource[]; // Character's resources (mana, fury, etc.)
+  resources: ResourceInstance[]; // Character's resources (mana, fury, etc.)
   config: CharacterConfiguration; // Character configuration settings
   initiative: Skill;
   actionTracker: ActionTracker;
@@ -112,7 +112,7 @@ export interface CreateCharacterData {
   };
   hitDice: HitDice;
   wounds: Wounds;
-  resources: CharacterResource[];
+  resources: ResourceInstance[];
   config: CharacterConfiguration;
   initiative: Skill;
   actionTracker: ActionTracker;

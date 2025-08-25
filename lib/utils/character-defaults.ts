@@ -2,7 +2,7 @@ import { Skill, AttributeName, HitDice, Wounds, CharacterConfiguration, Proficie
 import { Inventory } from '../types/inventory';
 import { Abilities } from '../types/abilities';
 import { ClassDefinition } from '../types/class';
-import { CharacterResource } from '../types/resources';
+import { ResourceInstance, ResourceDefinition, createResourceInstance } from '../types/resources';
 
 export const createDefaultSkills = () => {
   const defaultSkills = {
@@ -93,21 +93,21 @@ export const createDefaultCharacterConfiguration = (): CharacterConfiguration =>
   };
 };
 
-export const createDefaultResources = (): CharacterResource[] => {
+export const createDefaultResources = (): ResourceInstance[] => {
+  const manaDefinition: ResourceDefinition = {
+    id: 'mana',
+    name: 'Mana',
+    description: 'Magical energy used to cast spells',
+    colorScheme: 'blue-magic',
+    icon: 'sparkles',
+    resetCondition: 'safe_rest',
+    resetType: 'to_max',
+    minValue: 0,
+    maxValue: 10,
+  };
+
   return [
-    {
-      id: 'mana',
-      name: 'Mana',
-      description: 'Magical energy used to cast spells',
-      colorScheme: 'blue-magic',
-      icon: 'sparkles',
-      resetCondition: 'safe_rest',
-      resetType: 'to_max',
-      minValue: 0,
-      maxValue: 10,
-      current: 10,
-      sortOrder: 1,
-    },
+    createResourceInstance(manaDefinition, 10, 1),
   ];
 };
 

@@ -82,6 +82,7 @@ export class CharacterStorageService {
     
     const character = await this.createCharacter({
       name,
+      ancestry: 'Human', // Default ancestry
       level: 1,
       classId,
       grantedFeatures: [], // No features granted yet
