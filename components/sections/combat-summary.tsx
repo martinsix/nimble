@@ -9,60 +9,109 @@ import { useCharacterService } from "@/lib/hooks/use-character-service";
 import { useDiceActions } from "@/lib/hooks/use-dice-actions";
 import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
 
-export function CombatSummary() {
-  const { character, endEncounter, startEncounter, applyDamage, applyHealing, applyTemporaryHP, updateActionTracker, endTurn: serviceEndTurn } = useCharacterService();
-  const { rollInitiative } = useDiceActions();
-  const { uiState } = useUIStateService();
-  const [showCustomPanel, setShowCustomPanel] = useState(false);
-  const [customAmount, setCustomAmount] = useState("1");
-  
+// Health Bar Subcomponent
+function HealthBar() {
+  const { character } = useCharacterService();
   if (!character) return null;
-
-  const { hitPoints, wounds, initiative, attributes, inEncounter, actionTracker } = character;
-  const currentHp = hitPoints.current;
-  const maxHp = hitPoints.max;
-  const temporaryHp = hitPoints.temporary;
-  const totalModifier = attributes.dexterity + initiative.modifier;
   
-  // Calculate health percentage and status
-  const healthPercentage = (currentHp / maxHp) * 100;
+  const { current, max, temporary } = character.hitPoints;
+  const healthPercentage = (current / max) * 100;
+  
   const getHealthBarColor = () => {
     if (healthPercentage <= 25) return "bg-red-500";
     if (healthPercentage <= 50) return "bg-yellow-500";
     return "bg-green-500";
   };
 
-  // Combat status
-  const getCombatStatus = () => {
-    if (!inEncounter) return { text: "Ready", color: "text-green-600" };
-    return { text: "In Combat", color: "text-red-600" };
-  };
+  const totalEffectiveHP = max + temporary;
+  const currentHpPercentage = totalEffectiveHP > 0 ? (current / totalEffectiveHP) * 100 : 0;
+  const tempHpPercentage = totalEffectiveHP > 0 ? (temporary / totalEffectiveHP) * 100 : 0;
 
-  // Wound display logic
-  const shouldUseIcons = wounds.max <= 8;
-  const woundIcons = [];
-  
-  if (shouldUseIcons) {
-    for (let i = 0; i < wounds.max; i++) {
-      const isLastWound = i === wounds.max - 1;
-      const isWounded = i < wounds.current;
-      const IconComponent = isLastWound ? Skull : Bandage;
-      
-      woundIcons.push(
-        <IconComponent
-          key={i} 
-          className={`w-3 h-3 ${isWounded ? 'text-red-500' : 'text-gray-300'}`} 
+  return (
+    <div className="space-y-2 mb-4">
+      <div className="flex items-center justify-between text-sm">
+        <span className="font-medium">
+          {current}/{max} HP
+          {temporary > 0 && <span className="text-blue-600 ml-1">(+{temporary})</span>}
+        </span>
+        <span className="text-xs text-gray-500">{Math.round(healthPercentage)}%</span>
+      </div>
+      <div className="w-full bg-gray-200 rounded-full h-3 relative overflow-hidden">
+        {/* Current HP bar */}
+        <div 
+          className={`h-3 transition-all duration-300 ${getHealthBarColor()} absolute left-0 top-0 ${
+            temporary > 0 ? 'rounded-l-full' : 'rounded-full'
+          }`}
+          style={{ width: `${currentHpPercentage}%` }}
         />
-      );
-    }
+        {/* Temporary HP bar */}
+        {temporary > 0 && (
+          <div 
+            className="h-3 bg-blue-500 transition-all duration-300 absolute top-0 rounded-r-full"
+            style={{ 
+              left: `${currentHpPercentage}%`,
+              width: `${tempHpPercentage}%` 
+            }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Wounds Display Subcomponent
+function WoundsDisplay() {
+  const { character } = useCharacterService();
+  if (!character) return null;
+  
+  const { wounds } = character;
+  const shouldUseIcons = wounds.max <= 8;
+  
+  if (!shouldUseIcons) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium text-gray-600">Wounds:</span>
+        <span className="text-sm font-medium text-gray-600">
+          {wounds.current}/{wounds.max}
+        </span>
+      </div>
+    );
   }
 
-  const handleInitiativeRoll = async () => {
-    if (!character) return;
-    const result = await rollInitiative(totalModifier, uiState.advantageLevel);
-    await startEncounter(result.rollTotal);
-  };
+  const woundIcons = [];
+  for (let i = 0; i < wounds.max; i++) {
+    const isLastWound = i === wounds.max - 1;
+    const isWounded = i < wounds.current;
+    const IconComponent = isLastWound ? Skull : Bandage;
+    
+    woundIcons.push(
+      <IconComponent
+        key={i} 
+        className={`w-3 h-3 ${isWounded ? 'text-red-500' : 'text-gray-300'}`} 
+      />
+    );
+  }
 
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-sm font-medium text-gray-600">Wounds:</span>
+      <div className="flex items-center gap-0.5">
+        {woundIcons}
+      </div>
+    </div>
+  );
+}
+
+// Quick Actions Bar Subcomponent
+function QuickActionsBar() {
+  const { character, applyDamage, applyHealing, applyTemporaryHP } = useCharacterService();
+  const [showCustomPanel, setShowCustomPanel] = useState(false);
+  const [customAmount, setCustomAmount] = useState("1");
+  
+  if (!character) return null;
+  
+  const { currentHp, maxHp } = character.hitPoints;
+  
   const handleQuickDamage = (amount: number) => {
     applyDamage(amount);
   };
@@ -88,7 +137,143 @@ export function CombatSummary() {
     applyTemporaryHP(tempAmount);
     setShowCustomPanel(false);
   };
+  return (
+    <Card className="border border-gray-200">
+      <CardContent className="p-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Damage Buttons */}
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={() => handleQuickDamage(1)}
+            disabled={currentHp <= 0}
+            className="text-xs h-7"
+          >
+            -1
+          </Button>
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={() => handleQuickDamage(5)}
+            disabled={currentHp <= 0}
+            className="text-xs h-7"
+          >
+            -5
+          </Button>
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={() => handleQuickDamage(10)}
+            disabled={currentHp <= 0}
+            className="text-xs h-7"
+          >
+            -10
+          </Button>
 
+          <div className="w-px h-6 bg-gray-300 mx-1" />
+
+          {/* Heal Buttons */}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handleQuickHeal(1)}
+            disabled={currentHp >= maxHp}
+            className="text-green-600 border-green-600 hover:bg-green-50 text-xs h-7"
+          >
+            +1
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handleQuickHeal(5)}
+            disabled={currentHp >= maxHp}
+            className="text-green-600 border-green-600 hover:bg-green-50 text-xs h-7"
+          >
+            +5
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handleQuickHeal(10)}
+            disabled={currentHp >= maxHp}
+            className="text-green-600 border-green-600 hover:bg-green-50 text-xs h-7"
+          >
+            +10
+          </Button>
+
+          <div className="w-px h-6 bg-gray-300 mx-1" />
+
+          {/* Custom Button */}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowCustomPanel(!showCustomPanel)}
+            className="text-xs h-7"
+          >
+            <Settings className="w-3 h-3 mr-1" />
+            Custom
+          </Button>
+        </div>
+        
+        {/* Custom Panel */}
+        {showCustomPanel && (
+          <div className="mt-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Custom Amount</label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="1"
+                  value={customAmount}
+                  onChange={(e) => setCustomAmount(e.target.value)}
+                  className="flex-1 px-3 py-1 border border-gray-300 rounded text-sm"
+                  placeholder="Amount"
+                />
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={handleCustomDamage}
+                  disabled={currentHp <= 0}
+                  title="Apply Damage"
+                >
+                  <Minus className="w-4 h-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleCustomHeal}
+                  disabled={currentHp >= maxHp}
+                  className="text-green-600 border-green-600 hover:bg-green-50"
+                  title="Apply Healing"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleCustomTempHp}
+                  className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                  title="Add Temporary HP"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// Action Tracker Subcomponent
+function ActionTracker() {
+  const { character, updateActionTracker, endTurn: serviceEndTurn } = useCharacterService();
+  
+  if (!character) return null;
+  
+  const { actionTracker } = character;
+  
   const useAction = () => {
     if (actionTracker.current > 0) {
       updateActionTracker({
@@ -109,7 +294,6 @@ export function CombatSummary() {
   const endTurn = () => {
     serviceEndTurn();
   };
-
   const getActionDots = () => {
     const dots = [];
     const totalActions = actionTracker.base + actionTracker.bonus;
@@ -143,304 +327,159 @@ export function CombatSummary() {
     return dots;
   };
 
+  return (
+    <Card className="border border-gray-200">
+      <CardContent className="p-3">
+        <div className="flex items-center justify-between">
+          {/* Action Dots */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-600 mr-2">Actions:</span>
+            <div className="flex items-center gap-1">
+              {getActionDots()}
+            </div>
+          </div>
+          
+          {/* Action Controls */}
+          <div className="flex items-center gap-2">
+            <Button 
+              onClick={addBonusAction}
+              variant="outline"
+              size="sm"
+              className="text-xs h-7"
+              title="Add bonus action"
+            >
+              <Plus className="w-3 h-3 mr-1" />
+              Bonus
+            </Button>
+            <Button 
+              onClick={endTurn}
+              variant="default"
+              size="sm"
+              className="text-xs h-7"
+            >
+              <RotateCcw className="w-3 h-3 mr-1" />
+              End Turn
+            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                >
+                  <HelpCircle className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="text-xs">
+                  <p><strong>Initiative Rules:</strong></p>
+                  <p>&lt;10: 1 action • 10-20: 2 actions • &gt;20: 3 actions</p>
+                  <p><span className="text-green-600">Green</span> = base actions, <span className="text-blue-600">Blue</span> = bonus actions</p>
+                  <p>Click actions to use them</p>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Combat Status Bar Subcomponent
+function CombatStatusBar() {
+  const { character, endEncounter, startEncounter } = useCharacterService();
+  const { rollInitiative } = useDiceActions();
+  const { uiState } = useUIStateService();
+  
+  if (!character) return null;
+  
+  const { inEncounter, initiative, attributes } = character;
+  const totalModifier = attributes.dexterity + initiative.modifier;
+  
+  const handleInitiativeRoll = async () => {
+    if (!character) return;
+    const result = await rollInitiative(totalModifier, uiState.advantageLevel);
+    await startEncounter(result.rollTotal);
+  };
+  const getCombatStatus = () => {
+    if (!inEncounter) return { text: "Ready", color: "text-green-600" };
+    return { text: "In Combat", color: "text-red-600" };
+  };
+
   const status = getCombatStatus();
+
+  return (
+    <Card className="border-2 border-gray-200">
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Heart className="w-4 h-4 text-red-500" />
+            <span className="text-sm font-medium">Combat Summary</span>
+          </div>
+          <span className={`text-sm font-medium ${status.color}`}>
+            {status.text}
+          </span>
+        </div>
+
+        <HealthBar />
+
+        {/* Wounds and Combat Status */}
+        <div className="flex items-center justify-between">
+          <WoundsDisplay />
+          
+          {/* Combat Status and Initiative */}
+          <div className="flex items-center gap-3">
+            {!inEncounter ? (
+              <>
+                <span className="text-sm text-gray-600">Initiative: {totalModifier > 0 ? '+' : ''}{totalModifier}</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleInitiativeRoll}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Dice6 className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Roll Initiative: d20{totalModifier > 0 ? '+' + totalModifier : totalModifier}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </>
+            ) : (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={endEncounter}
+                className="text-xs"
+              >
+                <Square className="w-3 h-3 mr-1" />
+                End Combat
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function CombatSummary() {
+  const { character } = useCharacterService();
+  
+  if (!character) return null;
 
   return (
     <TooltipProvider>
       <div className="space-y-3">
-        {/* Combat Status Bar */}
-        <Card className="border-2 border-gray-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Heart className="w-4 h-4 text-red-500" />
-                <span className="text-sm font-medium">Combat Summary</span>
-              </div>
-              <span className={`text-sm font-medium ${status.color}`}>
-                {status.text}
-              </span>
-            </div>
+        <CombatStatusBar />
 
-            {/* Health Bar */}
-            <div className="space-y-2 mb-4">
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-medium">
-                  {currentHp}/{maxHp} HP
-                  {temporaryHp > 0 && <span className="text-blue-600 ml-1">(+{temporaryHp})</span>}
-                </span>
-                <span className="text-xs text-gray-500">{Math.round(healthPercentage)}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-3 relative overflow-hidden">
-                {(() => {
-                  const totalEffectiveHP = maxHp + temporaryHp;
-                  const currentHpPercentage = totalEffectiveHP > 0 ? (currentHp / totalEffectiveHP) * 100 : 0;
-                  const tempHpPercentage = totalEffectiveHP > 0 ? (temporaryHp / totalEffectiveHP) * 100 : 0;
-                  
-                  return (
-                    <>
-                      {/* Current HP bar */}
-                      <div 
-                        className={`h-3 transition-all duration-300 ${getHealthBarColor()} absolute left-0 top-0 ${
-                          temporaryHp > 0 ? 'rounded-l-full' : 'rounded-full'
-                        }`}
-                        style={{ width: `${currentHpPercentage}%` }}
-                      />
-                      {/* Temporary HP bar */}
-                      {temporaryHp > 0 && (
-                        <div 
-                          className="h-3 bg-blue-500 transition-all duration-300 absolute top-0 rounded-r-full"
-                          style={{ 
-                            left: `${currentHpPercentage}%`,
-                            width: `${tempHpPercentage}%` 
-                          }}
-                        />
-                      )}
-                    </>
-                  );
-                })()}
-              </div>
-            </div>
+        <QuickActionsBar />
 
-            {/* Wounds and Combat Status */}
-            <div className="flex items-center justify-between">
-              {/* Wounds Bar */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-600">Wounds:</span>
-                {shouldUseIcons ? (
-                  <div className="flex items-center gap-0.5">
-                    {woundIcons}
-                  </div>
-                ) : (
-                  <span className="text-sm font-medium text-gray-600">
-                    {wounds.current}/{wounds.max}
-                  </span>
-                )}
-              </div>
-              
-              {/* Combat Status and Initiative */}
-              <div className="flex items-center gap-3">
-                <span className={`text-sm font-medium ${status.color}`}>
-                  {status.text}
-                </span>
-                {!inEncounter ? (
-                  <>
-                    <span className="text-sm text-gray-600">Init: {totalModifier > 0 ? '+' : ''}{totalModifier}</span>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleInitiativeRoll}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Dice6 className="w-4 h-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Roll Initiative: d20{totalModifier > 0 ? '+' + totalModifier : totalModifier}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </>
-                ) : (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={endEncounter}
-                    className="text-xs"
-                  >
-                    <Square className="w-3 h-3 mr-1" />
-                    End Combat
-                  </Button>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Actions Bar */}
-        <Card className="border border-gray-200">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* Damage Buttons */}
-              <Button 
-                variant="destructive" 
-                size="sm" 
-                onClick={() => handleQuickDamage(1)}
-                disabled={currentHp <= 0}
-                className="text-xs h-7"
-              >
-                -1
-              </Button>
-              <Button 
-                variant="destructive" 
-                size="sm" 
-                onClick={() => handleQuickDamage(5)}
-                disabled={currentHp <= 0}
-                className="text-xs h-7"
-              >
-                -5
-              </Button>
-              <Button 
-                variant="destructive" 
-                size="sm" 
-                onClick={() => handleQuickDamage(10)}
-                disabled={currentHp <= 0}
-                className="text-xs h-7"
-              >
-                -10
-              </Button>
-
-              <div className="w-px h-6 bg-gray-300 mx-1" />
-
-              {/* Heal Buttons */}
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleQuickHeal(1)}
-                disabled={currentHp >= maxHp}
-                className="text-green-600 border-green-600 hover:bg-green-50 text-xs h-7"
-              >
-                +1
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleQuickHeal(5)}
-                disabled={currentHp >= maxHp}
-                className="text-green-600 border-green-600 hover:bg-green-50 text-xs h-7"
-              >
-                +5
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleQuickHeal(10)}
-                disabled={currentHp >= maxHp}
-                className="text-green-600 border-green-600 hover:bg-green-50 text-xs h-7"
-              >
-                +10
-              </Button>
-
-              <div className="w-px h-6 bg-gray-300 mx-1" />
-
-              {/* Custom Button */}
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setShowCustomPanel(!showCustomPanel)}
-                className="text-xs h-7"
-              >
-                <Settings className="w-3 h-3 mr-1" />
-                Custom
-              </Button>
-            </div>
-            
-            {/* Custom Panel */}
-            {showCustomPanel && (
-              <div className="mt-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Custom Amount</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="number"
-                      min="1"
-                      value={customAmount}
-                      onChange={(e) => setCustomAmount(e.target.value)}
-                      className="flex-1 px-3 py-1 border border-gray-300 rounded text-sm"
-                      placeholder="Amount"
-                    />
-                    <Button 
-                      variant="destructive" 
-                      size="sm" 
-                      onClick={handleCustomDamage}
-                      disabled={currentHp <= 0}
-                      title="Apply Damage"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={handleCustomHeal}
-                      disabled={currentHp >= maxHp}
-                      className="text-green-600 border-green-600 hover:bg-green-50"
-                      title="Apply Healing"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={handleCustomTempHp}
-                      className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                      title="Add Temporary HP"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Action Tracker */}
-        <Card className="border border-gray-200">
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between">
-              {/* Action Dots */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-600 mr-2">Actions:</span>
-                <div className="flex items-center gap-1">
-                  {getActionDots()}
-                </div>
-              </div>
-              
-              {/* Action Controls */}
-              <div className="flex items-center gap-2">
-                <Button 
-                  onClick={addBonusAction}
-                  variant="outline"
-                  size="sm"
-                  className="text-xs h-7"
-                  title="Add bonus action"
-                >
-                  <Plus className="w-3 h-3 mr-1" />
-                  Bonus
-                </Button>
-                <Button 
-                  onClick={endTurn}
-                  variant="default"
-                  size="sm"
-                  className="text-xs h-7"
-                >
-                  <RotateCcw className="w-3 h-3 mr-1" />
-                  End Turn
-                </Button>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0"
-                    >
-                      <HelpCircle className="w-4 h-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <div className="text-xs">
-                      <p><strong>Initiative Rules:</strong></p>
-                      <p>&lt;10: 1 action • 10-20: 2 actions • &gt;20: 3 actions</p>
-                      <p><span className="text-green-600">Green</span> = base actions, <span className="text-blue-600">Blue</span> = bonus actions</p>
-                      <p>Click actions to use them</p>
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
+        <ActionTracker />
       </div>
     </TooltipProvider>
   );
