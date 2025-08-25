@@ -15,11 +15,10 @@ import { Textarea } from "./ui/textarea";
 import { Trash2, Plus } from "lucide-react";
 
 interface CharacterConfigDialogProps {
-  isOpen: boolean;
   onClose: () => void;
 }
 
-export function CharacterConfigDialog({ isOpen, onClose }: CharacterConfigDialogProps) {
+export function CharacterConfigDialog({ onClose }: CharacterConfigDialogProps) {
   const { character, updateCharacter } = useCharacterService();
   
   // Assert character is non-null - dialog should only be rendered when character exists
@@ -170,7 +169,7 @@ export function CharacterConfigDialog({ isOpen, onClose }: CharacterConfigDialog
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
+    <Dialog open={true} onOpenChange={(open) => !open && handleCancel()}>
       <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Character Configuration</DialogTitle>

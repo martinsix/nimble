@@ -46,10 +46,11 @@ export function CharacterSheet({ character, mode }: CharacterSheetProps) {
       )}
 
       {/* Character Configuration Dialog */}
-      <CharacterConfigDialog
-        isOpen={isConfigDialogOpen}
-        onClose={() => setIsConfigDialogOpen(false)}
-      />
+      {isConfigDialogOpen && (
+        <CharacterConfigDialog
+          onClose={() => setIsConfigDialogOpen(false)}
+        />
+      )}
     </CharacterSheetLayout>
   );
 }

@@ -94,10 +94,11 @@ function HomeContent() {
       </div>
       
       {/* Character Config Dialog */}
-      <CharacterConfigDialog
-        isOpen={showConfigDialog}
-        onClose={onCloseConfig}
-      />
+      {showConfigDialog && (
+        <CharacterConfigDialog
+          onClose={onCloseConfig}
+        />
+      )}
     </main>
   );
 }
