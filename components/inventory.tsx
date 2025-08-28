@@ -117,14 +117,14 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
         attribute: editItem.attribute, 
         damage: editItem.damage, 
         properties: editItem.properties,
-        equipped: inventory.items.find(i => i.id === editingItemId)?.equipped || false
+        equipped: (inventory.items.find(i => i.id === editingItemId) as WeaponItem)?.equipped || false
       }),
       ...(editItem.type === 'armor' && { 
         armor: editItem.armor, 
         maxDexBonus: editItem.maxDexBonus, 
         isMainArmor: editItem.isMainArmor, 
         properties: editItem.properties,
-        equipped: inventory.items.find(i => i.id === editingItemId)?.equipped || false
+        equipped: (inventory.items.find(i => i.id === editingItemId) as ArmorItem)?.equipped || false
       }),
       ...(editItem.type === 'freeform' && { description: editItem.description }),
     };

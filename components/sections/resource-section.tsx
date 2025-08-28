@@ -127,9 +127,9 @@ export function ResourceSection() {
                         }}
                       />
                     </div>
-                    {definition?.description && (
+                    {resource.definition?.description && (
                       <div className="text-sm text-muted-foreground">
-                        {definition.description}
+                        {resource.definition.description}
                       </div>
                     )}
                   </div>

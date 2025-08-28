@@ -33,7 +33,7 @@ interface Character {
   hitPoints: { current, max, temporary }
   hitDice: { size, current, max }
   wounds: { current, max }
-  resources: CharacterResource[] // Generic resource system (mana, fury, focus, etc.)
+  resources: ResourceInstance[] // Generic resource system (mana, fury, focus, etc.)
   config: CharacterConfiguration
   initiative: Skill
   actionTracker: { current, base, bonus }

@@ -56,7 +56,7 @@ function HomeContent() {
     } else {
       document.title = "Nimble Navigator";
     }
-  }, [character?.name]);
+  }, [character]);
 
   if (!isLoaded) {
     return <LoadingScreen message="Loading character data..." />;

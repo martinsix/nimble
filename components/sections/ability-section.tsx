@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Abilities, Ability, ActionAbility, FreeformAbility, AbilityFrequency, AbilityRoll } from "@/lib/types/abilities";
 import { AttributeName } from "@/lib/types/character";
 import { abilityService } from "@/lib/services/ability-service";
+import { parseDiceExpression } from "@/lib/utils/dice-parser";
 import { Sparkles, Plus, Trash2, Edit, ChevronDown, ChevronRight, Zap, FileText } from "lucide-react";
 import { useCharacterService } from "@/lib/hooks/use-character-service";
 import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
@@ -28,6 +29,7 @@ interface NewAbilityForm {
     attribute?: AttributeName;
   };
 }
+
 
 export function AbilitySection() {
   // Get everything we need from service hooks
@@ -80,7 +82,13 @@ export function AbilitySection() {
             maxUses: newAbility.maxUses,
             currentUses: newAbility.maxUses,
           } : {}),
-          ...(newAbility.roll && newAbility.roll.dice ? { roll: newAbility.roll } : {}),
+          ...(newAbility.roll && newAbility.roll.dice ? { 
+            roll: {
+              dice: parseDiceExpression(newAbility.roll.dice) || { count: 1, sides: 6 },
+              modifier: newAbility.roll.modifier,
+              attribute: newAbility.roll.attribute,
+            }
+          } : {}),
         };
 
     updateAbilities({

@@ -1,6 +1,7 @@
 import { DiceType, DiceExpression } from '../types/dice';
 import { SingleDie } from '../types/log-entries';
 import { gameConfig } from '../config/game-config';
+import { parseDiceExpression } from '../utils/dice-parser';
 
 export interface DiceRollResult {
   dice: SingleDie[];
@@ -95,18 +96,6 @@ export class DiceService {
     return { dice: finalDice, droppedDice, criticalHits };
   }
 
-  parseDiceExpression(expression: string): DiceExpression | null {
-    const match = expression.match(/^(\d+)?d(\d+)$/i);
-    if (!match) return null;
-    
-    const count = match[1] ? parseInt(match[1]) : 1;
-    const sides = parseInt(match[2]) as DiceType;
-    
-    if (![4, 6, 8, 10, 12, 20, 100].includes(sides)) return null;
-    
-    return { count, sides };
-  }
-
   rollBasicDice(count: number, sides: DiceType, advantageLevel: number = 0): { dice: SingleDie[], droppedDice: SingleDie[] } {
     // Calculate total dice to roll (base count + advantage/disadvantage dice)
     const totalDiceToRoll = count + Math.abs(advantageLevel);
@@ -147,7 +136,7 @@ export class DiceService {
    * Roll an attack with damage dice and critical hit mechanics
    */
   rollAttack(diceExpression: string, modifier: number, advantageLevel: number = 0): DiceRollResult {
-    const parsed = this.parseDiceExpression(diceExpression);
+    const parsed = parseDiceExpression(diceExpression);
     if (!parsed) {
       throw new Error(`Invalid dice expression: ${diceExpression}`);
     }

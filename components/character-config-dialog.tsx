@@ -719,7 +719,7 @@ export function CharacterConfigDialog({ onClose }: CharacterConfigDialogProps) {
                       <Button 
                         size="sm" 
                         onClick={saveNewResource}
-                        disabled={!newResource.id || !newResource.name || resources.some(r => r.id === newResource.id)}
+                        disabled={!newResource.id || !newResource.name || resources.some(r => r.definition.id === newResource.id)}
                       >
                         Save Resource
                       </Button>
