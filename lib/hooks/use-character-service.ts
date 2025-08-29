@@ -45,6 +45,8 @@ export function useCharacterService() {
     endEncounter: characterService.endEncounter.bind(characterService),
     endTurn: characterService.endTurn.bind(characterService),
     performSafeRest: characterService.performSafeRest.bind(characterService),
+    performCatchBreath: characterService.performCatchBreath.bind(characterService),
+    performMakeCamp: characterService.performMakeCamp.bind(characterService),
     updateCharacterConfiguration: characterService.updateCharacterConfiguration.bind(characterService),
   };
 }

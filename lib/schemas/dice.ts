@@ -71,6 +71,22 @@ export const safeRestEntrySchema = z.object({
   abilitiesReset: z.number().min(0),
 }).merge(baseLogEntrySchema);
 
+// Catch breath log entry schema
+export const catchBreathEntrySchema = z.object({
+  type: z.literal('catch_breath'),
+  hitDiceSpent: z.number().min(0),
+  healingAmount: z.number().min(0),
+  abilitiesReset: z.number().min(0),
+}).merge(baseLogEntrySchema);
+
+// Make camp log entry schema
+export const makeCampEntrySchema = z.object({
+  type: z.literal('make_camp'),
+  healingAmount: z.number().min(0),
+  hitDiceRestored: z.number().min(0),
+  abilitiesReset: z.number().min(0),
+}).merge(baseLogEntrySchema);
+
 // Resource usage log entry schema
 export const resourceUsageEntrySchema = z.object({
   type: z.literal('resource'),
@@ -91,6 +107,8 @@ export const logEntrySchema = z.discriminatedUnion('type', [
   initiativeEntrySchema,
   abilityUsageEntrySchema,
   safeRestEntrySchema,
+  catchBreathEntrySchema,
+  makeCampEntrySchema,
   resourceUsageEntrySchema,
 ]);
 

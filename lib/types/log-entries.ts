@@ -71,6 +71,22 @@ export interface SafeRestEntry extends BaseLogEntry {
   abilitiesReset: number; // Number of abilities reset
 }
 
+// Catch breath entry (short rest)
+export interface CatchBreathEntry extends BaseLogEntry {
+  type: 'catch_breath';
+  hitDiceSpent: number; // Number of hit dice spent for healing
+  healingAmount: number; // Amount of HP restored
+  abilitiesReset: number; // Number of abilities reset
+}
+
+// Make camp entry (long rest)
+export interface MakeCampEntry extends BaseLogEntry {
+  type: 'make_camp';
+  healingAmount: number; // Amount of HP restored
+  hitDiceRestored: number; // Number of hit dice restored
+  abilitiesReset: number; // Number of abilities reset
+}
+
 
 // Resource usage entry (generic replacement for mana)
 export interface ResourceUsageEntry extends BaseLogEntry {
@@ -84,4 +100,4 @@ export interface ResourceUsageEntry extends BaseLogEntry {
 }
 
 // Union type for all log entries
-export type LogEntry = DiceRollEntry | DamageEntry | HealingEntry | TempHPEntry | InitiativeEntry | AbilityUsageEntry | SafeRestEntry | ResourceUsageEntry;
+export type LogEntry = DiceRollEntry | DamageEntry | HealingEntry | TempHPEntry | InitiativeEntry | AbilityUsageEntry | SafeRestEntry | CatchBreathEntry | MakeCampEntry | ResourceUsageEntry;

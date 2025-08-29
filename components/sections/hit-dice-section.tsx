@@ -15,7 +15,7 @@ import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
 
 export function HitDiceSection() {
   // Get everything we need from service hooks
-  const { character, performSafeRest, updateCharacter } = useCharacterService();
+  const { character, performSafeRest, performCatchBreath, performMakeCamp, updateCharacter } = useCharacterService();
   const { uiState, updateCollapsibleState } = useUIStateService();
   
   const [isEditing, setIsEditing] = useState(false);
@@ -185,8 +185,8 @@ export function HitDiceSection() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <Button
                       variant="default"
-                      onClick={() => {}}
-                      disabled={true} // TODO: Implement catch breath with dice service
+                      onClick={performCatchBreath}
+                      disabled={!canRollHitDie}
                       className="flex-1"
                     >
                       <Dices className="w-4 h-4 mr-2" />
@@ -196,8 +196,8 @@ export function HitDiceSection() {
                     
                     <Button
                       variant="secondary"
-                      onClick={() => {}}
-                      disabled={true} // TODO: Implement make camp with dice service
+                      onClick={performMakeCamp}
+                      disabled={false}
                       className="flex-1"
                     >
                       <Heart className="w-4 h-4 mr-2" />
@@ -208,7 +208,7 @@ export function HitDiceSection() {
                   
                   {!canRollHitDie && (
                     <div className="text-center text-sm text-muted-foreground">
-                      No hit dice available for field rest
+                      No hit dice available for Catch Breath
                     </div>
                   )}
                   

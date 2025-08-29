@@ -1,7 +1,9 @@
 import { Character, ActionTracker, CharacterConfiguration } from '../types/character';
 import { Abilities } from '../types/abilities';
+import { DiceType } from '../types/dice';
 import { ICharacterService, ICharacterStorage, IActivityLog, IAbilityService } from './interfaces';
 import { resourceService } from './resource-service';
+import { getDiceService } from './service-factory';
 
 // Import for backward compatibility singleton
 import { characterStorageService } from './character-storage-service';
@@ -328,6 +330,124 @@ export class CharacterService implements ICharacterService {
       const logEntry = resourceService.createResourceLogEntry(entry);
       await this.logService.addLogEntry(logEntry);
     }
+  }
+
+  /**
+   * Perform catch breath (short rest) - roll a hit die + strength to heal
+   */
+  async performCatchBreath(): Promise<void> {
+    if (!this._character) return;
+
+    // Can't rest without hit dice
+    if (this._character.hitDice.current <= 0) {
+      await this.logService.addLogEntry(
+        this.logService.createCatchBreathEntry(0, 0, 0)
+      );
+      return;
+    }
+
+    // Roll the hit die using dice service
+    const diceService = getDiceService();
+    const hitDieSize = this._character.hitDice.size;
+    const strengthMod = this._character.attributes.strength;
+    
+    const rollResult = diceService.rollBasicDice(1, hitDieSize as DiceType, 0); // No advantage/disadvantage
+    const dieRoll = rollResult.dice[0].result;
+    const totalHealing = Math.max(1, dieRoll + strengthMod); // Minimum 1 HP
+
+    // Calculate actual healing applied
+    const currentHP = this._character.hitPoints.current;
+    const maxHP = this._character.hitPoints.max;
+    const actualHealing = Math.min(totalHealing, maxHP - currentHP);
+
+    // Update character
+    this._character = {
+      ...this._character,
+      hitPoints: {
+        ...this._character.hitPoints,
+        current: Math.min(maxHP, currentHP + actualHealing),
+        temporary: 0, // Clear temporary HP on rest
+      },
+      hitDice: {
+        ...this._character.hitDice,
+        current: this._character.hitDice.current - 1, // Spend one hit die
+      },
+      inEncounter: false, // Catch breath ends encounter
+      actionTracker: {
+        ...this._character.actionTracker,
+        current: this._character.actionTracker.base,
+        bonus: 0,
+      },
+    };
+
+    await this.saveCharacter();
+    this.notifyCharacterChanged();
+
+    // Log the catch breath with roll details
+    await this.logService.addLogEntry(
+      this.logService.createCatchBreathEntry(1, actualHealing, 0)
+    );
+
+    // Also log the dice roll for transparency using proper dice service result
+    await this.logService.addLogEntry(
+      this.logService.createDiceRollEntry(
+        rollResult.dice,
+        rollResult.droppedDice,
+        strengthMod,
+        totalHealing,
+        `Catch Breath (d${hitDieSize} + ${strengthMod} STR = ${totalHealing} healing)`
+      )
+    );
+  }
+
+  /**
+   * Perform make camp (long rest) - restore max hit die + strength HP
+   */
+  async performMakeCamp(): Promise<void> {
+    if (!this._character) return;
+
+    // Can't rest without hit dice
+    if (this._character.hitDice.current <= 0) {
+      return;
+    }
+
+    // Calculate healing: max hit die + strength
+    const hitDieSize = this._character.hitDice.size;
+    const strengthMod = this._character.attributes.strength;
+    const totalHealing = Math.max(1, hitDieSize + strengthMod); // Minimum 1 HP
+
+    // Calculate actual healing applied
+    const currentHP = this._character.hitPoints.current;
+    const maxHP = this._character.hitPoints.max;
+    const actualHealing = Math.min(totalHealing, maxHP - currentHP);
+
+    // Update character with make camp restoration
+    this._character = {
+      ...this._character,
+      hitPoints: {
+        ...this._character.hitPoints,
+        current: Math.min(maxHP, currentHP + actualHealing),
+        temporary: 0, // Clear temporary HP
+      },
+      hitDice: {
+        ...this._character.hitDice,
+        current: this._character.hitDice.current - 1, // Use one hit die
+      },
+      inEncounter: false, // Make camp ends any encounter
+      actionTracker: {
+        ...this._character.actionTracker,
+        current: this._character.actionTracker.base,
+        bonus: 0,
+      },
+    };
+
+    await this.saveCharacter();
+    this.notifyCharacterChanged();
+
+    // Log the make camp (no hit dice restored, no abilities reset)
+    await this.logService.addLogEntry(
+      this.logService.createMakeCampEntry(actualHealing, 0, 0)
+    );
   }
 
   /**

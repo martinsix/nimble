@@ -1,4 +1,4 @@
-import { LogEntry, DiceRollEntry, DamageEntry, HealingEntry, TempHPEntry, InitiativeEntry, AbilityUsageEntry, SafeRestEntry, ResourceUsageEntry } from '../types/log-entries';
+import { LogEntry, DiceRollEntry, DamageEntry, HealingEntry, TempHPEntry, InitiativeEntry, AbilityUsageEntry, SafeRestEntry, CatchBreathEntry, MakeCampEntry, ResourceUsageEntry } from '../types/log-entries';
 import { logEntrySchema } from '../schemas/dice';
 import { gameConfig } from '../config/game-config';
 import { toast } from 'sonner';
@@ -234,6 +234,55 @@ export class ActivityLogService {
     };
   }
 
+  createCatchBreathEntry(
+    hitDiceSpent: number,
+    healingAmount: number,
+    abilitiesReset: number
+  ): CatchBreathEntry {
+    const parts: string[] = [];
+    if (hitDiceSpent > 0) parts.push(`spent ${hitDiceSpent} hit dice`);
+    if (healingAmount > 0) parts.push(`restored ${healingAmount} HP`);
+    if (abilitiesReset > 0) parts.push(`reset ${abilitiesReset} abilities`);
+    
+    const description = parts.length > 0 
+      ? `Catch Breath completed - ${parts.join(', ')}`
+      : 'Catch Breath completed';
+    
+    return {
+      id: crypto.randomUUID(),
+      timestamp: new Date(),
+      type: 'catch_breath',
+      description,
+      hitDiceSpent,
+      healingAmount,
+      abilitiesReset,
+    };
+  }
+
+  createMakeCampEntry(
+    healingAmount: number,
+    hitDiceRestored: number,
+    abilitiesReset: number
+  ): MakeCampEntry {
+    const parts: string[] = [];
+    if (healingAmount > 0) parts.push(`restored ${healingAmount} HP`);
+    if (hitDiceRestored > 0) parts.push(`restored ${hitDiceRestored} hit dice`);
+    if (abilitiesReset > 0) parts.push(`reset ${abilitiesReset} abilities`);
+    
+    const description = parts.length > 0 
+      ? `Make Camp completed - ${parts.join(', ')}`
+      : 'Make Camp completed';
+    
+    return {
+      id: crypto.randomUUID(),
+      timestamp: new Date(),
+      type: 'make_camp',
+      description,
+      healingAmount,
+      hitDiceRestored,
+      abilitiesReset,
+    };
+  }
 
   createResourceEntry(
     resourceId: string,

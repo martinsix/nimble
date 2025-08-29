@@ -41,6 +41,8 @@ export interface IActivityLog {
   createAbilityUsageEntry(abilityName: string, frequency: string, currentUses: number, maxUses: number): LogEntry;
   createInitiativeEntry(rollTotal: number, actionsGranted: number): LogEntry;
   createSafeRestEntry(healingAmount: number, hitDiceRestored: number, woundsRemoved: number, abilitiesReset: number): LogEntry;
+  createCatchBreathEntry(hitDiceSpent: number, healingAmount: number, abilitiesReset: number): LogEntry;
+  createMakeCampEntry(healingAmount: number, hitDiceRestored: number, abilitiesReset: number): LogEntry;
 }
 
 /**
@@ -72,6 +74,8 @@ export interface ICharacterService {
   updateAbilities(abilities: Abilities): Promise<void>;
   startEncounter(initiativeRoll: number): Promise<void>;
   performSafeRest(): Promise<void>;
+  performCatchBreath(): Promise<void>;
+  performMakeCamp(): Promise<void>;
   endEncounter(): Promise<void>;
   endTurn(): Promise<void>;
   updateCharacterFields(updates: Partial<Character>): Promise<void>;
