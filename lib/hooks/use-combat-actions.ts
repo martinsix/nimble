@@ -90,15 +90,33 @@ export function useCombatActions(): UseCombatActionsReturn {
   const handleUseAbility = async (character: Character, abilityId: string, onCharacterUpdate: (character: Character) => void, addLogEntry: (entry: LogEntry) => void) => {
     if (!character) return;
     try {
-      const result = abilityService.useAbility(character.abilities, abilityId);
+      const availableActions = character.actionTracker.current;
+      const inEncounter = character.inEncounter;
+      
+      const result = abilityService.useAbility(character.abilities, abilityId, availableActions, inEncounter);
       
       if (!result.success || !result.usedAbility) {
-        console.error("Failed to use ability: ability not found or no uses remaining");
+        if (result.actionsRequired && inEncounter && availableActions < result.actionsRequired) {
+          console.error(`Failed to use ability: not enough actions (need ${result.actionsRequired}, have ${availableActions})`);
+        } else {
+          console.error("Failed to use ability: ability not found or no uses remaining");
+        }
         return;
       }
 
-      // Update character with new abilities state
-      const updatedCharacter = { ...character, abilities: result.updatedAbilities };
+      // Calculate updated action tracker
+      const actionsToDeduct = (result.actionsRequired || 0);
+      const updatedActionTracker = inEncounter && actionsToDeduct > 0 ? {
+        ...character.actionTracker,
+        current: character.actionTracker.current - actionsToDeduct
+      } : character.actionTracker;
+
+      // Update character with new abilities state and action tracker
+      const updatedCharacter = { 
+        ...character, 
+        abilities: result.updatedAbilities,
+        actionTracker: updatedActionTracker
+      };
       onCharacterUpdate(updatedCharacter);
       await characterStorage.updateCharacter(updatedCharacter);
 
@@ -117,7 +135,8 @@ export function useCombatActions(): UseCombatActionsReturn {
         const totalModifier = abilityService.calculateAbilityRollModifier(roll, character);
         
         // Use the dice service to perform the roll
-        const rollResult = diceService.rollAttack(roll.dice, totalModifier, 0);
+        const diceString = `${roll.dice.count}d${roll.dice.sides}`;
+        const rollResult = diceService.rollAttack(diceString, totalModifier, 0);
         const rollLogEntry = activityLogService.createDiceRollEntry(
           rollResult.dice,
           rollResult.droppedDice,

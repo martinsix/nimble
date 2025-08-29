@@ -1,7 +1,7 @@
-import { Character, ActionTracker } from '../types/character';
-import { Abilities } from '../types/abilities';
-import { LogEntry } from '../types/log-entries';
-import { ClassFeatureGrant } from '../types/class';
+import { Character, ActionTracker, CharacterConfiguration } from '../types/character';
+import { Abilities, ActionAbility, AbilityRoll } from '../types/abilities';
+import { LogEntry, SingleDie } from '../types/log-entries';
+import { ClassFeatureGrant, ClassFeature } from '../types/class';
 
 /**
  * Character Storage Interface
@@ -25,8 +25,8 @@ export interface IActivityLog {
   addLogEntry(entry: LogEntry): Promise<void>;
   clearLogEntries(): Promise<void>;
   createDiceRollEntry(
-    dice: any[],
-    droppedDice: any[] | undefined,
+    dice: SingleDie[],
+    droppedDice: SingleDie[] | undefined,
     modifier: number,
     total: number,
     description: string,
@@ -51,8 +51,8 @@ export interface IActivityLog {
  */
 export interface IAbilityService {
   resetAbilities(abilities: Abilities, frequency: 'per_turn' | 'per_encounter' | 'per_safe_rest'): Abilities;
-  useAbility(abilities: Abilities, abilityId: string): { success: boolean; updatedAbilities: Abilities; usedAbility?: any };
-  calculateAbilityRollModifier(roll: any, character: Character): number;
+  useAbility(abilities: Abilities, abilityId: string, availableActions?: number, inEncounter?: boolean): { success: boolean; updatedAbilities: Abilities; usedAbility: ActionAbility | null; actionsRequired?: number };
+  calculateAbilityRollModifier(roll: AbilityRoll, character: Character): number;
 }
 
 /**
@@ -78,8 +78,10 @@ export interface ICharacterService {
   performMakeCamp(): Promise<void>;
   endEncounter(): Promise<void>;
   endTurn(): Promise<void>;
+  performAttack(weaponName: string, damage: string, attributeModifier: number, advantageLevel: number): Promise<void>;
+  performUseAbility(abilityId: string): Promise<void>;
   updateCharacterFields(updates: Partial<Character>): Promise<void>;
-  updateCharacterConfiguration(config: any): Promise<void>;
+  updateCharacterConfiguration(config: CharacterConfiguration): Promise<void>;
 }
 
 /**
@@ -87,8 +89,8 @@ export interface ICharacterService {
  * Handles class features and progression
  */
 export interface IClassService {
-  getExpectedFeaturesForCharacter(character: Character): any[];
-  getMissingFeatures(character: Character): any[];
+  getExpectedFeaturesForCharacter(character: Character): ClassFeature[];
+  getMissingFeatures(character: Character): ClassFeature[];
   syncCharacterFeatures(): Promise<ClassFeatureGrant[]>;
   levelUpCharacter(targetLevel: number): Promise<ClassFeatureGrant[]>;
   selectSubclass(characterId: string, subclassId: string): Promise<Character>;
@@ -100,7 +102,15 @@ export interface IClassService {
  * Handles character creation and initialization
  */
 export interface ICharacterCreation {
-  createCharacterWithClass(options: any): Promise<Character>;
+  createCharacterWithClass(options: CreateCharacterOptions): Promise<Character>;
   createSampleCharacter(name: string, classId: string): Promise<Character>;
   initializeCharacter(characterId: string): Promise<Character | null>;
+}
+
+export interface CreateCharacterOptions {
+  name: string;
+  ancestry?: string;
+  classId: string;
+  level?: number;
+  attributes?: Record<string, number>;
 }

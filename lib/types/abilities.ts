@@ -25,6 +25,7 @@ export interface ActionAbility extends BaseAbility {
   maxUses?: number; // Optional for at-will abilities
   currentUses?: number; // Optional for at-will abilities
   roll?: AbilityRoll; // Optional roll information
+  actionCost?: number; // Optional action cost (0 = free action, 1 = action, etc.)
 }
 
 export type Ability = FreeformAbility | ActionAbility;

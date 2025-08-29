@@ -47,6 +47,8 @@ export function useCharacterService() {
     performSafeRest: characterService.performSafeRest.bind(characterService),
     performCatchBreath: characterService.performCatchBreath.bind(characterService),
     performMakeCamp: characterService.performMakeCamp.bind(characterService),
+    performAttack: characterService.performAttack.bind(characterService),
+    performUseAbility: characterService.performUseAbility.bind(characterService),
     updateCharacterConfiguration: characterService.updateCharacterConfiguration.bind(characterService),
   };
 }

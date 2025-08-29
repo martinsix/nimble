@@ -6,10 +6,11 @@ export class AbilityService {
   /**
    * Use an ability and return the updated abilities object
    */
-  useAbility(abilities: Abilities, abilityId: string): { 
+  useAbility(abilities: Abilities, abilityId: string, availableActions?: number, inEncounter?: boolean): { 
     updatedAbilities: Abilities; 
     usedAbility: ActionAbility | null;
     success: boolean;
+    actionsRequired?: number;
   } {
     const ability = abilities.abilities.find(a => a.id === abilityId);
     
@@ -17,9 +18,26 @@ export class AbilityService {
       return { updatedAbilities: abilities, usedAbility: null, success: false };
     }
 
-    // At-will abilities can always be used
+    const actionCost = ability.actionCost || 0;
+
+    // Check if we have enough actions during encounters
+    if (inEncounter && actionCost > 0 && (availableActions || 0) < actionCost) {
+      return { 
+        updatedAbilities: abilities, 
+        usedAbility: null, 
+        success: false, 
+        actionsRequired: actionCost 
+      };
+    }
+
+    // At-will abilities can be used if action cost is satisfied
     if (ability.frequency === 'at_will') {
-      return { updatedAbilities: abilities, usedAbility: ability, success: true };
+      return { 
+        updatedAbilities: abilities, 
+        usedAbility: ability, 
+        success: true, 
+        actionsRequired: actionCost 
+      };
     }
 
     // For limited-use abilities, check uses remaining
@@ -37,7 +55,7 @@ export class AbilityService {
 
     const usedAbility = { ...ability, currentUses: (ability.currentUses || 1) - 1 };
 
-    return { updatedAbilities, usedAbility, success: true };
+    return { updatedAbilities, usedAbility, success: true, actionsRequired: actionCost };
   }
 
   /**

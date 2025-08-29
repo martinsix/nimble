@@ -6,10 +6,9 @@ import { Character, AttributeName } from "@/lib/types/character";
 import { WeaponItem } from "@/lib/types/inventory";
 import { ActionAbility, Abilities, AbilityFrequency } from "@/lib/types/abilities";
 import { Action, WeaponAction, AbilityAction } from "@/lib/types/actions";
-import { abilityService } from "@/lib/services/ability-service";
-import { AbilityUsageEntry } from "@/lib/types/log-entries";
 import { getEquippedWeapons } from "@/lib/utils/equipment";
-import { getCharacterService, getActivityLog } from "@/lib/services/service-factory";
+import { useCharacterService } from "@/lib/hooks/use-character-service";
+import { abilityService } from "@/lib/services/ability-service";
 import { Sword, Zap } from "lucide-react";
 import { Badge } from "./ui/badge";
 
@@ -20,6 +19,7 @@ interface ActionsProps {
 }
 
 export function Actions({ character, onAttack, advantageLevel }: ActionsProps) {
+  const { performAttack, performUseAbility } = useCharacterService();
   const weapons = getEquippedWeapons(character.inventory.items);
   const actionAbilities = character.abilities.abilities.filter(
     (ability): ability is ActionAbility => ability.type === 'action'
@@ -30,11 +30,17 @@ export function Actions({ character, onAttack, advantageLevel }: ActionsProps) {
     return character.attributes[attributeName];
   };
 
-  const handleAttack = (weapon: WeaponItem) => {
+  const handleAttack = async (weapon: WeaponItem) => {
     if (!weapon.damage) return;
     
+    // Check if we have enough actions for weapon attacks (always cost 1 action)
+    if (character.inEncounter && character.actionTracker.current < 1) {
+      console.error("Not enough actions to attack (need 1, have " + character.actionTracker.current + ")");
+      return;
+    }
+    
     const attributeModifier = getAttributeModifier(weapon.attribute);
-    onAttack(weapon.name, weapon.damage, attributeModifier, advantageLevel);
+    await performAttack(weapon.name, weapon.damage, attributeModifier, advantageLevel);
   };
 
   const handleUseAbility = async (ability: ActionAbility) => {
@@ -44,34 +50,15 @@ export function Actions({ character, onAttack, advantageLevel }: ActionsProps) {
       return;
     }
     
+    // Check if we have enough actions for abilities with action costs
+    const actionCost = ability.actionCost || 0;
+    if (character.inEncounter && actionCost > 0 && character.actionTracker.current < actionCost) {
+      console.error(`Not enough actions to use ability (need ${actionCost}, have ${character.actionTracker.current})`);
+      return;
+    }
+    
     try {
-      const result = abilityService.useAbility(character.abilities, ability.id);
-      
-      if (!result.success || !result.usedAbility) {
-        console.error("Failed to use ability: ability not found or no uses remaining");
-        return;
-      }
-
-      // Update character with new abilities state
-      const characterService = getCharacterService();
-      const updatedCharacter = { ...character, abilities: result.updatedAbilities };
-      await characterService.updateCharacter(updatedCharacter);
-
-      // Log the ability usage
-      const activityLogService = getActivityLog();
-      const logEntry = activityLogService.createAbilityUsageEntry(
-        result.usedAbility.name,
-        result.usedAbility.frequency,
-        result.usedAbility.currentUses || 0,
-        result.usedAbility.maxUses || 0
-      );
-      await activityLogService.addLogEntry(logEntry);
-
-      // If ability has a roll, execute it
-      if (result.usedAbility.roll) {
-        const rollDescription = abilityService.getAbilityRollDescription(result.usedAbility.roll, character);
-        // Here we could add dice rolling logic if needed
-      }
+      await performUseAbility(ability.id);
     } catch (error) {
       console.error("Failed to use ability:", error);
     }
@@ -121,9 +108,12 @@ export function Actions({ character, onAttack, advantageLevel }: ActionsProps) {
             {weapons.map((weapon) => {
               const attributeModifier = getAttributeModifier(weapon.attribute);
               const hasValidDamage = weapon.damage && weapon.damage.trim() !== '';
+              const weaponActionCost = 1; // Weapons always cost 1 action
+              const insufficientActions = character.inEncounter && character.actionTracker.current < weaponActionCost;
+              const isDisabled = !hasValidDamage || insufficientActions;
               
               return (
-                <Card key={weapon.id}>
+                <Card key={weapon.id} className={insufficientActions ? 'opacity-50' : ''}>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-center text-base flex items-center justify-center gap-2">
                       <Sword className="w-4 h-4" />
@@ -143,17 +133,24 @@ export function Actions({ character, onAttack, advantageLevel }: ActionsProps) {
                           {weapon.properties.join(', ')}
                         </div>
                       )}
+                      {character.inEncounter && (
+                        <div className="flex justify-center mt-2">
+                          <Badge variant="outline" className={insufficientActions ? 'text-red-600' : ''}>
+                            1 action
+                          </Badge>
+                        </div>
+                      )}
                     </div>
                     
                     <Button
                       variant="destructive"
                       size="sm"
                       onClick={() => handleAttack(weapon)}
-                      disabled={!hasValidDamage}
+                      disabled={isDisabled}
                       className="w-full"
                     >
                       <Sword className="w-4 h-4 mr-2" />
-                      Attack
+                      {insufficientActions ? "No Actions" : "Attack"}
                     </Button>
                   </CardContent>
                 </Card>
@@ -173,9 +170,12 @@ export function Actions({ character, onAttack, advantageLevel }: ActionsProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {actionAbilities.map((ability) => {
               const isUsed = ability.frequency !== 'at_will' && (ability.currentUses === undefined || ability.currentUses === 0);
+              const actionCost = ability.actionCost || 0;
+              const insufficientActions = character.inEncounter && actionCost > 0 && character.actionTracker.current < actionCost;
+              const isDisabled = isUsed || insufficientActions;
               
               return (
-                <Card key={ability.id} className={isUsed ? 'opacity-50' : ''}>
+                <Card key={ability.id} className={isDisabled ? 'opacity-50' : ''}>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-center text-base flex items-center justify-center gap-2">
                       <Zap className="w-4 h-4" />
@@ -194,25 +194,30 @@ export function Actions({ character, onAttack, advantageLevel }: ActionsProps) {
                         </div>
                       )}
                       
-                      <div className="flex justify-center gap-2 mb-2">
+                      <div className="flex justify-center gap-2 mb-2 flex-wrap">
                         {getFrequencyBadge(ability.frequency)}
                         {ability.frequency !== 'at_will' && ability.maxUses && (
                           <Badge variant="secondary">
                             {ability.currentUses}/{ability.maxUses} uses
                           </Badge>
                         )}
+                        {actionCost > 0 && (
+                          <Badge variant="outline" className={insufficientActions ? 'text-red-600' : ''}>
+                            {actionCost} action{actionCost !== 1 ? 's' : ''}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     
                     <Button
-                      variant={isUsed ? "outline" : "default"}
+                      variant={isDisabled ? "outline" : "default"}
                       size="sm"
                       onClick={() => handleUseAbility(ability)}
-                      disabled={isUsed}
+                      disabled={isDisabled}
                       className="w-full"
                     >
                       <Zap className="w-4 h-4 mr-2" />
-                      {isUsed ? "Used" : "Use Ability"}
+                      {isUsed ? "Used" : insufficientActions ? "No Actions" : "Use Ability"}
                     </Button>
                   </CardContent>
                 </Card>

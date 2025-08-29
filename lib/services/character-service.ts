@@ -1,5 +1,5 @@
 import { Character, ActionTracker, CharacterConfiguration } from '../types/character';
-import { Abilities } from '../types/abilities';
+import { Abilities, ActionAbility } from '../types/abilities';
 import { DiceType } from '../types/dice';
 import { ICharacterService, ICharacterStorage, IActivityLog, IAbilityService } from './interfaces';
 import { resourceService } from './resource-service';
@@ -545,6 +545,126 @@ export class CharacterService implements ICharacterService {
     for (const entry of resourceEntries) {
       const logEntry = resourceService.createResourceLogEntry(entry);
       await this.logService.addLogEntry(logEntry);
+    }
+  }
+
+  /**
+   * Perform weapon attack with automatic action deduction
+   */
+  async performAttack(weaponName: string, damage: string, attributeModifier: number, advantageLevel: number): Promise<void> {
+    if (!this._character) return;
+
+    // Check if we have enough actions for weapon attacks (always cost 1 action)
+    if (this._character.inEncounter && this._character.actionTracker.current < 1) {
+      console.error("Not enough actions to attack (need 1, have " + this._character.actionTracker.current + ")");
+      return;
+    }
+
+    try {
+      // Roll the attack using dice service
+      const diceService = getDiceService();
+      const rollResult = diceService.rollAttack(damage, attributeModifier, advantageLevel);
+      
+      // Log the attack
+      const logEntry = this.logService.createDiceRollEntry(
+        rollResult.dice,
+        rollResult.droppedDice,
+        attributeModifier,
+        rollResult.total,
+        `${weaponName} attack`,
+        advantageLevel,
+        rollResult.isMiss,
+        rollResult.criticalHits
+      );
+      await this.logService.addLogEntry(logEntry);
+
+      // Deduct action if in encounter (weapons always cost 1 action)
+      if (this._character.inEncounter) {
+        this._character = {
+          ...this._character,
+          actionTracker: {
+            ...this._character.actionTracker,
+            current: this._character.actionTracker.current - 1
+          }
+        };
+        
+        await this.saveCharacter();
+        this.notifyCharacterChanged();
+      }
+    } catch (error) {
+      console.error("Failed to perform attack:", error);
+    }
+  }
+
+  /**
+   * Use ability with automatic action deduction and usage tracking
+   */
+  async performUseAbility(abilityId: string): Promise<void> {
+    if (!this._character) return;
+
+    try {
+      const result = this.abilityService.useAbility(
+        this._character.abilities, 
+        abilityId, 
+        this._character.actionTracker.current, 
+        this._character.inEncounter
+      );
+      
+      if (!result.success || !result.usedAbility) {
+        if (result.actionsRequired && this._character.inEncounter && this._character.actionTracker.current < result.actionsRequired) {
+          console.error(`Failed to use ability: not enough actions (need ${result.actionsRequired}, have ${this._character.actionTracker.current})`);
+        } else {
+          console.error("Failed to use ability: ability not found or no uses remaining");
+        }
+        return;
+      }
+
+      // Update character with new abilities state and deduct actions if needed
+      const actionsToDeduct = result.actionsRequired || 0;
+      const updatedActionTracker = this._character.inEncounter && actionsToDeduct > 0 ? {
+        ...this._character.actionTracker,
+        current: this._character.actionTracker.current - actionsToDeduct
+      } : this._character.actionTracker;
+
+      this._character = { 
+        ...this._character, 
+        abilities: result.updatedAbilities,
+        actionTracker: updatedActionTracker
+      };
+
+      await this.saveCharacter();
+      this.notifyCharacterChanged();
+
+      // Log the ability usage
+      const logEntry = this.logService.createAbilityUsageEntry(
+        result.usedAbility.name,
+        result.usedAbility.frequency,
+        result.usedAbility.currentUses || 0,
+        result.usedAbility.maxUses || 0
+      );
+      await this.logService.addLogEntry(logEntry);
+
+      // Handle ability roll if it has one
+      if (result.usedAbility.roll) {
+        const roll = result.usedAbility.roll;
+        const totalModifier = this.abilityService.calculateAbilityRollModifier(roll, this._character);
+        
+        // Use the dice service to perform the roll
+        const diceService = getDiceService();
+        const diceString = `${roll.dice.count}d${roll.dice.sides}`;
+        const rollResult = diceService.rollAttack(diceString, totalModifier, 0);
+        const rollLogEntry = this.logService.createDiceRollEntry(
+          rollResult.dice,
+          rollResult.droppedDice,
+          totalModifier,
+          rollResult.total,
+          `${result.usedAbility.name} ability roll`,
+          0 // No advantage for ability rolls by default
+        );
+        await this.logService.addLogEntry(rollLogEntry);
+      }
+    } catch (error) {
+      console.error("Failed to use ability:", error);
     }
   }
 
