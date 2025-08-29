@@ -197,7 +197,7 @@ export function HitDiceSection() {
                     <Button
                       variant="secondary"
                       onClick={performMakeCamp}
-                      disabled={false}
+                      disabled={!canRollHitDie}
                       className="flex-1"
                     >
                       <Heart className="w-4 h-4 mr-2" />
@@ -208,7 +208,7 @@ export function HitDiceSection() {
                   
                   {!canRollHitDie && (
                     <div className="text-center text-sm text-muted-foreground">
-                      No hit dice available for Catch Breath
+                      No hit dice available for field rest
                     </div>
                   )}
                   
