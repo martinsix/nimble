@@ -21,81 +21,90 @@ interface CharacterConfigDialogProps {
 export function CharacterConfigDialog({ onClose }: CharacterConfigDialogProps) {
   const { character, updateCharacter } = useCharacterService();
   
-  // Assert character is non-null - dialog should only be rendered when character exists
-  const currentCharacter = character!;
-  
-  const [config, setConfig] = useState<CharacterConfiguration>(currentCharacter.config);
-  const [resources, setResources] = useState<ResourceInstance[]>(currentCharacter.resources);
-  const [maxHP, setMaxHP] = useState<number>(currentCharacter.hitPoints.max);
-  const [maxWounds, setMaxWounds] = useState<number>(currentCharacter.wounds.max);
-  const [initiativeModifier, setInitiativeModifier] = useState<number>(currentCharacter.initiative.modifier);
   const [newResource, setNewResource] = useState<Partial<ResourceDefinition> | null>(null);
   const [isCreatingResource, setIsCreatingResource] = useState(false);
   const [editingResource, setEditingResource] = useState<string | null>(null);
 
-  const handleSave = async () => {
-    const updatedCharacter = {
-      ...currentCharacter,
-      config,
-      resources,
-      hitPoints: {
-        ...currentCharacter.hitPoints,
-        max: maxHP,
-        current: Math.min(currentCharacter.hitPoints.current, maxHP)
-      },
-      wounds: {
-        ...currentCharacter.wounds,
-        max: maxWounds,
-        current: Math.min(currentCharacter.wounds.current, maxWounds)
-      },
-      initiative: {
-        ...currentCharacter.initiative,
-        modifier: initiativeModifier
-      }
-    };
-    await updateCharacter(updatedCharacter);
-    onClose();
-  };
+  // Don't render if character is null
+  if (!character) {
+    return null;
+  }
 
-  const handleCancel = () => {
-    // Reset to original config, resources, maxHP, maxWounds, and initiativeModifier
-    setConfig(currentCharacter.config);
-    setResources(currentCharacter.resources);
-    setMaxHP(currentCharacter.hitPoints.max);
-    setMaxWounds(currentCharacter.wounds.max);
-    setInitiativeModifier(currentCharacter.initiative.modifier);
-    setIsCreatingResource(false);
+  const handleClose = () => {
+    // Clean up any temporary state
     setNewResource(null);
+    setIsCreatingResource(false);
     setEditingResource(null);
     onClose();
   };
 
-  const updateMaxWounds = (value: string) => {
+
+  const updateMaxWounds = async (value: string) => {
     const numValue = parseInt(value) || 1;
-    setMaxWounds(Math.max(1, numValue)); // Minimum of 1 wound
+    const maxWounds = Math.max(1, numValue);
+    
+    const updatedCharacter = {
+      ...character,
+      wounds: {
+        ...character.wounds,
+        max: maxWounds,
+        current: Math.min(character.wounds.current, maxWounds)
+      }
+    };
+    await updateCharacter(updatedCharacter);
   };
 
-  const updateMaxHP = (value: string) => {
+  const updateMaxHP = async (value: string) => {
     const numValue = parseInt(value) || 1;
-    setMaxHP(Math.max(1, numValue)); // Minimum of 1 HP
+    const maxHP = Math.max(1, numValue);
+    
+    const updatedCharacter = {
+      ...character,
+      hitPoints: {
+        ...character.hitPoints,
+        max: maxHP,
+        current: Math.min(character.hitPoints.current, maxHP)
+      }
+    };
+    await updateCharacter(updatedCharacter);
   };
 
-  const updateMaxInventorySize = (value: string) => {
+  const updateMaxInventorySize = async (value: string) => {
     const numValue = parseInt(value) || 1;
-    setConfig(prev => ({
-      ...prev,
-      maxInventorySize: Math.max(1, numValue), // Minimum of 1 inventory slot
-    }));
+    const maxInventorySize = Math.max(1, numValue);
+    
+    const updatedCharacter = {
+      ...character,
+      config: {
+        ...character.config,
+        maxInventorySize
+      }
+    };
+    await updateCharacter(updatedCharacter);
   };
 
-  const updateInitiativeModifier = (value: string) => {
+  const updateInitiativeModifier = async (value: string) => {
     const numValue = parseInt(value) || 0;
-    setInitiativeModifier(Math.max(-10, Math.min(10, numValue))); // Range from -10 to +10
+    const modifier = Math.max(-10, Math.min(10, numValue));
+    
+    const updatedCharacter = {
+      ...character,
+      initiative: {
+        ...character.initiative,
+        modifier
+      }
+    };
+    await updateCharacter(updatedCharacter);
   };
 
   // Resource Management Functions
-  const deleteResource = (resourceId: string) => {
-    setResources(prev => prev.filter(r => r.definition.id !== resourceId));
+  const deleteResource = async (resourceId: string) => {
+    const updatedResources = character.resources.filter(r => r.definition.id !== resourceId);
+    const updatedCharacter = {
+      ...character,
+      resources: updatedResources
+    };
+    await updateCharacter(updatedCharacter);
   };
 
   const startCreatingResource = () => {
@@ -121,8 +130,8 @@ export function CharacterConfigDialog({ onClose }: CharacterConfigDialogProps) {
     setEditingResource(null);
   };
 
-  const updateResource = (resourceId: string, field: string, value: any) => {
-    setResources(prev => prev.map(resource => {
+  const updateResource = async (resourceId: string, field: string, value: any) => {
+    const updatedResources = character.resources.map(resource => {
       if (resource.definition.id !== resourceId) return resource;
       
       if (field === 'current' || field === 'sortOrder') {
@@ -133,7 +142,13 @@ export function CharacterConfigDialog({ onClose }: CharacterConfigDialogProps) {
           definition: { ...resource.definition, [field]: value }
         };
       }
-    }));
+    });
+    
+    const updatedCharacter = {
+      ...character,
+      resources: updatedResources
+    };
+    await updateCharacter(updatedCharacter);
   };
 
   const cancelCreateResource = () => {
@@ -141,13 +156,13 @@ export function CharacterConfigDialog({ onClose }: CharacterConfigDialogProps) {
     setIsCreatingResource(false);
   };
 
-  const saveNewResource = () => {
+  const saveNewResource = async () => {
     if (!newResource || !newResource.id || !newResource.name) {
       return; // Validation failed
     }
 
     // Check for duplicate IDs
-    if (resources.some(r => r.definition.id === newResource.id)) {
+    if (character.resources.some(r => r.definition.id === newResource.id)) {
       return; // ID already exists
     }
 
@@ -167,10 +182,15 @@ export function CharacterConfigDialog({ onClose }: CharacterConfigDialogProps) {
     const resourceInstance = createResourceInstance(
       definition,
       newResource.maxValue || 10,
-      resources.length + 1
+      character.resources.length + 1
     );
 
-    setResources(prev => [...prev, resourceInstance]);
+    const updatedCharacter = {
+      ...character,
+      resources: [...character.resources, resourceInstance]
+    };
+    await updateCharacter(updatedCharacter);
+    
     setNewResource(null);
     setIsCreatingResource(false);
   };
@@ -180,12 +200,12 @@ export function CharacterConfigDialog({ onClose }: CharacterConfigDialogProps) {
   };
 
   return (
-    <Dialog open={true} onOpenChange={(open) => !open && handleCancel()}>
+    <Dialog open={true} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Character Configuration</DialogTitle>
           <DialogDescription>
-            Configure advanced settings for {currentCharacter.name}.
+            Configure advanced settings for {character.name}.
           </DialogDescription>
         </DialogHeader>
         
@@ -201,7 +221,7 @@ export function CharacterConfigDialog({ onClose }: CharacterConfigDialogProps) {
                 type="number"
                 min="1"
                 max="20"
-                value={maxWounds}
+                value={character.wounds.max}
                 onChange={(e) => updateMaxWounds(e.target.value)}
                 className="w-full"
               />
@@ -222,7 +242,7 @@ export function CharacterConfigDialog({ onClose }: CharacterConfigDialogProps) {
                 type="number"
                 min="1"
                 max="1000"
-                value={maxHP}
+                value={character.hitPoints.max}
                 onChange={(e) => updateMaxHP(e.target.value)}
                 className="w-full"
               />
@@ -243,12 +263,12 @@ export function CharacterConfigDialog({ onClose }: CharacterConfigDialogProps) {
                 type="number"
                 min="-10"
                 max="10"
-                value={initiativeModifier}
+                value={character.initiative.modifier}
                 onChange={(e) => updateInitiativeModifier(e.target.value)}
                 className="w-full"
               />
               <p className="text-xs text-muted-foreground">
-                Additional modifier for initiative rolls (added to Dexterity). Current total: {currentCharacter.attributes.dexterity + initiativeModifier >= 0 ? '+' : ''}{currentCharacter.attributes.dexterity + initiativeModifier}.
+                Additional modifier for initiative rolls (added to Dexterity). Current total: {character.attributes.dexterity + character.initiative.modifier >= 0 ? '+' : ''}{character.attributes.dexterity + character.initiative.modifier}.
               </p>
             </div>
           </div>
@@ -264,12 +284,12 @@ export function CharacterConfigDialog({ onClose }: CharacterConfigDialogProps) {
                 type="number"
                 min="1"
                 max="100"
-                value={config.maxInventorySize}
+                value={character.config.maxInventorySize}
                 onChange={(e) => updateMaxInventorySize(e.target.value)}
                 className="w-full"
               />
               <p className="text-xs text-muted-foreground">
-                Base inventory slots (before strength bonus). Final size = {config.maxInventorySize} + {currentCharacter.attributes.strength} (strength) = {config.maxInventorySize + currentCharacter.attributes.strength}.
+                Base inventory slots (before strength bonus). Final size = {character.config.maxInventorySize} + {character.attributes.strength} (strength) = {character.config.maxInventorySize + character.attributes.strength}.
               </p>
             </div>
           </div>
@@ -292,13 +312,13 @@ export function CharacterConfigDialog({ onClose }: CharacterConfigDialogProps) {
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Existing Resources */}
-              {resources.length === 0 ? (
+              {character.resources.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   No resources configured. Add a resource to get started.
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {resources.map((resource) => {
+                  {character.resources.map((resource) => {
                     const isEditing = editingResource === resource.definition.id;
                     const iconOption = getIconById(resource.definition.icon || '');
                     const colorScheme = getColorSchemeById(resource.definition.colorScheme);
@@ -719,7 +739,7 @@ export function CharacterConfigDialog({ onClose }: CharacterConfigDialogProps) {
                       <Button 
                         size="sm" 
                         onClick={saveNewResource}
-                        disabled={!newResource.id || !newResource.name || resources.some(r => r.definition.id === newResource.id)}
+                        disabled={!newResource.id || !newResource.name || character.resources.some(r => r.definition.id === newResource.id)}
                       >
                         Save Resource
                       </Button>
@@ -730,7 +750,7 @@ export function CharacterConfigDialog({ onClose }: CharacterConfigDialogProps) {
                     {(!newResource.id || !newResource.name) && (
                       <p className="text-xs text-destructive">ID and Name are required</p>
                     )}
-                    {newResource.id && resources.some(r => r.definition.id === newResource.id) && (
+                    {newResource.id && character.resources.some(r => r.definition.id === newResource.id) && (
                       <p className="text-xs text-destructive">Resource ID already exists</p>
                     )}
                   </CardContent>
@@ -741,11 +761,8 @@ export function CharacterConfigDialog({ onClose }: CharacterConfigDialogProps) {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave}>
-            Save Configuration
+          <Button onClick={handleClose}>
+            Close
           </Button>
         </DialogFooter>
       </DialogContent>
