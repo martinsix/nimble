@@ -145,6 +145,7 @@ export const abilitySchema = z.discriminatedUnion('type', [
     maxUses: z.number().min(1).optional(),
     currentUses: z.number().min(0).optional(),
     roll: abilityRollSchema.optional(),
+    actionCost: z.number().min(0).optional(),
   }).refine((data) => {
     // Non-at_will abilities must have maxUses defined
     if (data.frequency !== 'at_will' && data.maxUses === undefined) {
