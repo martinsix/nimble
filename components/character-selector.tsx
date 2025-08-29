@@ -4,12 +4,10 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Character } from "@/lib/types/character";
 import { Plus, Trash2, User, Clock, AlertTriangle } from "lucide-react";
-import { getAllClasses } from "@/lib/data/classes/index";
+import { CharacterCreateForm } from "./character-create-form";
 
 interface CharacterSelectorProps {
   isOpen?: boolean;
@@ -35,21 +33,16 @@ export function CharacterSelector({
   fullScreen = false
 }: CharacterSelectorProps) {
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [newCharacterName, setNewCharacterName] = useState("");
-  const [selectedClass, setSelectedClass] = useState("fighter");
 
-  const availableClasses = getAllClasses();
-
-  const handleCreateCharacter = () => {
-    if (newCharacterName.trim()) {
-      const name = newCharacterName.trim();
-      setNewCharacterName("");
-      setShowCreateForm(false);
-      
-      if (onCharacterCreate) {
-        onCharacterCreate(name, selectedClass);
-      }
+  const handleCreateCharacter = (name: string, classId: string) => {
+    setShowCreateForm(false);
+    if (onCharacterCreate) {
+      onCharacterCreate(name, classId);
     }
+  };
+
+  const handleCancelCreate = () => {
+    setShowCreateForm(false);
   };
 
   const handleDeleteCharacter = (characterId: string) => {
@@ -103,62 +96,12 @@ export function CharacterSelector({
               Create New Character
             </Button>
           ) : (
-            <Card className="border-dashed">
-              <CardContent className="pt-4 space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="character-name">Character Name</Label>
-                  <Input
-                    id="character-name"
-                    value={newCharacterName}
-                    onChange={(e) => setNewCharacterName(e.target.value)}
-                    placeholder="Enter character name"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleCreateCharacter();
-                      } else if (e.key === 'Escape') {
-                        setShowCreateForm(false);
-                        setNewCharacterName("");
-                      }
-                    }}
-                    autoFocus
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="character-class">Class</Label>
-                  <select 
-                    id="character-class"
-                    value={selectedClass} 
-                    onChange={(e) => setSelectedClass(e.target.value)}
-                    className="w-full p-2 border rounded-md"
-                  >
-                    {availableClasses.map((cls: any) => (
-                      <option key={cls.id} value={cls.id}>
-                        {cls.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={handleCreateCharacter}
-                    disabled={!newCharacterName.trim()}
-                    size="sm"
-                  >
-                    Create
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setShowCreateForm(false);
-                      setNewCharacterName("");
-                    }}
-                    size="sm"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <CharacterCreateForm
+              onCharacterCreate={handleCreateCharacter}
+              onCancel={handleCancelCreate}
+              showAsCard={true}
+              autoFocus={true}
+            />
           )}
 
           {/* Character List */}

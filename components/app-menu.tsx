@@ -9,9 +9,11 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "./ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Menu, Settings, Users, Plus } from "lucide-react";
 import { SettingsPanel } from "./settings-panel";
 import { CharacterSelector } from "./character-selector";
+import { CharacterCreateForm } from "./character-create-form";
 import { AppSettings } from "@/lib/services/settings-service";
 import { Character } from "@/lib/types/character";
 
@@ -21,6 +23,7 @@ interface AppMenuProps {
   onSettingsChange: (settings: AppSettings) => void;
   onCharacterSwitch: (characterId: string) => void;
   onCharacterDelete: (characterId: string) => void;
+  onCharacterCreate: (name: string, classId: string) => void;
 }
 
 export function AppMenu({ 
@@ -28,10 +31,12 @@ export function AppMenu({
   characters,
   onSettingsChange, 
   onCharacterSwitch,
-  onCharacterDelete
+  onCharacterDelete,
+  onCharacterCreate
 }: AppMenuProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [showCharacterSelector, setShowCharacterSelector] = useState(false);
+  const [showCreateCharacter, setShowCreateCharacter] = useState(false);
 
   return (
     <>
@@ -52,13 +57,7 @@ export function AppMenu({
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem 
-              onClick={() => {
-                const name = prompt("Enter character name:");
-                if (name?.trim()) {
-                  const event = new CustomEvent('createCharacter', { detail: name.trim() });
-                  window.dispatchEvent(event);
-                }
-              }}
+              onClick={() => setShowCreateCharacter(true)}
             >
               <Plus className="w-4 h-4 mr-2" />
               New Character
@@ -80,7 +79,25 @@ export function AppMenu({
         activeCharacterId={settings.activeCharacterId}
         onCharacterSwitch={onCharacterSwitch}
         onCharacterDelete={onCharacterDelete}
+        onCharacterCreate={onCharacterCreate}
       />
+
+      <Dialog open={showCreateCharacter} onOpenChange={setShowCreateCharacter}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create New Character</DialogTitle>
+          </DialogHeader>
+          <CharacterCreateForm
+            onCharacterCreate={(name, classId) => {
+              onCharacterCreate(name, classId);
+              setShowCreateCharacter(false);
+            }}
+            onCancel={() => setShowCreateCharacter(false)}
+            showAsCard={false}
+            autoFocus={true}
+          />
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

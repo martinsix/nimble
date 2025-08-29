@@ -84,6 +84,7 @@ function HomeContent() {
         onSettingsChange={handleSettingsChange}
         onCharacterSwitch={handleCharacterSwitch}
         onCharacterDelete={handleCharacterDelete}
+        onCharacterCreate={handleCharacterSelectionCreate}
       />
       <div className="container mx-auto py-6 px-4 space-y-6">
         <CharacterHeader 
