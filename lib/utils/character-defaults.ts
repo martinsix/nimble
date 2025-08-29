@@ -129,6 +129,7 @@ export const createDefaultAbilities = (): Abilities => {
         frequency: 'per_encounter',
         maxUses: 1,
         currentUses: 1,
+        actionCost: 1,
       },
       {
         id: 'sample-backstory',
