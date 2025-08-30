@@ -18,6 +18,9 @@ export function ActionTrackerSection() {
   // Early return if no character (shouldn't happen in normal usage)
   if (!character) return null;
   
+  // Hide action tracker when not in encounter
+  if (!character.inEncounter) return null;
+  
   const isOpen = uiState.collapsibleSections.actionTracker;
   const onToggle = (isOpen: boolean) => updateCollapsibleState('actionTracker', isOpen);
   

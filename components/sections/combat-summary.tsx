@@ -143,131 +143,129 @@ function QuickActionsBar() {
     setShowCustomPanel(false);
   };
   return (
-    <Card className="border border-gray-200">
-      <CardContent className="p-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Damage Buttons */}
-          <Button 
-            variant="destructive" 
-            size="sm" 
-            onClick={() => handleQuickDamage(1)}
-            disabled={currentHp <= 0}
-            className="text-xs h-7"
-          >
-            -1
-          </Button>
-          <Button 
-            variant="destructive" 
-            size="sm" 
-            onClick={() => handleQuickDamage(5)}
-            disabled={currentHp <= 0}
-            className="text-xs h-7"
-          >
-            -5
-          </Button>
-          <Button 
-            variant="destructive" 
-            size="sm" 
-            onClick={() => handleQuickDamage(10)}
-            disabled={currentHp <= 0}
-            className="text-xs h-7"
-          >
-            -10
-          </Button>
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 flex-wrap">
+        {/* Damage Buttons */}
+        <Button 
+          variant="destructive" 
+          size="sm" 
+          onClick={() => handleQuickDamage(1)}
+          disabled={currentHp <= 0}
+          className="text-xs h-7"
+        >
+          -1
+        </Button>
+        <Button 
+          variant="destructive" 
+          size="sm" 
+          onClick={() => handleQuickDamage(5)}
+          disabled={currentHp <= 0}
+          className="text-xs h-7"
+        >
+          -5
+        </Button>
+        <Button 
+          variant="destructive" 
+          size="sm" 
+          onClick={() => handleQuickDamage(10)}
+          disabled={currentHp <= 0}
+          className="text-xs h-7"
+        >
+          -10
+        </Button>
 
-          <div className="w-px h-6 bg-gray-300 mx-1" />
+        <div className="w-px h-6 bg-gray-300 mx-1" />
 
-          {/* Heal Buttons */}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => handleQuickHeal(1)}
-            disabled={currentHp >= maxHp}
-            className="text-green-600 border-green-600 hover:bg-green-50 text-xs h-7"
-          >
-            +1
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => handleQuickHeal(5)}
-            disabled={currentHp >= maxHp}
-            className="text-green-600 border-green-600 hover:bg-green-50 text-xs h-7"
-          >
-            +5
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => handleQuickHeal(10)}
-            disabled={currentHp >= maxHp}
-            className="text-green-600 border-green-600 hover:bg-green-50 text-xs h-7"
-          >
-            +10
-          </Button>
+        {/* Heal Buttons */}
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => handleQuickHeal(1)}
+          disabled={currentHp >= maxHp}
+          className="text-green-600 border-green-600 hover:bg-green-50 text-xs h-7"
+        >
+          +1
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => handleQuickHeal(5)}
+          disabled={currentHp >= maxHp}
+          className="text-green-600 border-green-600 hover:bg-green-50 text-xs h-7"
+        >
+          +5
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => handleQuickHeal(10)}
+          disabled={currentHp >= maxHp}
+          className="text-green-600 border-green-600 hover:bg-green-50 text-xs h-7"
+        >
+          +10
+        </Button>
 
-          <div className="w-px h-6 bg-gray-300 mx-1" />
+        <div className="w-px h-6 bg-gray-300 mx-1" />
 
-          {/* Custom Button */}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setShowCustomPanel(!showCustomPanel)}
-            className="text-xs h-7"
-          >
-            <Settings className="w-3 h-3 mr-1" />
-            Custom
-          </Button>
-        </div>
-        
-        {/* Custom Panel */}
-        {showCustomPanel && (
-          <div className="mt-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Custom Amount</label>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  min="1"
-                  value={customAmount}
-                  onChange={(e) => setCustomAmount(e.target.value)}
-                  className="flex-1 px-3 py-1 border border-gray-300 rounded text-sm"
-                  placeholder="Amount"
-                />
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  onClick={handleCustomDamage}
-                  disabled={currentHp <= 0}
-                  title="Apply Damage"
-                >
-                  <Minus className="w-4 h-4" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleCustomHeal}
-                  disabled={currentHp >= maxHp}
-                  className="text-green-600 border-green-600 hover:bg-green-50"
-                  title="Apply Healing"
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleCustomTempHp}
-                  className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                  title="Add Temporary HP"
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
+        {/* Custom Button */}
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => setShowCustomPanel(!showCustomPanel)}
+          className="text-xs h-7"
+        >
+          <Settings className="w-3 h-3 mr-1" />
+          Custom
+        </Button>
+      </div>
+      
+      {/* Custom Panel */}
+      {showCustomPanel && (
+        <div className="mt-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Custom Amount</label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                min="1"
+                value={customAmount}
+                onChange={(e) => setCustomAmount(e.target.value)}
+                className="flex-1 px-3 py-1 border border-gray-300 rounded text-sm"
+                placeholder="Amount"
+              />
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                onClick={handleCustomDamage}
+                disabled={currentHp <= 0}
+                title="Apply Damage"
+              >
+                <Minus className="w-4 h-4" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleCustomHeal}
+                disabled={currentHp >= maxHp}
+                className="text-green-600 border-green-600 hover:bg-green-50"
+                title="Apply Healing"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleCustomTempHp}
+                className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                title="Add Temporary HP"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
             </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -430,7 +428,7 @@ function CombatStatusBar() {
         <HealthBar />
 
         {/* Wounds and Combat Status */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-3">
           <WoundsDisplay />
           
           {/* Combat Status and Initiative */}
@@ -467,6 +465,9 @@ function CombatStatusBar() {
             )}
           </div>
         </div>
+
+        {/* Integrated Quick Actions */}
+        <QuickActionsBar />
       </CardContent>
     </Card>
   );
@@ -481,8 +482,6 @@ export function CombatSummary() {
     <TooltipProvider>
       <div className="space-y-3">
         <CombatStatusBar />
-
-        <QuickActionsBar />
 
         <ActionTracker />
       </div>

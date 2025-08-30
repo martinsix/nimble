@@ -1,4 +1,3 @@
-import { InitiativeSection } from "../sections/initiative-section";
 import { ActionTrackerSection } from "../sections/action-tracker-section";
 import { useCharacterService } from "@/lib/hooks/use-character-service";
 
@@ -10,9 +9,6 @@ export function CombatSection() {
   if (!character) return null;
   return (
     <>
-      {/* Initiative Section - Now completely self-contained */}
-      <InitiativeSection />
-
       {/* Action Tracker Section - Now completely self-contained, only show during encounters */}
       {character.inEncounter && (
         <ActionTrackerSection />
