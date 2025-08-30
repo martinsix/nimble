@@ -172,7 +172,26 @@ export function Actions({ character, onAttack, advantageLevel }: ActionsProps) {
               const isUsed = ability.frequency !== 'at_will' && (ability.currentUses === undefined || ability.currentUses === 0);
               const actionCost = ability.actionCost || 0;
               const insufficientActions = character.inEncounter && actionCost > 0 && character.actionTracker.current < actionCost;
-              const isDisabled = isUsed || insufficientActions;
+              
+              // Check resource requirements
+              const getResourceInfo = () => {
+                if (!ability.resourceCost) return { canAfford: true, resourceName: null };
+                
+                const resource = character.resources.find(r => r.definition.id === ability.resourceCost!.resourceId);
+                if (!resource) return { canAfford: false, resourceName: ability.resourceCost.resourceId };
+                
+                const requiredAmount = ability.resourceCost.type === 'fixed' 
+                  ? ability.resourceCost.amount 
+                  : ability.resourceCost.minAmount;
+                
+                return { 
+                  canAfford: resource.current >= requiredAmount, 
+                  resourceName: resource.definition.name 
+                };
+              };
+              
+              const resourceInfo = getResourceInfo();
+              const isDisabled = isUsed || insufficientActions || !resourceInfo.canAfford;
               
               return (
                 <Card key={ability.id} className={isDisabled ? 'opacity-50' : ''}>
@@ -206,6 +225,14 @@ export function Actions({ character, onAttack, advantageLevel }: ActionsProps) {
                             {actionCost} action{actionCost !== 1 ? 's' : ''}
                           </Badge>
                         )}
+                        {ability.resourceCost && (
+                          <Badge variant="outline" className={resourceInfo.canAfford ? "text-blue-600" : "text-red-600"}>
+                            {ability.resourceCost.type === 'fixed' 
+                              ? `${ability.resourceCost.amount} ${resourceInfo.resourceName}`
+                              : `${ability.resourceCost.minAmount}-${ability.resourceCost.maxAmount} ${resourceInfo.resourceName}`
+                            }
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     
@@ -217,7 +244,10 @@ export function Actions({ character, onAttack, advantageLevel }: ActionsProps) {
                       className="w-full"
                     >
                       <Zap className="w-4 h-4 mr-2" />
-                      {isUsed ? "Used" : insufficientActions ? "No Actions" : "Use Ability"}
+                      {isUsed ? "Used" : 
+                       insufficientActions ? "No Actions" : 
+                       !resourceInfo.canAfford ? `Need ${resourceInfo.resourceName}` : 
+                       "Use Ability"}
                     </Button>
                   </CardContent>
                 </Card>
