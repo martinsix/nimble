@@ -398,42 +398,81 @@ function ResourceTracker() {
   
   const getResourceColor = (current: number, max: number) => {
     const percentage = max > 0 ? (current / max) * 100 : 0;
-    if (percentage <= 25) return "bg-red-500";
-    if (percentage <= 50) return "bg-yellow-500";
-    return "bg-blue-500";
+    if (percentage <= 25) return "#ef4444"; // red-500
+    if (percentage <= 50) return "#eab308"; // yellow-500
+    return "#3b82f6"; // blue-500
+  };
+
+  const createPieChart = (current: number, max: number, color: string) => {
+    const percentage = max > 0 ? (current / max) : 0;
+    const radius = 16;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDasharray = circumference;
+    const strokeDashoffset = circumference * (1 - percentage);
+
+    return (
+      <div className="relative w-10 h-10">
+        <svg className="w-10 h-10 transform -rotate-90" viewBox="0 0 40 40">
+          {/* Background circle */}
+          <circle
+            cx="20"
+            cy="20"
+            r="16"
+            stroke="#e5e7eb"
+            strokeWidth="3"
+            fill="transparent"
+          />
+          {/* Progress circle */}
+          <circle
+            cx="20"
+            cy="20"
+            r="16"
+            stroke={color}
+            strokeWidth="3"
+            fill="transparent"
+            strokeDasharray={strokeDasharray}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            className="transition-all duration-500 ease-in-out"
+          />
+        </svg>
+        {/* Center text */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-xs font-medium text-gray-700">
+            {current}
+          </span>
+        </div>
+      </div>
+    );
   };
 
   return (
     <Card className="border border-gray-200">
       <CardContent className="p-3">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-blue-500" />
             <span className="text-sm font-medium">Resources</span>
           </div>
         </div>
         
-        <div className="space-y-2">
-          {character.resources.map((resource) => (
-            <div key={resource.definition.id} className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">
-                {resource.definition.name}
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">
-                  {resource.current}/{resource.definition.maxValue}
-                </span>
-                <div className="w-16 bg-gray-200 rounded-full h-2">
-                  <div 
-                    className={`h-2 rounded-full transition-all duration-300 ${getResourceColor(resource.current, resource.definition.maxValue)}`}
-                    style={{ 
-                      width: `${resource.definition.maxValue > 0 ? (resource.current / resource.definition.maxValue) * 100 : 0}%` 
-                    }}
-                  />
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          {character.resources.map((resource) => {
+            const color = getResourceColor(resource.current, resource.definition.maxValue);
+            return (
+              <div key={resource.definition.id} className="flex flex-col items-center">
+                {createPieChart(resource.current, resource.definition.maxValue, color)}
+                <div className="mt-1 text-center">
+                  <div className="text-xs font-medium text-gray-700 leading-tight">
+                    {resource.definition.name}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {resource.current}/{resource.definition.maxValue}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </CardContent>
     </Card>
