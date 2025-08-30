@@ -1,4 +1,4 @@
-import { LogEntry, DiceRollEntry, DamageEntry, HealingEntry, TempHPEntry, InitiativeEntry, AbilityUsageEntry, SafeRestEntry, CatchBreathEntry, MakeCampEntry, ResourceUsageEntry } from '../types/log-entries';
+import { LogEntry, DiceRollEntry, DamageEntry, HealingEntry, TempHPEntry, InitiativeEntry, AbilityUsageEntry, SafeRestEntry, CatchBreathEntry, MakeCampEntry, ResourceUsageEntry, SpellCastEntry } from '../types/log-entries';
 import { logEntrySchema } from '../schemas/dice';
 import { gameConfig } from '../config/game-config';
 import { toast } from 'sonner';
@@ -97,6 +97,10 @@ export class ActivityLogService {
         } else {
           toast.success(description);
         }
+        break;
+        
+      case 'spell_cast':
+        toast.info(description);
         break;
         
       default:
@@ -306,6 +310,34 @@ export class ActivityLogService {
       action,
       currentAmount,
       maxAmount,
+    };
+  }
+
+  createSpellCastEntry(
+    spellName: string,
+    school: string,
+    tier: number,
+    actionCost: number,
+    resourceCost?: {
+      resourceId: string;
+      resourceName: string;
+      amount: number;
+    }
+  ): SpellCastEntry {
+    const resourceText = resourceCost ? ` (cost: ${resourceCost.amount} ${resourceCost.resourceName})` : '';
+    const actionText = actionCost === 0 ? 'bonus action' : `${actionCost} action${actionCost > 1 ? 's' : ''}`;
+    const description = `Cast ${spellName} (${school}, tier ${tier}, ${actionText})${resourceText}`;
+    
+    return {
+      id: crypto.randomUUID(),
+      timestamp: new Date(),
+      type: 'spell_cast',
+      description,
+      spellName,
+      school,
+      tier,
+      resourceCost,
+      actionCost,
     };
   }
 }

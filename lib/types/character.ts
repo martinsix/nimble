@@ -52,6 +52,7 @@ export interface Character {
   classId: string; // Character's class (e.g., 'fighter', 'wizard')
   subclassId?: string; // Character's subclass (e.g., 'fighter-champion', 'wizard-evocation')
   grantedFeatures: string[]; // IDs of class features already granted to this character
+  spellTierAccess: number; // Highest tier of spells character can access (1-9, 0 for no spell access)
   proficiencies: Proficiencies; // Armor and weapon proficiencies
   attributes: {
     strength: number;
@@ -97,6 +98,7 @@ export interface CreateCharacterData {
   classId: string;
   subclassId?: string;
   grantedFeatures: string[];
+  spellTierAccess: number; // Highest tier of spells character can access (1-9, 0 for no spell access)
   proficiencies: Proficiencies;
   attributes: {
     strength: number;

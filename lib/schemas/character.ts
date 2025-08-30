@@ -178,6 +178,17 @@ export const abilitySchema = z.discriminatedUnion('type', [
     message: "Abilities with frequency other than 'at_will' must specify maxUses",
     path: ['maxUses'],
   }),
+  z.object({
+    id: z.string(),
+    name: z.string().min(1),
+    description: z.string(),
+    type: z.literal('spell'),
+    school: z.string().min(1),
+    tier: z.number().min(1).max(9),
+    roll: abilityRollSchema.optional(),
+    actionCost: z.number().min(0).optional(),
+    resourceCost: resourceCostSchema.optional(),
+  }),
 ]);
 
 export const abilitiesSchema = z.object({
@@ -211,6 +222,7 @@ export const createCharacterSchema = z.object({
   classId: z.string().min(1),
   subclassId: z.string().optional(),
   grantedFeatures: z.array(z.string()),
+  spellTierAccess: z.number().min(0).max(9),
   proficiencies: proficienciesSchema,
   attributes: attributeSchema,
   saveAdvantages: saveAdvantageMapSchema,
@@ -235,6 +247,7 @@ export const characterSchema = z.object({
   classId: z.string().min(1),
   subclassId: z.string().optional(),
   grantedFeatures: z.array(z.string()),
+  spellTierAccess: z.number().min(0).max(9),
   proficiencies: proficienciesSchema,
   attributes: attributeSchema,
   saveAdvantages: saveAdvantageMapSchema,

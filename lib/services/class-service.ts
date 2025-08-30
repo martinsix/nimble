@@ -1,8 +1,10 @@
 import { Character } from '../types/character';
-import { ClassDefinition, ClassFeature, ClassFeatureGrant, AbilityFeature, StatBoostFeature, ProficiencyFeature, SpellAccessFeature, ResourceFeature, SubclassChoiceFeature, SubclassDefinition } from '../types/class';
+import { ClassDefinition, ClassFeature, ClassFeatureGrant, AbilityFeature, StatBoostFeature, ProficiencyFeature, SpellSchoolFeature, SpellTierAccessFeature, ResourceFeature, SubclassChoiceFeature, SubclassDefinition } from '../types/class';
 import { ResourceInstance, createResourceInstance } from '../types/resources';
 import { getClassDefinition, getClassFeaturesForLevel, getAllClassFeaturesUpToLevel } from '../data/classes/index';
 import { getSubclassDefinition, getSubclassFeaturesForLevel, getAllSubclassFeaturesUpToLevel } from '../data/subclasses/index';
+import { getSpellsBySchool } from '../data/example-abilities';
+import { SpellAbility } from '../types/abilities';
 import { IClassService, ICharacterService } from './interfaces';
 
 /**
@@ -174,8 +176,11 @@ export class ClassService implements IClassService {
       case 'proficiency':
         updatedCharacter = await this.grantProficiencyFeature(updatedCharacter, feature);
         break;
-      case 'spell_access':
-        updatedCharacter = await this.grantSpellAccessFeature(updatedCharacter, feature);
+      case 'spell_school':
+        updatedCharacter = await this.grantSpellSchoolFeature(updatedCharacter, feature);
+        break;
+      case 'spell_tier_access':
+        updatedCharacter = await this.grantSpellTierAccessFeature(updatedCharacter, feature);
         break;
       case 'resource':
         updatedCharacter = await this.grantResourceFeature(updatedCharacter, feature);
@@ -245,12 +250,70 @@ export class ClassService implements IClassService {
   }
 
   /**
-   * Grant spell access feature (adds spellcasting capabilities)
+   * Synchronize character spells based on their spell school access and tier access
    */
-  private async grantSpellAccessFeature(character: Character, feature: SpellAccessFeature): Promise<Character> {
-    // For now, spell access is just recorded as granted features
-    // In the future, we could add a spellcasting system to the character model
+  private syncCharacterSpells(character: Character): Character {
+    // Find all spell school features the character has been granted
+    const expectedFeatures = this.getExpectedFeaturesForCharacter(character);
+    const spellSchoolFeatures = expectedFeatures.filter(f => f.type === 'spell_school') as SpellSchoolFeature[];
+    
+    // Get all spells the character should have access to
+    const eligibleSpells: SpellAbility[] = [];
+    
+    for (const schoolFeature of spellSchoolFeatures) {
+      const schoolSpells = getSpellsBySchool(schoolFeature.spellSchool.schoolId);
+      
+      // Filter by character's spell tier access
+      const accessibleSpells = schoolSpells.filter(spell => spell.tier <= character.spellTierAccess);
+      eligibleSpells.push(...accessibleSpells);
+    }
+    
+    // Get current spell abilities
+    const currentSpells = character.abilities.abilities.filter(ability => ability.type === 'spell') as SpellAbility[];
+    const currentSpellIds = new Set(currentSpells.map(spell => spell.id));
+    
+    // Find missing spells
+    const missingSpells = eligibleSpells.filter(spell => !currentSpellIds.has(spell.id));
+    
+    // Add missing spells to character's abilities
+    if (missingSpells.length > 0) {
+      const nonSpellAbilities = character.abilities.abilities.filter(ability => ability.type !== 'spell');
+      const allAbilities = [...nonSpellAbilities, ...currentSpells, ...missingSpells];
+      
+      return {
+        ...character,
+        abilities: {
+          ...character.abilities,
+          abilities: allAbilities
+        }
+      };
+    }
+    
     return character;
+  }
+
+  /**
+   * Grant spell school feature (adds spellcasting capabilities and syncs spells)
+   */
+  private async grantSpellSchoolFeature(character: Character, feature: SpellSchoolFeature): Promise<Character> {
+    // Sync spells after granting the school access
+    return this.syncCharacterSpells(character);
+  }
+
+  /**
+   * Grant spell tier access feature (increases max spell tier and syncs spells)
+   */
+  private async grantSpellTierAccessFeature(character: Character, feature: SpellTierAccessFeature): Promise<Character> {
+    // Update the character's spell tier access to the highest tier they can now access
+    const newSpellTierAccess = Math.max(character.spellTierAccess, feature.maxTier);
+    
+    const updatedCharacter = {
+      ...character,
+      spellTierAccess: newSpellTierAccess
+    };
+    
+    // Sync spells after updating tier access
+    return this.syncCharacterSpells(updatedCharacter);
   }
 
   /**

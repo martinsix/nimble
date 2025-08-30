@@ -71,6 +71,7 @@ export class CharacterCreationService implements ICharacterCreation {
       level,
       classId,
       grantedFeatures: [], // Start with no features
+      spellTierAccess: 0, // No spell access by default - class features will grant this
       proficiencies,
       attributes,
       saveAdvantages: { ...classDefinition.saveAdvantages }, // Initialize from class defaults

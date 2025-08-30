@@ -22,15 +22,22 @@ export const cleric: ClassDefinition = {
   features: [
     {
       level: 1,
-      type: 'spell_access',
-      name: 'Spellcasting',
-      description: 'You can cast cleric spells using your wisdom as your spellcasting ability.',
-      spellAccess: {
-        spellLevel: 1,
-        spellsKnown: 3,
-        cantrips: 3,
-        spellList: 'cleric'
+      type: 'spell_school',
+      name: 'Radiant Magic',
+      description: 'You gain access to the Radiant school of magic, wielding divine light.',
+      spellSchool: {
+        schoolId: 'radiant',
+        name: 'Radiant Magic',
+        description: 'Divine spells that channel holy light and radiant energy',
+        spells: ['sacred-flame', 'guiding-bolt', 'spiritual-weapon', 'daylight', 'guardian-of-faith']
       }
+    },
+    {
+      level: 1,
+      type: 'spell_tier_access',
+      name: 'Divine Spellcasting',
+      description: 'You learn to cast divine spells of 1st tier.',
+      maxTier: 1
     },
     {
       level: 1,
@@ -50,72 +57,11 @@ export const cleric: ClassDefinition = {
       }
     },
     {
-      level: 1,
-      type: 'ability',
-      name: 'Sacred Flame',
-      description: 'You learn a divine cantrip that requires no mana.',
-      ability: {
-        id: 'sacred-flame',
-        name: 'Sacred Flame',
-        description: 'Flame-like radiance descends on a creature that you can see. This is a cantrip that requires no mana.',
-        type: 'action',
-        frequency: 'at_will',
-        actionCost: 1,
-        roll: {
-          dice: { count: 1, sides: 8 },
-          attribute: 'will'
-        }
-      }
-    },
-    {
-      level: 1,
-      type: 'ability',
-      name: 'Cure Wounds',
-      description: 'You learn to heal wounds with divine magic.',
-      ability: {
-        id: 'cure-wounds',
-        name: 'Cure Wounds',
-        description: 'A creature you touch regains hit points. You can spend additional divine energy to increase the healing.',
-        type: 'action',
-        frequency: 'per_safe_rest',
-        maxUses: 5,
-        currentUses: 5,
-        actionCost: 1,
-        roll: {
-          dice: { count: 1, sides: 8 },
-          attribute: 'will'
-        },
-        resourceCost: {
-          type: 'variable',
-          resourceId: 'mana',
-          minAmount: 1,
-          maxAmount: 3
-        }
-      }
-    },
-    {
-      level: 1,
-      type: 'ability',
-      name: 'Guiding Bolt',
-      description: 'You learn to strike enemies with divine light.',
-      ability: {
-        id: 'guiding-bolt',
-        name: 'Guiding Bolt',
-        description: 'A flash of light streaks toward a creature of your choice, dealing radiant damage.',
-        type: 'action',
-        frequency: 'per_safe_rest',
-        maxUses: 3,
-        currentUses: 3,
-        actionCost: 1,
-        roll: {
-          dice: { count: 4, sides: 6 }
-        },
-        resourceCost: {
-          type: 'fixed',
-          resourceId: 'mana',
-          amount: 1
-        }
-      }
+      level: 3,
+      type: 'spell_tier_access',
+      name: 'Advanced Divine Spellcasting',
+      description: 'You learn to cast divine spells of 2nd tier.',
+      maxTier: 2
     },
     {
       level: 1,
@@ -139,31 +85,6 @@ export const cleric: ClassDefinition = {
         resetType: 'to_max',
         minValue: 0,
         maxValue: 1
-      }
-    },
-    {
-      level: 2,
-      type: 'ability',
-      name: 'Spiritual Weapon',
-      description: 'You learn to summon a divine weapon.',
-      ability: {
-        id: 'spiritual-weapon',
-        name: 'Spiritual Weapon',
-        description: 'You create a floating, spectral weapon that can attack enemies.',
-        type: 'action',
-        frequency: 'per_safe_rest',
-        maxUses: 2,
-        currentUses: 2,
-        actionCost: 0,
-        roll: {
-          dice: { count: 1, sides: 8 },
-          attribute: 'will'
-        },
-        resourceCost: {
-          type: 'fixed',
-          resourceId: 'mana',
-          amount: 2
-        }
       }
     },
     {

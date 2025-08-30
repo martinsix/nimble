@@ -98,6 +98,20 @@ export const resourceUsageEntrySchema = z.object({
   maxAmount: z.number().min(0),
 }).merge(baseLogEntrySchema);
 
+// Spell cast log entry schema
+export const spellCastEntrySchema = z.object({
+  type: z.literal('spell_cast'),
+  spellName: z.string().min(1),
+  school: z.string().min(1),
+  tier: z.number().min(1).max(9),
+  resourceCost: z.object({
+    resourceId: z.string().min(1),
+    resourceName: z.string().min(1),
+    amount: z.number().positive(),
+  }).optional(),
+  actionCost: z.number().min(0),
+}).merge(baseLogEntrySchema);
+
 // Union schema for all log entries
 export const logEntrySchema = z.discriminatedUnion('type', [
   diceRollEntrySchema,
@@ -110,6 +124,7 @@ export const logEntrySchema = z.discriminatedUnion('type', [
   catchBreathEntrySchema,
   makeCampEntrySchema,
   resourceUsageEntrySchema,
+  spellCastEntrySchema,
 ]);
 
 export type ValidatedLogEntry = z.infer<typeof logEntrySchema>;

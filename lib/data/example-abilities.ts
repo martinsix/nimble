@@ -1,4 +1,4 @@
-import { ActionAbility } from '../types/abilities';
+import { ActionAbility, SpellAbility } from '../types/abilities';
 
 /**
  * Example spell abilities that consume mana
@@ -240,10 +240,193 @@ export function getSpellsByResource(resourceId: string): ActionAbility[] {
 }
 
 /**
+ * Fire School Spells (Wizard)
+ */
+export const fireSchoolSpells: SpellAbility[] = [
+  {
+    id: 'fire-bolt',
+    name: 'Fire Bolt',
+    description: 'You hurl a mote of fire at a creature or object within range. This is a cantrip that requires no mana.',
+    type: 'spell',
+    school: 'fire',
+    tier: 1,
+    actionCost: 1,
+    roll: {
+      dice: { count: 1, sides: 10 }
+    }
+    // No resource cost - cantrip
+  },
+  {
+    id: 'burning-hands',
+    name: 'Burning Hands',
+    description: 'A thin sheet of flames shoots forth from your outstretched fingertips.',
+    type: 'spell',
+    school: 'fire',
+    tier: 1,
+    actionCost: 1,
+    roll: {
+      dice: { count: 3, sides: 6 }
+    },
+    resourceCost: {
+      type: 'fixed',
+      resourceId: 'mana',
+      amount: 1
+    }
+  },
+  {
+    id: 'fireball',
+    name: 'Fireball',
+    description: 'A bright streak flashes from your pointing finger to a point within range and blossoms into a burst of flame.',
+    type: 'spell',
+    school: 'fire',
+    tier: 3,
+    actionCost: 1,
+    roll: {
+      dice: { count: 8, sides: 6 }
+    },
+    resourceCost: {
+      type: 'fixed',
+      resourceId: 'mana',
+      amount: 3
+    }
+  },
+  {
+    id: 'fire-shield',
+    name: 'Fire Shield',
+    description: 'Thin and wispy flames wreathe your body, providing protection and dealing fire damage to attackers.',
+    type: 'spell',
+    school: 'fire',
+    tier: 4,
+    actionCost: 1,
+    resourceCost: {
+      type: 'fixed',
+      resourceId: 'mana',
+      amount: 2
+    }
+  },
+  {
+    id: 'wall-of-fire',
+    name: 'Wall of Fire',
+    description: 'You create a wall of fire on a solid surface within range.',
+    type: 'spell',
+    school: 'fire',
+    tier: 5,
+    actionCost: 1,
+    roll: {
+      dice: { count: 5, sides: 8 }
+    },
+    resourceCost: {
+      type: 'fixed',
+      resourceId: 'mana',
+      amount: 4
+    }
+  }
+];
+
+/**
+ * Radiant School Spells (Cleric)
+ */
+export const radiantSchoolSpells: SpellAbility[] = [
+  {
+    id: 'sacred-flame',
+    name: 'Sacred Flame',
+    description: 'Flame-like radiance descends on a creature that you can see. This is a cantrip that requires no mana.',
+    type: 'spell',
+    school: 'radiant',
+    tier: 1,
+    actionCost: 1,
+    roll: {
+      dice: { count: 1, sides: 8 },
+      attribute: 'will'
+    }
+    // No resource cost - cantrip
+  },
+  {
+    id: 'guiding-bolt',
+    name: 'Guiding Bolt',
+    description: 'A flash of light streaks toward a creature of your choice, dealing radiant damage.',
+    type: 'spell',
+    school: 'radiant',
+    tier: 1,
+    actionCost: 1,
+    roll: {
+      dice: { count: 4, sides: 6 }
+    },
+    resourceCost: {
+      type: 'fixed',
+      resourceId: 'mana',
+      amount: 1
+    }
+  },
+  {
+    id: 'spiritual-weapon',
+    name: 'Spiritual Weapon',
+    description: 'You create a floating, spectral weapon that can attack enemies.',
+    type: 'spell',
+    school: 'radiant',
+    tier: 2,
+    actionCost: 0, // Bonus action
+    roll: {
+      dice: { count: 1, sides: 8 },
+      attribute: 'will'
+    },
+    resourceCost: {
+      type: 'fixed',
+      resourceId: 'mana',
+      amount: 2
+    }
+  },
+  {
+    id: 'daylight',
+    name: 'Daylight',
+    description: 'A 60-foot-radius sphere of light spreads out from a point you choose within range.',
+    type: 'spell',
+    school: 'radiant',
+    tier: 3,
+    actionCost: 1,
+    resourceCost: {
+      type: 'fixed',
+      resourceId: 'mana',
+      amount: 3
+    }
+  },
+  {
+    id: 'guardian-of-faith',
+    name: 'Guardian of Faith',
+    description: 'A Large spectral guardian hovers near you for the duration.',
+    type: 'spell',
+    school: 'radiant',
+    tier: 4,
+    actionCost: 1,
+    roll: {
+      dice: { count: 6, sides: 8 }
+    },
+    resourceCost: {
+      type: 'fixed',
+      resourceId: 'mana',
+      amount: 4
+    }
+  }
+];
+
+/**
  * Get cleric spells by resource
  */
 export function getClericSpellsByResource(resourceId: string): ActionAbility[] {
   return exampleClericSpells.filter(spell => 
     spell.resourceCost?.resourceId === resourceId
   );
+}
+
+/**
+ * Get spells from a specific school
+ */
+export function getSpellsBySchool(schoolId: string): SpellAbility[] {
+  if (schoolId === 'fire') {
+    return fireSchoolSpells;
+  }
+  if (schoolId === 'radiant') {
+    return radiantSchoolSpells;
+  }
+  return [];
 }

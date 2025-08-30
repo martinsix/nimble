@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { Button } from "./ui/button";
-import { Sword, Target, User, Package, ScrollText } from "lucide-react";
+import { Sword, Target, User, Package, Sparkles, ScrollText } from "lucide-react";
 import { TabType } from "@/lib/services/ui-state-service";
+import { useCharacterService } from "@/lib/hooks/use-character-service";
 
 interface BottomTabBarProps {
   activeTab: TabType;
@@ -18,6 +19,7 @@ interface TabDefinition {
 
 const tabs: TabDefinition[] = [
   { id: 'combat', label: 'Combat', icon: Sword },
+  { id: 'spells', label: 'Spells', icon: Sparkles },
   { id: 'skills', label: 'Skills', icon: Target },
   { id: 'character', label: 'Character', icon: User },
   { id: 'equipment', label: 'Equipment', icon: Package },
@@ -25,11 +27,25 @@ const tabs: TabDefinition[] = [
 ];
 
 export function BottomTabBar({ activeTab, onTabChange }: BottomTabBarProps) {
+  const { character } = useCharacterService();
+  
+  // Filter tabs based on character capabilities
+  const visibleTabs = tabs.filter(tab => {
+    // Hide spells tab if character has no spell access or no spells
+    if (tab.id === 'spells') {
+      if (!character || character.spellTierAccess === 0) return false;
+      // Also check if character has any spell abilities
+      const hasSpells = character.abilities.abilities.some(ability => ability.type === 'spell');
+      return hasSpells;
+    }
+    return true;
+  });
+  
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background border-t z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
       <div className="w-full px-2 sm:px-4">
         <div className="flex justify-around items-center h-16 max-w-screen-sm mx-auto">
-          {tabs.map((tab) => {
+          {visibleTabs.map((tab) => {
             const IconComponent = tab.icon;
             const isActive = activeTab === tab.id;
             

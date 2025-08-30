@@ -61,7 +61,12 @@ export function AbilitySection() {
   
   const isOpen = uiState.collapsibleSections.abilities;
   const onToggle = (isOpen: boolean) => updateCollapsibleState('abilities', isOpen);
-  const abilities = character.abilities;
+  
+  // Filter out spell abilities - they have their own spells tab
+  const abilities = {
+    ...character.abilities,
+    abilities: character.abilities.abilities.filter(ability => ability.type !== 'spell')
+  };
 
   const handleUseAbility = async (abilityId: string, variableAmount?: number) => {
     if (!character) return;

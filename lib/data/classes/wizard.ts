@@ -19,24 +19,14 @@ export const wizard: ClassDefinition = {
   features: [
     {
       level: 1,
-      type: 'spell_access',
-      name: 'Cantrips',
-      description: 'You know three cantrips of your choice from the wizard spell list.',
-      spellAccess: {
-        spellLevel: 0,
-        cantrips: 3,
-        spellList: 'wizard'
-      }
-    },
-    {
-      level: 1,
-      type: 'spell_access',
-      name: 'Spellcasting',
-      description: 'You have learned to cast spells through study and preparation.',
-      spellAccess: {
-        spellLevel: 1,
-        spellsKnown: 6,
-        spellList: 'wizard'
+      type: 'spell_school',
+      name: 'Fire Magic',
+      description: 'You gain access to the Fire school of magic, learning to harness the power of flame.',
+      spellSchool: {
+        schoolId: 'fire',
+        name: 'Fire Magic',
+        description: 'Spells that harness the destructive power of fire and flame',
+        spells: ['fire-bolt', 'burning-hands', 'fireball', 'fire-shield', 'wall-of-fire']
       }
     },
     {
@@ -53,54 +43,18 @@ export const wizard: ClassDefinition = {
       }
     },
     {
-      level: 1,
-      type: 'ability',
-      name: 'Magic Missile',
-      description: 'You learn the Magic Missile spell, a reliable force projectile.',
-      ability: {
-        id: 'magic-missile',
-        name: 'Magic Missile',
-        description: 'You create three glowing darts of magical force. Each dart hits a creature of your choice within range.',
-        type: 'action',
-        frequency: 'per_safe_rest',
-        maxUses: 3,
-        currentUses: 3,
-        actionCost: 1,
-        roll: {
-          dice: { count: 3, sides: 4 },
-          modifier: 3
-        },
-        resourceCost: {
-          type: 'fixed',
-          resourceId: 'mana',
-          amount: 1
-        }
-      }
-    },
-    {
-      level: 1,
-      type: 'ability',
-      name: 'Eldritch Blast',
-      description: 'You learn a powerful cantrip that requires no mana.',
-      ability: {
-        id: 'eldritch-blast',
-        name: 'Eldritch Blast',
-        description: 'A beam of crackling energy streaks toward a creature within range. This is a cantrip that requires no mana.',
-        type: 'action',
-        frequency: 'at_will',
-        actionCost: 1,
-        roll: {
-          dice: { count: 1, sides: 10 },
-          attribute: 'intelligence'
-        }
-      }
-    },
-    {
       level: 2,
       type: 'subclass_choice',
       name: 'Arcane Tradition',
       description: 'Choose a school of magic to focus your studies and shape your magical abilities.',
       availableSubclasses: ['wizard-evocation']
+    },
+    {
+      level: 1,
+      type: 'spell_tier_access',
+      name: 'Spellcasting',
+      description: 'You learn to cast spells of 1st tier.',
+      maxTier: 1
     },
     {
       level: 2,
@@ -121,27 +75,10 @@ export const wizard: ClassDefinition = {
     },
     {
       level: 3,
-      type: 'ability',
-      name: 'Fireball',
-      description: 'You learn the devastating Fireball spell.',
-      ability: {
-        id: 'fireball',
-        name: 'Fireball',
-        description: 'A bright streak flashes from your pointing finger to a point within range and blossoms into a burst of flame.',
-        type: 'action',
-        frequency: 'per_safe_rest',
-        maxUses: 1,
-        currentUses: 1,
-        actionCost: 1,
-        roll: {
-          dice: { count: 8, sides: 6 }
-        },
-        resourceCost: {
-          type: 'fixed',
-          resourceId: 'mana',
-          amount: 3
-        }
-      }
+      type: 'spell_tier_access',
+      name: 'Advanced Spellcasting',
+      description: 'You learn to cast spells of 2nd tier.',
+      maxTier: 2
     },
     {
       level: 4,

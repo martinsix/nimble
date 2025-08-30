@@ -2,7 +2,7 @@ import { HitDieSize, AttributeName, SaveAdvantageMap } from './character';
 import { Ability } from './abilities';
 import { ResourceDefinition } from './resources';
 
-export type ClassFeatureType = 'ability' | 'passive_feature' | 'stat_boost' | 'proficiency' | 'spell_access' | 'resource' | 'subclass_choice';
+export type ClassFeatureType = 'ability' | 'passive_feature' | 'stat_boost' | 'proficiency' | 'spell_school' | 'spell_tier_access' | 'resource' | 'subclass_choice';
 
 export interface StatBoost {
   attribute: AttributeName;
@@ -15,11 +15,11 @@ export interface ProficiencyGrant {
   bonus?: number; // Optional bonus beyond proficiency
 }
 
-export interface SpellAccess {
-  spellLevel: number;
-  spellsKnown?: number; // Number of spells learned at this level
-  cantrips?: number; // Number of cantrips learned
-  spellList?: string; // Which spell list to use (e.g., 'wizard', 'cleric')
+export interface SpellSchool {
+  schoolId: string; // Unique identifier for the school (e.g., 'fire', 'radiant')
+  name: string; // Display name (e.g., 'Fire Magic', 'Radiant Magic')
+  description: string; // Description of the school
+  spells: string[]; // Array of spell IDs available in this school
 }
 
 
@@ -54,10 +54,10 @@ export interface ProficiencyFeature extends BaseClassFeature {
   proficiencies: ProficiencyGrant[];
 }
 
-// Spell access - grants spellcasting or new spells
-export interface SpellAccessFeature extends BaseClassFeature {
-  type: 'spell_access';
-  spellAccess: SpellAccess;
+// Spell school - grants access to a school of magic
+export interface SpellSchoolFeature extends BaseClassFeature {
+  type: 'spell_school';
+  spellSchool: SpellSchool;
 }
 
 // Resource - grants new resources (like Ki, Bardic Inspiration, etc.)
@@ -65,6 +65,12 @@ export interface ResourceFeature extends BaseClassFeature {
   type: 'resource';
   resourceDefinition: ResourceDefinition;
   startingAmount?: number; // Optional override for initial current amount (defaults to maxValue)
+}
+
+// Spell Tier Access - grants access to higher tiers of spells
+export interface SpellTierAccessFeature extends BaseClassFeature {
+  type: 'spell_tier_access';
+  maxTier: number; // Maximum spell tier this feature grants access to (1-9)
 }
 
 // Subclass Choice - allows player to choose a subclass specialization
@@ -78,7 +84,8 @@ export type ClassFeature =
   | PassiveFeature 
   | StatBoostFeature 
   | ProficiencyFeature 
-  | SpellAccessFeature 
+  | SpellSchoolFeature 
+  | SpellTierAccessFeature
   | ResourceFeature
   | SubclassChoiceFeature;
 

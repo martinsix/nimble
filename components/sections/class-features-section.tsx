@@ -35,7 +35,8 @@ export function ClassFeaturesSection() {
   const passiveFeatures = availableFeatures.filter(f => f.type === 'passive_feature');
   const statBoosts = availableFeatures.filter(f => f.type === 'stat_boost');
   const proficiencies = availableFeatures.filter(f => f.type === 'proficiency');
-  const spellAccess = availableFeatures.filter(f => f.type === 'spell_access');
+  const spellSchools = availableFeatures.filter(f => f.type === 'spell_school');
+  const spellTierAccess = availableFeatures.filter(f => f.type === 'spell_tier_access');
   const resources = availableFeatures.filter(f => f.type === 'resource');
 
   const getFeatureIcon = (type: ClassFeature['type']) => {
@@ -48,8 +49,10 @@ export function ClassFeaturesSection() {
         return <TrendingUp className="w-4 h-4" />;
       case 'proficiency':
         return <Star className="w-4 h-4" />;
-      case 'spell_access':
+      case 'spell_school':
         return <Sparkles className="w-4 h-4" />;
+      case 'spell_tier_access':
+        return <Star className="w-4 h-4" />;
       case 'resource':
         return <Zap className="w-4 h-4" />;
       default:
@@ -67,8 +70,10 @@ export function ClassFeaturesSection() {
         return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'proficiency':
         return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'spell_access':
+      case 'spell_school':
         return 'bg-indigo-100 text-indigo-800 border-indigo-200';
+      case 'spell_tier_access':
+        return 'bg-cyan-100 text-cyan-800 border-cyan-200';
       case 'resource':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       default:
@@ -86,8 +91,10 @@ export function ClassFeaturesSection() {
         return 'Stat Boost';
       case 'proficiency':
         return 'Proficiency';
-      case 'spell_access':
-        return 'Spell Access';
+      case 'spell_school':
+        return 'Spell School';
+      case 'spell_tier_access':
+        return 'Spell Tier Access';
       case 'resource':
         return 'Resource';
       default:
@@ -253,15 +260,15 @@ export function ClassFeaturesSection() {
                   </div>
                 )}
 
-                {/* Spell Access */}
-                {spellAccess.length > 0 && (
+                {/* Spell Schools */}
+                {spellSchools.length > 0 && (
                   <div className="space-y-3">
                     <h3 className="text-lg font-semibold text-indigo-600 flex items-center gap-2">
                       <Sparkles className="w-5 h-5" />
-                      Spell Access ({spellAccess.length})
+                      Spell Schools ({spellSchools.length})
                     </h3>
                     <div className="space-y-3">
-                      {spellAccess.map((feature, index) => (
+                      {spellSchools.map((feature, index) => (
                         <div key={index} className="border rounded-lg p-4 space-y-2">
                           <div className="flex items-start justify-between">
                             <div className="space-y-1">
@@ -274,21 +281,51 @@ export function ClassFeaturesSection() {
                               <p className="text-sm text-muted-foreground">
                                 {feature.description}
                               </p>
-                              {feature.type === 'spell_access' && feature.spellAccess && (
+                              {feature.type === 'spell_school' && feature.spellSchool && (
                                 <div className="flex gap-2 mt-2">
                                   <Badge variant="secondary" className="text-xs">
-                                    Level {feature.spellAccess.spellLevel} Spells
+                                    {feature.spellSchool.name}
                                   </Badge>
-                                  {feature.spellAccess.spellsKnown && (
-                                    <Badge variant="secondary" className="text-xs">
-                                      {feature.spellAccess.spellsKnown} spells known
-                                    </Badge>
-                                  )}
-                                  {feature.spellAccess.cantrips && (
-                                    <Badge variant="secondary" className="text-xs">
-                                      {feature.spellAccess.cantrips} cantrips
-                                    </Badge>
-                                  )}
+                                  <Badge variant="secondary" className="text-xs">
+                                    {feature.spellSchool.spells.length} spells
+                                  </Badge>
+                                </div>
+                              )}
+                            </div>
+                            {getFeatureIcon(feature.type)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Spell Tier Access */}
+                {spellTierAccess.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-cyan-600 flex items-center gap-2">
+                      <Star className="w-5 h-5" />
+                      Spell Tier Access ({spellTierAccess.length})
+                    </h3>
+                    <div className="space-y-3">
+                      {spellTierAccess.map((feature, index) => (
+                        <div key={index} className="border rounded-lg p-4 space-y-2">
+                          <div className="flex items-start justify-between">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-semibold">{feature.name}</h4>
+                                <Badge variant="outline" className={getFeatureTypeColor(feature.type)}>
+                                  Level {feature.level}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                {feature.description}
+                              </p>
+                              {feature.type === 'spell_tier_access' && feature.maxTier && (
+                                <div className="flex gap-2 mt-2">
+                                  <Badge variant="secondary" className="text-xs">
+                                    Max Tier: {feature.maxTier}
+                                  </Badge>
                                 </div>
                               )}
                             </div>

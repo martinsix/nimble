@@ -67,13 +67,15 @@ interface ResourceInstance {
 ```
 
 #### Service Architecture
+- **CharacterCreationService** handles character creation with proper initialization and class features (primary responsibility for character creation)
+- **CharacterStorageService** handles character persistence operations (CRUD only, no creation logic)
 - **CharacterService** handles character CRUD operations with validation and business logic
 - **ResourceService** manages generic resource system (mana, fury, focus, etc.) with configurable reset conditions
 - **DiceService** manages all dice rolling mechanics with advantage/disadvantage and critical hits
 - **ActivityLogService** tracks character actions, dice rolls, and resource usage
 - **AbilityService** handles ability usage, cooldowns, and roll calculations
 - **SettingsService** manages app settings and character selection
-- **ClassService** handles class definitions, subclass management, and feature progression
+- **ClassService** handles class definitions, subclass management, feature progression, and spell tier system
 - **UIStateService** manages collapsible sections and UI preferences
 - **Singleton pattern** for direct service access without React Context overhead
 

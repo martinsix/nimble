@@ -6,8 +6,8 @@ import { getCharacterService } from '../services/service-factory';
  * Custom hook that provides direct access to character service with automatic re-rendering.
  * Eliminates the need for React Context by subscribing to service changes directly.
  * 
- * This hook only provides character state and basic CRUD operations.
- * Use useDiceActions and useCombatActions for dice rolling and combat functionality.
+ * This hook provides character state and all character operations including combat actions.
+ * Use useDiceActions for dice rolling functionality.
  */
 export function useCharacterService() {
   const [character, setCharacter] = useState<Character | null>(null);

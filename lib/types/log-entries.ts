@@ -99,5 +99,19 @@ export interface ResourceUsageEntry extends BaseLogEntry {
   maxAmount: number; // Maximum amount for this resource
 }
 
+// Spell cast entry
+export interface SpellCastEntry extends BaseLogEntry {
+  type: 'spell_cast';
+  spellName: string; // Name of the spell cast
+  school: string; // Spell school (e.g., 'fire', 'radiant')
+  tier: number; // Spell tier (1-9)
+  resourceCost?: {
+    resourceId: string;
+    resourceName: string;
+    amount: number;
+  }; // Resource cost if any
+  actionCost: number; // Action cost (0 = bonus action, 1 = action, etc.)
+}
+
 // Union type for all log entries
-export type LogEntry = DiceRollEntry | DamageEntry | HealingEntry | TempHPEntry | InitiativeEntry | AbilityUsageEntry | SafeRestEntry | CatchBreathEntry | MakeCampEntry | ResourceUsageEntry;
+export type LogEntry = DiceRollEntry | DamageEntry | HealingEntry | TempHPEntry | InitiativeEntry | AbilityUsageEntry | SafeRestEntry | CatchBreathEntry | MakeCampEntry | ResourceUsageEntry | SpellCastEntry;

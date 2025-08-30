@@ -44,7 +44,16 @@ export interface ActionAbility extends BaseAbility {
   resourceCost?: ResourceCost; // Optional resource cost
 }
 
-export type Ability = FreeformAbility | ActionAbility;
+export interface SpellAbility extends BaseAbility {
+  type: 'spell';
+  school: string; // Which spell school this belongs to (e.g., 'fire', 'radiant')
+  tier: number; // Spell tier from 1 to 9
+  roll?: AbilityRoll; // Optional roll information
+  actionCost?: number; // Optional action cost (0 = free action, 1 = action, etc.)
+  resourceCost?: ResourceCost; // Optional resource cost
+}
+
+export type Ability = FreeformAbility | ActionAbility | SpellAbility;
 
 export interface Abilities {
   abilities: Ability[];

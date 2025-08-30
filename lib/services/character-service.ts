@@ -1,5 +1,5 @@
 import { Character, ActionTracker, CharacterConfiguration } from '../types/character';
-import { Abilities, ActionAbility } from '../types/abilities';
+import { Abilities, ActionAbility, SpellAbility } from '../types/abilities';
 import { DiceType } from '../types/dice';
 import { ICharacterService, ICharacterStorage, IActivityLog, IAbilityService } from './interfaces';
 import { resourceService } from './resource-service';
@@ -654,14 +654,33 @@ export class CharacterService implements ICharacterService {
       await this.saveCharacter();
       this.notifyCharacterChanged();
 
-      // Log the ability usage
-      const logEntry = this.logService.createAbilityUsageEntry(
-        result.usedAbility.name,
-        result.usedAbility.frequency,
-        result.usedAbility.currentUses || 0,
-        result.usedAbility.maxUses || 0
-      );
-      await this.logService.addLogEntry(logEntry);
+      // Log the ability usage - create different entries for spells vs actions
+      if (result.usedAbility.type === 'spell') {
+        const spellAbility = result.usedAbility as SpellAbility;
+        const resourceCostInfo = result.resourceCost ? {
+          resourceId: result.resourceCost.resourceId,
+          resourceName: this._character.resources.find(r => r.definition.id === result.resourceCost!.resourceId)?.definition.name || result.resourceCost.resourceId,
+          amount: result.resourceCost.amount
+        } : undefined;
+        
+        const spellLogEntry = this.logService.createSpellCastEntry(
+          spellAbility.name,
+          spellAbility.school,
+          spellAbility.tier,
+          result.actionsRequired || 0,
+          resourceCostInfo
+        );
+        await this.logService.addLogEntry(spellLogEntry);
+      } else {
+        const actionAbility = result.usedAbility as ActionAbility;
+        const logEntry = this.logService.createAbilityUsageEntry(
+          actionAbility.name,
+          actionAbility.frequency,
+          actionAbility.currentUses || 0,
+          actionAbility.maxUses || 0
+        );
+        await this.logService.addLogEntry(logEntry);
+      }
 
       // Handle ability roll if it has one
       if (result.usedAbility.roll) {

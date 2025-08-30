@@ -1,8 +1,6 @@
 import { Character, CreateCharacterData } from '../types/character';
 import { ICharacterRepository, LocalStorageCharacterRepository } from '../storage/character-repository';
 import { createCharacterSchema, characterSchema } from '../schemas/character';
-import { createDefaultCharacterConfiguration, createDefaultHitPoints, createDefaultHitDice, createDefaultProficiencies, createDefaultResources } from '../utils/character-defaults';
-import { getClassDefinition } from '../data/classes/index';
 
 export class CharacterStorageService {
   private readonly characterListStorageKey = 'nimble-navigator-character-list';
@@ -67,54 +65,6 @@ export class CharacterStorageService {
     }
   }
 
-  async createCharacterWithDefaults(name: string, classId: string = 'fighter'): Promise<Character> {
-    const characterId = `character-${Date.now()}`;
-    const config = createDefaultCharacterConfiguration();
-    const classDefinition = getClassDefinition(classId);
-    
-    if (!classDefinition) {
-      throw new Error(`Class not found: ${classId}`);
-    }
-
-    const hitPoints = createDefaultHitPoints(classDefinition.startingHP);
-    const hitDice = createDefaultHitDice(1, classDefinition.hitDieSize);
-    const proficiencies = createDefaultProficiencies(classDefinition);
-    
-    const character = await this.createCharacter({
-      name,
-      ancestry: 'Human', // Default ancestry
-      level: 1,
-      classId,
-      grantedFeatures: [], // No features granted yet
-      proficiencies,
-      attributes: { strength: 0, dexterity: 0, intelligence: 0, will: 0 },
-      saveAdvantages: { ...classDefinition.saveAdvantages },
-      hitPoints,
-      hitDice,
-      wounds: { current: 0, max: config.maxWounds },
-      resources: createDefaultResources(),
-      config,
-      initiative: { name: 'Initiative', associatedAttribute: 'dexterity', modifier: 0 },
-      actionTracker: { current: 3, base: 3, bonus: 0 },
-      inEncounter: false,
-      skills: {
-        arcana: { name: 'Arcana', associatedAttribute: 'intelligence', modifier: 0 },
-        examination: { name: 'Examination', associatedAttribute: 'intelligence', modifier: 0 },
-        finesse: { name: 'Finesse', associatedAttribute: 'dexterity', modifier: 0 },
-        influence: { name: 'Influence', associatedAttribute: 'will', modifier: 0 },
-        insight: { name: 'Insight', associatedAttribute: 'will', modifier: 0 },
-        might: { name: 'Might', associatedAttribute: 'strength', modifier: 0 },
-        lore: { name: 'Lore', associatedAttribute: 'intelligence', modifier: 0 },
-        naturecraft: { name: 'Naturecraft', associatedAttribute: 'will', modifier: 0 },
-        perception: { name: 'Perception', associatedAttribute: 'will', modifier: 0 },
-        stealth: { name: 'Stealth', associatedAttribute: 'will', modifier: 0 },
-      },
-      inventory: { maxSize: config.maxInventorySize + 0, items: [] }, // config.maxInventorySize + strength (0 for new characters)
-      abilities: { abilities: [] },
-    }, characterId);
-
-    return character;
-  }
 
 }
 

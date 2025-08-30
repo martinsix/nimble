@@ -1,4 +1,4 @@
-import { Abilities, Ability, ActionAbility, AbilityRoll, ResourceCost } from '../types/abilities';
+import { Abilities, Ability, ActionAbility, SpellAbility, AbilityRoll, ResourceCost } from '../types/abilities';
 import { Character } from '../types/character';
 import { ResourceInstance } from '../types/resources';
 
@@ -16,7 +16,7 @@ export class AbilityService {
     variableResourceAmount?: number
   ): { 
     updatedAbilities: Abilities; 
-    usedAbility: ActionAbility | null;
+    usedAbility: ActionAbility | SpellAbility | null;
     success: boolean;
     actionsRequired?: number;
     resourceCost?: { resourceId: string; amount: number };
@@ -24,7 +24,7 @@ export class AbilityService {
   } {
     const ability = abilities.abilities.find(a => a.id === abilityId);
     
-    if (!ability || ability.type !== 'action') {
+    if (!ability || (ability.type !== 'action' && ability.type !== 'spell')) {
       return { updatedAbilities: abilities, usedAbility: null, success: false };
     }
 
@@ -98,8 +98,8 @@ export class AbilityService {
       resourceCostInfo = { resourceId: resourceCost.resourceId, amount: requiredAmount };
     }
 
-    // At-will abilities can be used if action cost is satisfied
-    if (ability.frequency === 'at_will') {
+    // Spells are always available (like at-will abilities)
+    if (ability.type === 'spell') {
       return { 
         updatedAbilities: abilities, 
         usedAbility: ability, 
@@ -109,11 +109,23 @@ export class AbilityService {
       };
     }
 
-    // For limited-use abilities, check uses remaining
-    if (!ability.currentUses || ability.currentUses <= 0) {
+    // At-will action abilities can be used if action cost is satisfied
+    if (ability.type === 'action' && ability.frequency === 'at_will') {
+      return { 
+        updatedAbilities: abilities, 
+        usedAbility: ability, 
+        success: true, 
+        actionsRequired: actionCost,
+        resourceCost: resourceCostInfo
+      };
+    }
+
+    // For limited-use action abilities, check uses remaining
+    if (ability.type === 'action' && (!ability.currentUses || ability.currentUses <= 0)) {
       return { updatedAbilities: abilities, usedAbility: null, success: false };
     }
 
+    // Update uses for limited-use action abilities
     const updatedAbilities: Abilities = {
       abilities: abilities.abilities.map(a => 
         a.id === abilityId && a.type === 'action'
@@ -122,7 +134,9 @@ export class AbilityService {
       )
     };
 
-    const usedAbility = { ...ability, currentUses: (ability.currentUses || 1) - 1 };
+    const usedAbility = ability.type === 'action' 
+      ? { ...ability, currentUses: (ability.currentUses || 1) - 1 }
+      : ability;
 
     return { 
       updatedAbilities, 
@@ -182,6 +196,25 @@ export class AbilityService {
   getActionAbilities(abilities: Abilities): ActionAbility[] {
     return abilities.abilities.filter(
       (ability): ability is ActionAbility => ability.type === 'action'
+    );
+  }
+
+  /**
+   * Get all spell abilities
+   */
+  getSpellAbilities(abilities: Abilities): SpellAbility[] {
+    return abilities.abilities.filter(
+      (ability): ability is SpellAbility => ability.type === 'spell'
+    );
+  }
+
+  /**
+   * Get all usable abilities (action and spell types)
+   */
+  getUsableAbilities(abilities: Abilities): (ActionAbility | SpellAbility)[] {
+    return abilities.abilities.filter(
+      (ability): ability is ActionAbility | SpellAbility => 
+        ability.type === 'action' || ability.type === 'spell'
     );
   }
 
