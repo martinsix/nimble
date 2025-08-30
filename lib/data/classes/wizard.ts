@@ -53,6 +53,49 @@ export const wizard: ClassDefinition = {
       }
     },
     {
+      level: 1,
+      type: 'ability',
+      name: 'Magic Missile',
+      description: 'You learn the Magic Missile spell, a reliable force projectile.',
+      ability: {
+        id: 'magic-missile',
+        name: 'Magic Missile',
+        description: 'You create three glowing darts of magical force. Each dart hits a creature of your choice within range.',
+        type: 'action',
+        frequency: 'per_safe_rest',
+        maxUses: 3,
+        currentUses: 3,
+        actionCost: 1,
+        roll: {
+          dice: { count: 3, sides: 4 },
+          modifier: 3
+        },
+        resourceCost: {
+          type: 'fixed',
+          resourceId: 'mana',
+          amount: 1
+        }
+      }
+    },
+    {
+      level: 1,
+      type: 'ability',
+      name: 'Eldritch Blast',
+      description: 'You learn a powerful cantrip that requires no mana.',
+      ability: {
+        id: 'eldritch-blast',
+        name: 'Eldritch Blast',
+        description: 'A beam of crackling energy streaks toward a creature within range. This is a cantrip that requires no mana.',
+        type: 'action',
+        frequency: 'at_will',
+        actionCost: 1,
+        roll: {
+          dice: { count: 1, sides: 10 },
+          attribute: 'intelligence'
+        }
+      }
+    },
+    {
       level: 2,
       type: 'subclass_choice',
       name: 'Arcane Tradition',
@@ -74,6 +117,30 @@ export const wizard: ClassDefinition = {
         resetType: 'to_max',
         minValue: 0,
         maxValue: 5
+      }
+    },
+    {
+      level: 3,
+      type: 'ability',
+      name: 'Fireball',
+      description: 'You learn the devastating Fireball spell.',
+      ability: {
+        id: 'fireball',
+        name: 'Fireball',
+        description: 'A bright streak flashes from your pointing finger to a point within range and blossoms into a burst of flame.',
+        type: 'action',
+        frequency: 'per_safe_rest',
+        maxUses: 1,
+        currentUses: 1,
+        actionCost: 1,
+        roll: {
+          dice: { count: 8, sides: 6 }
+        },
+        resourceCost: {
+          type: 'fixed',
+          resourceId: 'mana',
+          amount: 3
+        }
       }
     },
     {
