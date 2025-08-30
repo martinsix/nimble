@@ -1,6 +1,6 @@
 "use client";
 
-import { LogEntry, DiceRollEntry, DamageEntry, HealingEntry, TempHPEntry, InitiativeEntry, AbilityUsageEntry, SafeRestEntry, CatchBreathEntry, MakeCampEntry, ResourceUsageEntry } from "@/lib/types/log-entries";
+import { LogEntry, DiceRollEntry, DamageEntry, HealingEntry, TempHPEntry, InitiativeEntry, AbilityUsageEntry, SafeRestEntry, CatchBreathEntry, MakeCampEntry, ResourceUsageEntry, SpellCastEntry } from "@/lib/types/log-entries";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
@@ -145,7 +145,7 @@ function RollEntryDisplay({ roll, formatTime }: { roll: DiceRollEntry, formatTim
 }
 
 // Component for displaying non-roll entries
-function NonRollEntryDisplay({ entry, formatTime }: { entry: DamageEntry | HealingEntry | TempHPEntry | InitiativeEntry | AbilityUsageEntry | SafeRestEntry | CatchBreathEntry | MakeCampEntry | ResourceUsageEntry, formatTime: (date: Date) => string }) {
+function NonRollEntryDisplay({ entry, formatTime }: { entry: DamageEntry | HealingEntry | TempHPEntry | InitiativeEntry | AbilityUsageEntry | SafeRestEntry | CatchBreathEntry | MakeCampEntry | ResourceUsageEntry | SpellCastEntry, formatTime: (date: Date) => string }) {
   const getEntryIcon = () => {
     switch (entry.type) {
       case 'damage':
@@ -166,6 +166,8 @@ function NonRollEntryDisplay({ entry, formatTime }: { entry: DamageEntry | Heali
         return '🏕️';
       case 'resource':
         return '💎';
+      case 'spell_cast':
+        return '🔮';
       default:
         return '📝';
     }
@@ -191,6 +193,8 @@ function NonRollEntryDisplay({ entry, formatTime }: { entry: DamageEntry | Heali
         return 'text-orange-600';
       case 'resource':
         return 'text-purple-600';
+      case 'spell_cast':
+        return 'text-indigo-600';
       default:
         return 'text-muted-foreground';
     }

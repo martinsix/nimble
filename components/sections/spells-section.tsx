@@ -7,14 +7,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { Badge } from "../ui/badge";
-import { Sparkles, ChevronDown, ChevronRight, Zap } from "lucide-react";
+import { Sparkles, ChevronDown, ChevronRight, Zap, Lock } from "lucide-react";
 import { useCharacterService } from "@/lib/hooks/use-character-service";
 import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
+import { getSpellsBySchool } from "@/lib/data/example-abilities";
+import { getAllClassFeaturesUpToLevel } from "@/lib/data/classes/index";
 
 export function SpellsSection() {
   const { character, performUseAbility } = useCharacterService();
   const { uiState, updateCollapsibleState } = useUIStateService();
   const [openSchools, setOpenSchools] = useState<Record<string, boolean>>({});
+  const [openLockedSchools, setOpenLockedSchools] = useState<Record<string, boolean>>({});
+  const [isLockedSectionOpen, setIsLockedSectionOpen] = useState<boolean>(false);
   
   if (!character || character.spellTierAccess === 0) return null;
   
@@ -26,6 +30,31 @@ export function SpellsSection() {
     resource.definition.id.toLowerCase() === 'mana' || 
     resource.definition.name.toLowerCase().includes('mana')
   );
+  
+  // Get all spell schools the character has access to
+  const availableFeatures = getAllClassFeaturesUpToLevel(character.classId, character.level);
+  const spellSchoolFeatures = availableFeatures.filter(f => f.type === 'spell_school');
+  
+  // Get all locked spells by school
+  const getLockedSpellsBySchool = () => {
+    const lockedSpellsBySchool: Record<string, SpellAbility[]> = {};
+    
+    spellSchoolFeatures.forEach(feature => {
+      if (feature.type === 'spell_school' && feature.spellSchool) {
+        const schoolId = feature.spellSchool.schoolId;
+        const allSpells = getSpellsBySchool(schoolId);
+        const lockedSpells = allSpells.filter(spell => spell.tier > character.spellTierAccess);
+        
+        if (lockedSpells.length > 0) {
+          lockedSpellsBySchool[schoolId] = lockedSpells;
+        }
+      }
+    });
+    
+    return lockedSpellsBySchool;
+  };
+  
+  const lockedSpellsBySchool = getLockedSpellsBySchool();
   
   if (spellAbilities.length === 0) {
     return (
@@ -208,6 +237,97 @@ export function SpellsSection() {
             </Collapsible>
           );
         })}
+        
+        {/* Locked Spells Section */}
+        {Object.keys(lockedSpellsBySchool).length > 0 && (
+          <div className="pt-6 border-t">
+            <Collapsible open={isLockedSectionOpen} onOpenChange={setIsLockedSectionOpen}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between p-4 h-auto">
+                  <h3 className={`text-lg font-semibold flex items-center gap-2 text-muted-foreground`}>
+                    <Lock className="w-5 h-5" />
+                    Locked Spells
+                  </h3>
+                  {isLockedSectionOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="space-y-4 pt-2">
+                  {Object.entries(lockedSpellsBySchool).map(([schoolId, spells]) => {
+                    const schoolFeature = spellSchoolFeatures.find(f => 
+                      f.type === 'spell_school' && f.spellSchool?.schoolId === schoolId
+                    );
+                    const schoolName = schoolFeature?.spellSchool?.name || schoolId;
+                    const isOpen = openLockedSchools[schoolId] ?? false;
+                    
+                    return (
+                      <Collapsible key={schoolId} open={isOpen} onOpenChange={(open) => {
+                        setOpenLockedSchools(prev => ({ ...prev, [schoolId]: open }));
+                      }}>
+                        <CollapsibleTrigger asChild>
+                          <Button variant="ghost" className="w-full justify-between p-4 h-auto">
+                            <h4 className={`font-semibold flex items-center gap-2 ${getSchoolColor(schoolId)}`}>
+                              <Sparkles className="w-4 h-4" />
+                              {formatSchoolName(schoolId)} ({spells.length} locked)
+                            </h4>
+                            {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                          </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="space-y-3 pt-2 pl-4">
+                            {spells.map((spell) => (
+                              <div key={spell.id} className="border rounded-lg p-4 space-y-3 bg-muted/30">
+                                <div className="flex items-start justify-between">
+                                  <div className="space-y-2 flex-1">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <h5 className="font-semibold text-muted-foreground">{spell.name}</h5>
+                                      <Badge variant="outline" className={getTierColor(spell.tier)}>
+                                        Tier {spell.tier}
+                                      </Badge>
+                                      <Badge variant="outline" className="text-red-600 border-red-600">
+                                        Requires Tier {spell.tier} Access
+                                      </Badge>
+                                      {spell.actionCost !== undefined && (
+                                        <Badge variant="secondary" className="text-xs">
+                                          {spell.actionCost === 0 ? 'Bonus Action' : 
+                                           spell.actionCost === 1 ? 'Action' : 
+                                           `${spell.actionCost} Actions`}
+                                        </Badge>
+                                      )}
+                                      {spell.resourceCost && (
+                                        <Badge variant="secondary" className="text-xs">
+                                          {spell.resourceCost.type === 'fixed' 
+                                            ? `${spell.resourceCost.amount} ${spell.resourceCost.resourceId}`
+                                            : `${spell.resourceCost.minAmount}-${spell.resourceCost.maxAmount} ${spell.resourceCost.resourceId}`
+                                          }
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <p className="text-sm text-muted-foreground/70">
+                                      {spell.description}
+                                    </p>
+                                    {spell.roll && (
+                                      <div className="text-xs text-muted-foreground/70">
+                                        Roll: {spell.roll.dice.count}d{spell.roll.dice.sides}
+                                        {spell.roll.modifier && ` + ${spell.roll.modifier}`}
+                                        {spell.roll.attribute && ` + ${spell.roll.attribute}`}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <Lock className="w-4 h-4 text-muted-foreground ml-4" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    );
+                  })}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

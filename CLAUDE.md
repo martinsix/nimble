@@ -203,7 +203,20 @@ app/page.tsx (main orchestrator)
     - Automatic ability resets on turn/encounter end
     - Visual usage tracking and roll descriptions
 
-10. **Dice Rolling & Combat**
+11. **Spell System**
+    - **Tier-Based Access (1-9)**: Progressive spell unlocking as characters level up
+    - **School-Based Organization**: Spells grouped by magical schools (fire, radiant, frost, nature, shadow, arcane)
+    - **Class Integration**: Automatic spell school access through class features (Wizard gets Fire Magic, Cleric gets Radiant Magic)
+    - **Resource Integration**: Spells consume mana or other class-specific resources
+    - **Dedicated Spell Tab**: Separate interface for spell management with mana tracker
+    - **Smart Visibility**: Spells tab automatically hidden for non-spellcasting characters
+    - **Expandable School Cards**: Class features section shows unlocked/locked spells per school
+    - **Locked Spells Preview**: Spells tab shows future spells available when tier access increases
+    - **Spell Cast Logging**: Dedicated activity log entries with school, tier, and resource cost details
+    - **Dynamic Tab Positioning**: Spells tab positioned prominently (2nd position) for spellcasters
+    - **Visual Spell Status**: Clear indicators for unlocked vs locked spells with tier requirements
+
+12. **Dice Rolling & Combat**
     - **Attack Rolls**: Exploding crits, miss on natural 1
     - **Checks/Saves**: Standard d20 + modifier (no crits/misses)
     - **Ability Rolls**: Custom dice with modifiers and attribute bonuses
@@ -211,28 +224,28 @@ app/page.tsx (main orchestrator)
     - Multi-die expressions (2d6, 3d4, etc.)
     - Activity log with comprehensive action tracking
 
-11. **Inventory Management**
+13. **Inventory Management**
     - Three item types: weapons, armor, freeform
     - Size-based capacity system with visual indicators (10 + Strength attribute)
     - Automatic inventory size adjustment when Strength changes
     - Type-specific properties (damage, armor value, description)
     - Equipment state tracking and validation
 
-12. **App Modes & Character Management**
+14. **App Modes & Character Management**
     - Basic mode: simplified interface (HP, actions, saves, attributes, skills)
     - Full mode: complete character sheet with inventory and abilities
     - Multiple character support with switching and creation
     - Global settings panel with mode selection
     - Character selector with creation and deletion
 
-13. **Class and Subclass System**
+15. **Class and Subclass System**
     - Four core classes: Fighter, Wizard, Cleric, Rogue
     - Subclass selection at appropriate levels with automatic feature grants
     - Level-based feature progression with validation
     - Automatic feature synchronization when gaining levels or choosing subclasses
     - Feature tracking with unique identifiers and grant history
 
-14. **Advanced UI Features**
+16. **Advanced UI Features**
     - Collapsible sections with persistent preferences
     - Mobile-responsive design with adaptive grids
     - Consistent visual feedback and state indicators
@@ -273,68 +286,90 @@ app/page.tsx (main orchestrator)
 
 ```
 lib/
-├── config/          # Game configuration
-│   └── game-config.ts
-├── data/            # Game data definitions
-│   ├── classes/     # Class definitions (fighter, wizard, cleric, rogue)
-│   └── subclasses/  # Subclass definitions with parent class associations
-├── types/           # TypeScript interfaces
-│   ├── character.ts
-│   ├── class.ts (keyAttributes: AttributeName[] for flexibility)
-│   ├── inventory.ts
-│   ├── abilities.ts
-│   ├── resources.ts (ResourceDefinition + ResourceInstance)
-│   ├── actions.ts
-│   └── dice.ts
-├── schemas/         # Zod validation schemas
-│   └── character.ts
-├── services/        # Business logic layer
-│   ├── character-service.ts
-│   ├── class-service.ts (ResourceFeature integration)
-│   ├── resource-service.ts (generic resource management)
-│   ├── dice-service.ts
-│   ├── activity-log-service.ts
-│   ├── ability-service.ts
-│   ├── settings-service.ts
-│   ├── ui-state-service.ts
-│   ├── service-factory.ts (singleton access)
-│   └── interfaces.ts
-├── hooks/           # Custom React hooks
-│   ├── use-character-service.ts
-│   ├── use-dice-actions.ts
-│   ├── use-activity-log.ts
-│   └── use-ui-state-service.ts
-└── utils/           # Helper functions
-    ├── character-defaults.ts
-    ├── equipment.ts
-    └── resource-config.ts (color schemes & icons)
+├── config/          # Game configuration and constants
+│   └── game-config.ts # Core game rules and limits
+├── data/            # Static game data definitions
+│   ├── classes/     # Class progression and feature definitions
+│   │   ├── index.ts # Class registry and utilities
+│   │   ├── fighter.ts # Fighter class features and progression
+│   │   ├── wizard.ts # Wizard class with spell school access
+│   │   ├── cleric.ts # Cleric class with divine magic
+│   │   └── rogue.ts # Rogue class features and abilities
+│   ├── subclasses/  # Specialization options for classes
+│   │   └── index.ts # Subclass registry and utilities
+│   └── example-abilities.ts # Predefined spells and abilities by school
+├── types/           # TypeScript type definitions
+│   ├── character.ts # Character model with spell tier access
+│   ├── class.ts # Class features including spell schools
+│   ├── inventory.ts # Equipment and item type definitions
+│   ├── abilities.ts # Action and spell ability types
+│   ├── resources.ts # Generic resource system types
+│   ├── actions.ts # Combat action type definitions
+│   ├── dice.ts # Dice rolling type definitions
+│   └── log-entries.ts # Activity logging including spell casting
+├── schemas/         # Runtime validation with Zod
+│   ├── character.ts # Character data validation schemas
+│   └── dice.ts # Dice roll and log entry validation
+├── services/        # Business logic and state management
+│   ├── character-service.ts # Core character operations and spell casting
+│   ├── class-service.ts # Class progression and feature management
+│   ├── resource-service.ts # Generic resource tracking and resets
+│   ├── dice-service.ts # Dice rolling with advantage/disadvantage
+│   ├── activity-log-service.ts # Action and spell cast logging
+│   ├── ability-service.ts # Ability usage for actions and spells
+│   ├── settings-service.ts # App configuration and preferences
+│   ├── ui-state-service.ts # UI state including tab management
+│   ├── character-storage-service.ts # Local storage abstraction
+│   ├── character-creation-service.ts # New character generation
+│   ├── service-factory.ts # Singleton service access pattern
+│   └── interfaces.ts # Service interface definitions
+├── hooks/           # React hooks for service integration
+│   ├── use-character-service.ts # Character state and operations
+│   ├── use-dice-actions.ts # Dice rolling functionality
+│   ├── use-activity-log.ts # Activity log state management
+│   └── use-ui-state-service.ts # UI state and preferences
+└── utils/           # Utility functions and helpers
+    ├── character-defaults.ts # Default character generation
+    ├── equipment.ts # Equipment management utilities
+    ├── dice-parser.ts # Dice expression parsing
+    └── resource-config.ts # Resource color schemes and icons
 
 components/
-├── ui/              # shadcn/ui components
-├── sections/        # Character sheet sections
-│   ├── attributes-section.tsx (key attribute highlighting, tooltips)
-│   ├── skills-section.tsx
-│   ├── actions-section.tsx
-│   ├── action-tracker-section.tsx
-│   ├── ability-section.tsx
-│   ├── armor-section.tsx
-│   ├── hit-points-section.tsx
-│   ├── initiative-section.tsx
-│   ├── inventory-section.tsx
-│   ├── resource-section.tsx (generic resource management)
-│   ├── character-name-section.tsx
-│   └── class-features-section.tsx
+├── ui/              # shadcn/ui component library
+├── sections/        # Modular character sheet sections
+│   ├── attributes-section.tsx # Attribute rolls/saves with key highlighting
+│   ├── skills-section.tsx # Skill checks with attribute bonuses
+│   ├── actions-section.tsx # Equipped weapon and ability actions
+│   ├── action-tracker-section.tsx # Combat action management
+│   ├── ability-section.tsx # Ability management excluding spells
+│   ├── armor-section.tsx # Armor equipment and AC calculation
+│   ├── hit-points-section.tsx # HP, temporary HP, and wounds
+│   ├── initiative-section.tsx # Initiative rolling and display
+│   ├── inventory-section.tsx # Equipment management and capacity
+│   ├── resource-section.tsx # Generic resource bars and management
+│   ├── character-name-section.tsx # Editable character name
+│   ├── class-features-section.tsx # Class progression with expandable spell schools
+│   └── spells-section.tsx # Spell casting with mana tracker and locked spells
+├── tabs/            # Tabbed interface organization
+│   ├── combat-tab.tsx # Combat-focused interface
+│   ├── skills-tab.tsx # Skills and attribute interface
+│   ├── character-tab.tsx # Character information and features
+│   ├── equipment-tab.tsx # Equipment and inventory management
+│   ├── spells-tab.tsx # Dedicated spell management interface
+│   └── log-tab.tsx # Activity and action history
 ├── character-sheet/
-│   ├── basic-mode.tsx
-│   ├── full-mode.tsx
-│   └── character-stats.tsx
-├── character-sheet.tsx
-├── advantage-toggle.tsx
-├── activity-log.tsx
-├── app-menu.tsx
-├── character-config-dialog.tsx (comprehensive configuration)
-├── settings-panel.tsx
-└── character-selector.tsx
+│   ├── basic-mode.tsx # Simplified character interface
+│   ├── full-mode.tsx # Complete character sheet
+│   └── character-stats.tsx # Character statistics display
+├── character-sheet.tsx # Main character sheet orchestrator
+├── tabbed-character-sheet.tsx # Tabbed interface with auto-switching
+├── bottom-tab-bar.tsx # Mobile-friendly tab navigation
+├── advantage-toggle.tsx # Global advantage/disadvantage toggle
+├── activity-log.tsx # Comprehensive action and spell logging
+├── app-menu.tsx # Application settings and character selection
+├── character-config-dialog.tsx # Advanced character configuration
+├── settings-panel.tsx # Application preferences and modes
+└── character-selector.tsx # Character management and creation
 
 app/
 └── page.tsx         # Main application entry

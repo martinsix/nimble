@@ -44,6 +44,7 @@ export interface IActivityLog {
   createSafeRestEntry(healingAmount: number, hitDiceRestored: number, woundsRemoved: number, abilitiesReset: number): LogEntry;
   createCatchBreathEntry(hitDiceSpent: number, healingAmount: number, abilitiesReset: number): LogEntry;
   createMakeCampEntry(healingAmount: number, hitDiceRestored: number, abilitiesReset: number): LogEntry;
+  createSpellCastEntry(spellName: string, school: string, tier: number, actionCost: number, resourceCost?: { resourceId: string; resourceName: string; amount: number }): LogEntry;
 }
 
 /**

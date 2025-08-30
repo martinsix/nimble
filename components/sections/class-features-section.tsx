@@ -1,20 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import { Character } from "@/lib/types/character";
 import { ClassFeature } from "@/lib/types/class";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { Badge } from "../ui/badge";
-import { Sparkles, ChevronDown, ChevronRight, Star, Zap, TrendingUp } from "lucide-react";
+import { Sparkles, ChevronDown, ChevronRight, Star, Zap, TrendingUp, Lock, Unlock } from "lucide-react";
 import { getAllClassFeaturesUpToLevel, getClassDefinition } from "@/lib/data/classes/index";
 import { useCharacterService } from "@/lib/hooks/use-character-service";
 import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
+import { getSpellsBySchool } from "@/lib/data/example-abilities";
 
 export function ClassFeaturesSection() {
   // Get everything we need from service hooks
   const { character } = useCharacterService();
   const { uiState, updateCollapsibleState } = useUIStateService();
+  const [expandedSpellSchools, setExpandedSpellSchools] = useState<Record<string, boolean>>({});
   
   // Early return if no character (shouldn't happen in normal usage)
   if (!character) return null;
@@ -58,6 +61,17 @@ export function ClassFeaturesSection() {
       default:
         return <Sparkles className="w-4 h-4" />;
     }
+  };
+
+  const getTierColor = (tier: number) => {
+    if (tier === 1) return 'bg-green-100 text-green-800 border-green-200';
+    if (tier <= 3) return 'bg-blue-100 text-blue-800 border-blue-200';
+    if (tier <= 6) return 'bg-purple-100 text-purple-800 border-purple-200';
+    return 'bg-red-100 text-red-800 border-red-200';
+  };
+
+  const isSpellUnlocked = (tier: number): boolean => {
+    return tier <= character.spellTierAccess;
   };
 
   const getFeatureTypeColor = (type: ClassFeature['type']) => {
@@ -268,34 +282,120 @@ export function ClassFeaturesSection() {
                       Spell Schools ({spellSchools.length})
                     </h3>
                     <div className="space-y-3">
-                      {spellSchools.map((feature, index) => (
-                        <div key={index} className="border rounded-lg p-4 space-y-2">
-                          <div className="flex items-start justify-between">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-semibold">{feature.name}</h4>
-                                <Badge variant="outline" className={getFeatureTypeColor(feature.type)}>
-                                  Level {feature.level}
-                                </Badge>
-                              </div>
-                              <p className="text-sm text-muted-foreground">
-                                {feature.description}
-                              </p>
-                              {feature.type === 'spell_school' && feature.spellSchool && (
-                                <div className="flex gap-2 mt-2">
-                                  <Badge variant="secondary" className="text-xs">
-                                    {feature.spellSchool.name}
-                                  </Badge>
-                                  <Badge variant="secondary" className="text-xs">
-                                    {feature.spellSchool.spells.length} spells
-                                  </Badge>
+                      {spellSchools.map((feature, index) => {
+                        if (feature.type !== 'spell_school' || !feature.spellSchool) return null;
+                        
+                        const schoolId = feature.spellSchool.schoolId;
+                        const isExpanded = expandedSpellSchools[schoolId] ?? false;
+                        const spells = getSpellsBySchool(schoolId);
+                        
+                        return (
+                          <Collapsible 
+                            key={index} 
+                            open={isExpanded} 
+                            onOpenChange={(open) => setExpandedSpellSchools(prev => ({ ...prev, [schoolId]: open }))}
+                          >
+                            <div className="border rounded-lg">
+                              <CollapsibleTrigger asChild>
+                                <Button variant="ghost" className="w-full justify-between p-4 h-auto">
+                                  <div className="flex items-start justify-between w-full">
+                                    <div className="space-y-1 text-left">
+                                      <div className="flex items-center gap-2">
+                                        <h4 className="font-semibold">{feature.name}</h4>
+                                        <Badge variant="outline" className={getFeatureTypeColor(feature.type)}>
+                                          Level {feature.level}
+                                        </Badge>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground">
+                                        {feature.description}
+                                      </p>
+                                      <div className="flex gap-2 mt-2">
+                                        <Badge variant="secondary" className="text-xs">
+                                          {feature.spellSchool.name}
+                                        </Badge>
+                                        <Badge variant="secondary" className="text-xs">
+                                          {spells.length} spells
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 ml-4">
+                                      {getFeatureIcon(feature.type)}
+                                      {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                                    </div>
+                                  </div>
+                                </Button>
+                              </CollapsibleTrigger>
+                              <CollapsibleContent>
+                                <div className="px-4 pb-4 space-y-2">
+                                  <h5 className="font-medium text-sm text-muted-foreground mb-3">Available Spells:</h5>
+                                  {spells.length === 0 ? (
+                                    <div className="text-sm text-muted-foreground italic">
+                                      No spells available in this school yet.
+                                    </div>
+                                  ) : (
+                                    <div className="space-y-2">
+                                      {spells.map((spell) => {
+                                        const unlocked = isSpellUnlocked(spell.tier);
+                                        return (
+                                          <div 
+                                            key={spell.id} 
+                                            className={`border rounded p-3 ${unlocked ? 'bg-background' : 'bg-muted/50'}`}
+                                          >
+                                            <div className="flex items-start justify-between">
+                                              <div className="space-y-1 flex-1">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                  <span className={`font-medium ${unlocked ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                                    {spell.name}
+                                                  </span>
+                                                  <Badge variant="outline" className={getTierColor(spell.tier)}>
+                                                    Tier {spell.tier}
+                                                  </Badge>
+                                                  {spell.actionCost !== undefined && (
+                                                    <Badge variant="secondary" className="text-xs">
+                                                      {spell.actionCost === 0 ? 'Bonus Action' : 
+                                                       spell.actionCost === 1 ? 'Action' : 
+                                                       `${spell.actionCost} Actions`}
+                                                    </Badge>
+                                                  )}
+                                                  {spell.resourceCost && (
+                                                    <Badge variant="secondary" className="text-xs">
+                                                      {spell.resourceCost.type === 'fixed' 
+                                                        ? `${spell.resourceCost.amount} ${spell.resourceCost.resourceId}`
+                                                        : `${spell.resourceCost.minAmount}-${spell.resourceCost.maxAmount} ${spell.resourceCost.resourceId}`
+                                                      }
+                                                    </Badge>
+                                                  )}
+                                                </div>
+                                                <p className={`text-sm ${unlocked ? 'text-muted-foreground' : 'text-muted-foreground/70'}`}>
+                                                  {spell.description}
+                                                </p>
+                                                {spell.roll && (
+                                                  <div className={`text-xs ${unlocked ? 'text-muted-foreground' : 'text-muted-foreground/70'}`}>
+                                                    Roll: {spell.roll.dice.count}d{spell.roll.dice.sides}
+                                                    {spell.roll.modifier && ` + ${spell.roll.modifier}`}
+                                                    {spell.roll.attribute && ` + ${spell.roll.attribute}`}
+                                                  </div>
+                                                )}
+                                              </div>
+                                              <div className="ml-2">
+                                                {unlocked ? (
+                                                  <Unlock className="w-4 h-4 text-green-600" />
+                                                ) : (
+                                                  <Lock className="w-4 h-4 text-muted-foreground" />
+                                                )}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
                                 </div>
-                              )}
+                              </CollapsibleContent>
                             </div>
-                            {getFeatureIcon(feature.type)}
-                          </div>
-                        </div>
-                      ))}
+                          </Collapsible>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
