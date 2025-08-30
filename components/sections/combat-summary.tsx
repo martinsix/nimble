@@ -8,6 +8,7 @@ import { Heart, Minus, Plus, Zap, Swords, Dice6, Square, ChevronDown, ChevronUp,
 import { useCharacterService } from "@/lib/hooks/use-character-service";
 import { useDiceActions } from "@/lib/hooks/use-dice-actions";
 import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
+import { getResourceColor } from "@/lib/utils/resource-config";
 
 // Health Bar Subcomponent
 function HealthBar() {
@@ -395,13 +396,6 @@ function ResourceTracker() {
   
   // All hooks called first, then safety check
   if (!character || character.resources.length === 0) return null;
-  
-  const getResourceColor = (current: number, max: number) => {
-    const percentage = max > 0 ? (current / max) * 100 : 0;
-    if (percentage <= 25) return "#ef4444"; // red-500
-    if (percentage <= 50) return "#eab308"; // yellow-500
-    return "#3b82f6"; // blue-500
-  };
 
   const createPieChart = (current: number, max: number, color: string) => {
     const percentage = max > 0 ? (current / max) : 0;
@@ -458,7 +452,8 @@ function ResourceTracker() {
         
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {character.resources.map((resource) => {
-            const color = getResourceColor(resource.current, resource.definition.maxValue);
+            const percentage = resource.definition.maxValue > 0 ? (resource.current / resource.definition.maxValue) * 100 : 0;
+            const color = getResourceColor(resource.definition.colorScheme, percentage);
             return (
               <div key={resource.definition.id} className="flex flex-col items-center">
                 {createPieChart(resource.current, resource.definition.maxValue, color)}
