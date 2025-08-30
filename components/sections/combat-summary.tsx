@@ -143,7 +143,7 @@ function QuickActionsBar() {
     setShowCustomPanel(false);
   };
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 mb-3">
       <div className="flex items-center gap-2 flex-wrap">
         {/* Damage Buttons */}
         <Button 
@@ -274,7 +274,7 @@ function ActionTracker() {
   const { character, updateActionTracker, endTurn: serviceEndTurn } = useCharacterService();
   
   // All hooks called first, then safety check
-  if (!character) return null;
+  if (!character || !character.inEncounter) return null;
   
   const { actionTracker } = character;
   
@@ -427,8 +427,11 @@ function CombatStatusBar() {
 
         <HealthBar />
 
+        {/* Integrated Quick Actions */}
+        <QuickActionsBar />
+
         {/* Wounds and Combat Status */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between">
           <WoundsDisplay />
           
           {/* Combat Status and Initiative */}
@@ -465,9 +468,6 @@ function CombatStatusBar() {
             )}
           </div>
         </div>
-
-        {/* Integrated Quick Actions */}
-        <QuickActionsBar />
       </CardContent>
     </Card>
   );
