@@ -62,18 +62,18 @@ export const wizard: ClassDefinition = {
     {
       level: 2,
       type: 'resource',
-      name: 'Arcane Recovery',
-      description: 'You can recover some of your magical energy by studying your spellbook.',
+      name: 'Mana Pool',
+      description: 'You have learned to harness and store magical energy for casting spells.',
       resourceDefinition: {
-        id: 'spell-slots',
-        name: 'Spell Slots',
-        description: 'Magical energy stored in prepared spells',
+        id: 'mana',
+        name: 'Mana',
+        description: 'Magical energy used to cast spells',
         colorScheme: 'blue-magic',
         icon: 'sparkles',
         resetCondition: 'safe_rest',
         resetType: 'to_max',
         minValue: 0,
-        maxValue: 2
+        maxValue: 5
       }
     },
     {

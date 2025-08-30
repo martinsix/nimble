@@ -1,7 +1,7 @@
 import { ActionAbility } from '../types/abilities';
 
 /**
- * Example spell abilities that consume mana/spell slots
+ * Example spell abilities that consume mana
  * These can be manually added to characters for testing the resource consumption system
  */
 export const exampleSpellAbilities: ActionAbility[] = [
@@ -20,7 +20,7 @@ export const exampleSpellAbilities: ActionAbility[] = [
     },
     resourceCost: {
       type: 'fixed',
-      resourceId: 'spell-slots',
+      resourceId: 'mana',
       amount: 1
     }
   },
@@ -39,7 +39,7 @@ export const exampleSpellAbilities: ActionAbility[] = [
     },
     resourceCost: {
       type: 'fixed',
-      resourceId: 'spell-slots',
+      resourceId: 'mana',
       amount: 1
     }
   },
@@ -57,7 +57,7 @@ export const exampleSpellAbilities: ActionAbility[] = [
     },
     resourceCost: {
       type: 'fixed',
-      resourceId: 'spell-slots',
+      resourceId: 'mana',
       amount: 3
     }
   },
@@ -76,7 +76,7 @@ export const exampleSpellAbilities: ActionAbility[] = [
     },
     resourceCost: {
       type: 'variable',
-      resourceId: 'spell-slots',
+      resourceId: 'mana',
       minAmount: 1,
       maxAmount: 3
     }
@@ -84,7 +84,7 @@ export const exampleSpellAbilities: ActionAbility[] = [
   {
     id: 'eldritch-blast',
     name: 'Eldritch Blast',
-    description: 'A beam of crackling energy streaks toward a creature within range. This is a cantrip that requires no spell slots.',
+    description: 'A beam of crackling energy streaks toward a creature within range. This is a cantrip that requires no mana.',
     type: 'action',
     frequency: 'at_will',
     actionCost: 1,
@@ -105,7 +105,7 @@ export const exampleSpellAbilities: ActionAbility[] = [
     actionCost: 0, // Reaction
     resourceCost: {
       type: 'fixed',
-      resourceId: 'spell-slots',
+      resourceId: 'mana',
       amount: 1
     }
   }
