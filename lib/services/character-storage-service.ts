@@ -1,6 +1,7 @@
 import { Character, CreateCharacterData } from '../types/character';
 import { ICharacterRepository, LocalStorageCharacterRepository } from '../storage/character-repository';
 import { createCharacterSchema, characterSchema } from '../schemas/character';
+import { mergeWithDefaultCharacter } from '../utils/character-defaults';
 
 export class CharacterStorageService {
   private readonly characterListStorageKey = 'nimble-navigator-character-list';
@@ -13,31 +14,21 @@ export class CharacterStorageService {
   }
 
   async getCharacter(id: string): Promise<Character | null> {
-    try {
-      const character = await this.repository.load(id);
-      if (!character) return null;
-      
-      return characterSchema.parse(character);
-    } catch (error) {
-      console.error(`Failed to load character ${id}:`, error);
-      // Return null so the caller can handle the missing character
-      return null;
-    }
+    const character = await this.repository.load(id);
+    if (!character) return null;
+    
+    return this.validateOrRecoverCharacter(character, id);
   }
 
   async getAllCharacters(): Promise<Character[]> {
     try {
       const characters = await this.repository.list();
-      // Filter out any characters that fail validation instead of throwing
       const validCharacters: Character[] = [];
       
       for (const char of characters) {
-        try {
-          const validatedChar = characterSchema.parse(char);
+        const validatedChar = await this.validateOrRecoverCharacter(char, char.id || `recovered-${Date.now()}`);
+        if (validatedChar) {
           validCharacters.push(validatedChar);
-        } catch (error) {
-          console.error(`Failed to validate character ${char.id || 'unknown'}:`, error);
-          // Skip invalid characters instead of failing entirely
         }
       }
       
@@ -65,7 +56,36 @@ export class CharacterStorageService {
     }
   }
 
-
+  /**
+   * Validates a character or attempts recovery by merging with defaults
+   * @param character Raw character data from storage
+   * @param id Character ID for recovery purposes
+   * @returns Validated character or null if recovery fails
+   */
+  private async validateOrRecoverCharacter(character: any, id: string): Promise<Character | null> {
+    try {
+      return characterSchema.parse(character);
+    } catch (error) {
+      console.warn(`Character ${id} failed validation, attempting recovery by merging with defaults:`, error);
+      
+      try {
+        // Attempt to recover by merging with default character template
+        const recoveredCharacter = mergeWithDefaultCharacter(character, id);
+        
+        // Validate the recovered character
+        const validatedCharacter = characterSchema.parse(recoveredCharacter);
+        
+        // Save the recovered character back to storage
+        await this.repository.save(validatedCharacter);
+        
+        console.info(`Successfully recovered character ${id} by merging with defaults`);
+        return validatedCharacter;
+      } catch (recoveryError) {
+        console.error(`Failed to recover character ${id} even after merging with defaults:`, recoveryError);
+        return null;
+      }
+    }
+  }
 }
 
 export const characterStorageService = new CharacterStorageService();
