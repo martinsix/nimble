@@ -1,16 +1,26 @@
-import { Abilities, Ability, ActionAbility, AbilityRoll } from '../types/abilities';
+import { Abilities, Ability, ActionAbility, AbilityRoll, ResourceCost } from '../types/abilities';
 import { Character } from '../types/character';
+import { ResourceInstance } from '../types/resources';
 
 export class AbilityService {
   
   /**
    * Use an ability and return the updated abilities object
    */
-  useAbility(abilities: Abilities, abilityId: string, availableActions?: number, inEncounter?: boolean): { 
+  useAbility(
+    abilities: Abilities, 
+    abilityId: string, 
+    availableActions?: number, 
+    inEncounter?: boolean,
+    availableResources?: ResourceInstance[],
+    variableResourceAmount?: number
+  ): { 
     updatedAbilities: Abilities; 
     usedAbility: ActionAbility | null;
     success: boolean;
     actionsRequired?: number;
+    resourceCost?: { resourceId: string; amount: number };
+    insufficientResource?: string;
   } {
     const ability = abilities.abilities.find(a => a.id === abilityId);
     
@@ -30,13 +40,72 @@ export class AbilityService {
       };
     }
 
+    // Check resource requirements
+    if (ability.resourceCost && availableResources) {
+      const resourceCost = ability.resourceCost;
+      const targetResource = availableResources.find(r => r.definition.id === resourceCost.resourceId);
+      
+      if (!targetResource) {
+        return {
+          updatedAbilities: abilities,
+          usedAbility: null,
+          success: false,
+          insufficientResource: resourceCost.resourceId
+        };
+      }
+
+      let requiredAmount: number;
+      if (resourceCost.type === 'fixed') {
+        requiredAmount = resourceCost.amount;
+      } else {
+        // Variable cost - use provided amount or default to minimum
+        requiredAmount = variableResourceAmount || resourceCost.minAmount;
+        
+        // Validate variable amount is within bounds
+        if (requiredAmount < resourceCost.minAmount || requiredAmount > resourceCost.maxAmount) {
+          return {
+            updatedAbilities: abilities,
+            usedAbility: null,
+            success: false,
+            insufficientResource: `Invalid amount: ${requiredAmount} (must be ${resourceCost.minAmount}-${resourceCost.maxAmount})`
+          };
+        }
+      }
+
+      // Check if we have enough of the resource
+      if (targetResource.current < requiredAmount) {
+        return {
+          updatedAbilities: abilities,
+          usedAbility: null,
+          success: false,
+          insufficientResource: targetResource.definition.name
+        };
+      }
+    }
+
+    // Calculate resource cost if present
+    let resourceCostInfo: { resourceId: string; amount: number } | undefined;
+    if (ability.resourceCost) {
+      const resourceCost = ability.resourceCost;
+      let requiredAmount: number;
+      
+      if (resourceCost.type === 'fixed') {
+        requiredAmount = resourceCost.amount;
+      } else {
+        requiredAmount = variableResourceAmount || resourceCost.minAmount;
+      }
+      
+      resourceCostInfo = { resourceId: resourceCost.resourceId, amount: requiredAmount };
+    }
+
     // At-will abilities can be used if action cost is satisfied
     if (ability.frequency === 'at_will') {
       return { 
         updatedAbilities: abilities, 
         usedAbility: ability, 
         success: true, 
-        actionsRequired: actionCost 
+        actionsRequired: actionCost,
+        resourceCost: resourceCostInfo
       };
     }
 
@@ -55,7 +124,13 @@ export class AbilityService {
 
     const usedAbility = { ...ability, currentUses: (ability.currentUses || 1) - 1 };
 
-    return { updatedAbilities, usedAbility, success: true, actionsRequired: actionCost };
+    return { 
+      updatedAbilities, 
+      usedAbility, 
+      success: true, 
+      actionsRequired: actionCost,
+      resourceCost: resourceCostInfo
+    };
   }
 
   /**

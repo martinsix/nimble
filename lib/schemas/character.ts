@@ -129,6 +129,27 @@ const abilityRollSchema = z.object({
   attribute: attributeNameSchema.optional(),
 });
 
+const fixedResourceCostSchema = z.object({
+  type: z.literal('fixed'),
+  resourceId: z.string().min(1),
+  amount: z.number().min(1),
+});
+
+const variableResourceCostSchema = z.object({
+  type: z.literal('variable'),
+  resourceId: z.string().min(1),
+  minAmount: z.number().min(1),
+  maxAmount: z.number().min(1),
+}).refine((data) => data.maxAmount >= data.minAmount, {
+  message: "maxAmount must be greater than or equal to minAmount",
+  path: ['maxAmount'],
+});
+
+const resourceCostSchema = z.discriminatedUnion('type', [
+  fixedResourceCostSchema,
+  variableResourceCostSchema,
+]);
+
 export const abilitySchema = z.discriminatedUnion('type', [
   z.object({
     id: z.string(),
@@ -146,6 +167,7 @@ export const abilitySchema = z.discriminatedUnion('type', [
     currentUses: z.number().min(0).optional(),
     roll: abilityRollSchema.optional(),
     actionCost: z.number().min(0).optional(),
+    resourceCost: resourceCostSchema.optional(),
   }).refine((data) => {
     // Non-at_will abilities must have maxUses defined
     if (data.frequency !== 'at_will' && data.maxUses === undefined) {

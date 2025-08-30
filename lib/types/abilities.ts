@@ -9,6 +9,21 @@ export interface AbilityRoll {
   attribute?: AttributeName; // attribute to add to the roll
 }
 
+export interface FixedResourceCost {
+  type: 'fixed';
+  resourceId: string;
+  amount: number;
+}
+
+export interface VariableResourceCost {
+  type: 'variable';
+  resourceId: string;
+  minAmount: number;
+  maxAmount: number;
+}
+
+export type ResourceCost = FixedResourceCost | VariableResourceCost;
+
 export interface BaseAbility {
   id: string;
   name: string;
@@ -26,6 +41,7 @@ export interface ActionAbility extends BaseAbility {
   currentUses?: number; // Optional for at-will abilities
   roll?: AbilityRoll; // Optional roll information
   actionCost?: number; // Optional action cost (0 = free action, 1 = action, etc.)
+  resourceCost?: ResourceCost; // Optional resource cost
 }
 
 export type Ability = FreeformAbility | ActionAbility;

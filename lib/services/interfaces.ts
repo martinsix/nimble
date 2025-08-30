@@ -2,6 +2,7 @@ import { Character, ActionTracker, CharacterConfiguration } from '../types/chara
 import { Abilities, ActionAbility, AbilityRoll } from '../types/abilities';
 import { LogEntry, SingleDie } from '../types/log-entries';
 import { ClassFeatureGrant, ClassFeature } from '../types/class';
+import { ResourceInstance } from '../types/resources';
 
 /**
  * Character Storage Interface
@@ -51,7 +52,7 @@ export interface IActivityLog {
  */
 export interface IAbilityService {
   resetAbilities(abilities: Abilities, frequency: 'per_turn' | 'per_encounter' | 'per_safe_rest'): Abilities;
-  useAbility(abilities: Abilities, abilityId: string, availableActions?: number, inEncounter?: boolean): { success: boolean; updatedAbilities: Abilities; usedAbility: ActionAbility | null; actionsRequired?: number };
+  useAbility(abilities: Abilities, abilityId: string, availableActions?: number, inEncounter?: boolean, availableResources?: ResourceInstance[], variableResourceAmount?: number): { success: boolean; updatedAbilities: Abilities; usedAbility: ActionAbility | null; actionsRequired?: number; resourceCost?: { resourceId: string; amount: number }; insufficientResource?: string };
   calculateAbilityRollModifier(roll: AbilityRoll, character: Character): number;
 }
 
@@ -79,7 +80,7 @@ export interface ICharacterService {
   endEncounter(): Promise<void>;
   endTurn(): Promise<void>;
   performAttack(weaponName: string, damage: string, attributeModifier: number, advantageLevel: number): Promise<void>;
-  performUseAbility(abilityId: string): Promise<void>;
+  performUseAbility(abilityId: string, variableResourceAmount?: number): Promise<void>;
   updateCharacterFields(updates: Partial<Character>): Promise<void>;
   updateCharacterConfiguration(config: CharacterConfiguration): Promise<void>;
 }

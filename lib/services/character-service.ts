@@ -599,7 +599,7 @@ export class CharacterService implements ICharacterService {
   /**
    * Use ability with automatic action deduction and usage tracking
    */
-  async performUseAbility(abilityId: string): Promise<void> {
+  async performUseAbility(abilityId: string, variableResourceAmount?: number): Promise<void> {
     if (!this._character) return;
 
     try {
@@ -607,12 +607,16 @@ export class CharacterService implements ICharacterService {
         this._character.abilities, 
         abilityId, 
         this._character.actionTracker.current, 
-        this._character.inEncounter
+        this._character.inEncounter,
+        this._character.resources,
+        variableResourceAmount
       );
       
       if (!result.success || !result.usedAbility) {
         if (result.actionsRequired && this._character.inEncounter && this._character.actionTracker.current < result.actionsRequired) {
           console.error(`Failed to use ability: not enough actions (need ${result.actionsRequired}, have ${this._character.actionTracker.current})`);
+        } else if (result.insufficientResource) {
+          console.error(`Failed to use ability: insufficient ${result.insufficientResource}`);
         } else {
           console.error("Failed to use ability: ability not found or no uses remaining");
         }
@@ -626,10 +630,25 @@ export class CharacterService implements ICharacterService {
         current: this._character.actionTracker.current - actionsToDeduct
       } : this._character.actionTracker;
 
+      // Update resources if the ability consumed any
+      let updatedResources = this._character.resources;
+      if (result.resourceCost) {
+        updatedResources = this._character.resources.map(resource => {
+          if (resource.definition.id === result.resourceCost!.resourceId) {
+            return {
+              ...resource,
+              current: resource.current - result.resourceCost!.amount
+            };
+          }
+          return resource;
+        });
+      }
+
       this._character = { 
         ...this._character, 
         abilities: result.updatedAbilities,
-        actionTracker: updatedActionTracker
+        actionTracker: updatedActionTracker,
+        resources: updatedResources
       };
 
       await this.saveCharacter();

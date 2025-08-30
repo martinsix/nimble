@@ -9,7 +9,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Abilities, Ability, ActionAbility, FreeformAbility, AbilityFrequency, AbilityRoll } from "@/lib/types/abilities";
+import { Abilities, Ability, ActionAbility, FreeformAbility, AbilityFrequency, AbilityRoll, ResourceCost } from "@/lib/types/abilities";
 import { AttributeName } from "@/lib/types/character";
 import { abilityService } from "@/lib/services/ability-service";
 import { parseDiceExpression } from "@/lib/utils/dice-parser";
@@ -23,17 +23,25 @@ interface NewAbilityForm {
   type: 'freeform' | 'action';
   frequency: AbilityFrequency;
   maxUses?: number;
+  actionCost?: number;
   roll?: {
     dice: string;
     modifier?: number;
     attribute?: AttributeName;
+  };
+  resourceCost?: {
+    type: 'fixed' | 'variable';
+    resourceId: string;
+    amount?: number;
+    minAmount?: number;
+    maxAmount?: number;
   };
 }
 
 
 export function AbilitySection() {
   // Get everything we need from service hooks
-  const { character, updateAbilities } = useCharacterService();
+  const { character, updateAbilities, performUseAbility } = useCharacterService();
   const { uiState, updateCollapsibleState } = useUIStateService();
   
   const [isAddingAbility, setIsAddingAbility] = useState(false);
@@ -44,7 +52,9 @@ export function AbilitySection() {
     type: 'freeform',
     frequency: 'per_encounter',
     maxUses: 1,
+    actionCost: 0,
   });
+  const [variableResourceAmount, setVariableResourceAmount] = useState<number>(1);
   
   // Early return if no character (shouldn't happen in normal usage)
   if (!character) return null;
@@ -53,13 +63,10 @@ export function AbilitySection() {
   const onToggle = (isOpen: boolean) => updateCollapsibleState('abilities', isOpen);
   const abilities = character.abilities;
 
-  const handleUseAbility = async (abilityId: string) => {
+  const handleUseAbility = async (abilityId: string, variableAmount?: number) => {
     if (!character) return;
     
-    const result = abilityService.useAbility(character.abilities, abilityId);
-    if (result.success) {
-      await updateAbilities(result.updatedAbilities);
-    }
+    await performUseAbility(abilityId, variableAmount);
   };
 
   const addAbility = () => {
@@ -82,11 +89,24 @@ export function AbilitySection() {
             maxUses: newAbility.maxUses,
             currentUses: newAbility.maxUses,
           } : {}),
+          ...(newAbility.actionCost ? { actionCost: newAbility.actionCost } : {}),
           ...(newAbility.roll && newAbility.roll.dice ? { 
             roll: {
               dice: parseDiceExpression(newAbility.roll.dice) || { count: 1, sides: 6 },
               modifier: newAbility.roll.modifier,
               attribute: newAbility.roll.attribute,
+            }
+          } : {}),
+          ...(newAbility.resourceCost && newAbility.resourceCost.resourceId ? {
+            resourceCost: newAbility.resourceCost.type === 'fixed' ? {
+              type: 'fixed' as const,
+              resourceId: newAbility.resourceCost.resourceId,
+              amount: newAbility.resourceCost.amount || 1,
+            } : {
+              type: 'variable' as const,
+              resourceId: newAbility.resourceCost.resourceId,
+              minAmount: newAbility.resourceCost.minAmount || 1,
+              maxAmount: newAbility.resourceCost.maxAmount || 5,
             }
           } : {}),
         };
@@ -101,6 +121,7 @@ export function AbilitySection() {
       type: 'freeform',
       frequency: 'per_encounter',
       maxUses: 1,
+      actionCost: 0,
     });
     setIsAddingAbility(false);
   };
@@ -162,13 +183,34 @@ export function AbilitySection() {
 
     const actionAbility = ability as ActionAbility;
     const isUsed = actionAbility.frequency !== 'at_will' && actionAbility.currentUses === 0;
+    
+    // Check if ability has resource requirements and if we have enough resources
+    const getResourceInfo = () => {
+      if (!actionAbility.resourceCost) return { canAfford: true, resourceName: null };
+      
+      const resource = character.resources.find(r => r.definition.id === actionAbility.resourceCost!.resourceId);
+      if (!resource) return { canAfford: false, resourceName: actionAbility.resourceCost.resourceId };
+      
+      const requiredAmount = actionAbility.resourceCost.type === 'fixed' 
+        ? actionAbility.resourceCost.amount 
+        : actionAbility.resourceCost.minAmount;
+      
+      return { 
+        canAfford: resource.current >= requiredAmount, 
+        resourceName: resource.definition.name,
+        resource: resource 
+      };
+    };
+    
+    const resourceInfo = getResourceInfo();
+    const canUse = !isUsed && resourceInfo.canAfford;
 
     return (
-      <Card key={ability.id} className={`mb-2 ${isUsed ? 'opacity-50' : ''}`}>
+      <Card key={ability.id} className={`mb-2 ${!canUse ? 'opacity-50' : ''}`}>
         <CardContent className="p-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <Zap className="w-4 h-4 text-yellow-500" />
                 <h4 className="font-semibold">{ability.name}</h4>
                 {getFrequencyBadge(actionAbility.frequency)}
@@ -180,6 +222,19 @@ export function AbilitySection() {
                 {actionAbility.frequency === 'at_will' && (
                   <Badge variant="outline">At Will</Badge>
                 )}
+                {actionAbility.actionCost && actionAbility.actionCost > 0 && (
+                  <Badge variant="outline" className="text-orange-600">
+                    {actionAbility.actionCost} action{actionAbility.actionCost > 1 ? 's' : ''}
+                  </Badge>
+                )}
+                {actionAbility.resourceCost && (
+                  <Badge variant="outline" className={resourceInfo.canAfford ? "text-blue-600" : "text-red-600"}>
+                    {actionAbility.resourceCost.type === 'fixed' 
+                      ? `${actionAbility.resourceCost.amount} ${resourceInfo.resourceName}`
+                      : `${actionAbility.resourceCost.minAmount}-${actionAbility.resourceCost.maxAmount} ${resourceInfo.resourceName}`
+                    }
+                  </Badge>
+                )}
               </div>
               <p className="text-sm text-muted-foreground mb-2">{ability.description}</p>
               {actionAbility.roll && (
@@ -187,13 +242,41 @@ export function AbilitySection() {
                   <strong>Roll:</strong> {abilityService.getAbilityRollDescription(actionAbility.roll, character)}
                 </div>
               )}
+              
+              {/* Variable resource cost selection */}
+              {actionAbility.resourceCost && actionAbility.resourceCost.type === 'variable' && canUse && (
+                <div className="mb-3 p-2 border rounded">
+                  <Label className="text-sm font-medium">Spend Amount:</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Input
+                      type="number"
+                      min={actionAbility.resourceCost.type === 'variable' ? actionAbility.resourceCost.minAmount : 1}
+                      max={actionAbility.resourceCost.type === 'variable' 
+                        ? Math.min(actionAbility.resourceCost.maxAmount, resourceInfo.resource?.current || 0)
+                        : resourceInfo.resource?.current || 0
+                      }
+                      value={variableResourceAmount}
+                      onChange={(e) => setVariableResourceAmount(parseInt(e.target.value) || (
+                        actionAbility.resourceCost?.type === 'variable' ? actionAbility.resourceCost.minAmount : 1
+                      ))}
+                      className="w-20"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      {resourceInfo.resourceName} (have {resourceInfo.resource?.current || 0})
+                    </span>
+                  </div>
+                </div>
+              )}
+              
               <Button
-                variant={isUsed ? "outline" : "default"}
+                variant={!canUse ? "outline" : "default"}
                 size="sm"
-                onClick={() => handleUseAbility(ability.id)}
-                disabled={isUsed}
+                onClick={() => handleUseAbility(ability.id, 
+                  actionAbility.resourceCost?.type === 'variable' ? variableResourceAmount : undefined
+                )}
+                disabled={!canUse}
               >
-                {isUsed ? "Used" : "Use Ability"}
+                {isUsed ? "Used" : !resourceInfo.canAfford ? `Need ${resourceInfo.resourceName}` : "Use Ability"}
               </Button>
             </div>
             <Button
@@ -328,6 +411,143 @@ export function AbilitySection() {
                         </div>
                       )}
                       
+                      {/* Action Cost */}
+                      <div className="space-y-2">
+                        <Label htmlFor="ability-action-cost">Action Cost</Label>
+                        <Input
+                          id="ability-action-cost"
+                          type="number"
+                          min="0"
+                          max="5"
+                          value={newAbility.actionCost || 0}
+                          onChange={(e) => setNewAbility({ 
+                            ...newAbility, 
+                            actionCost: parseInt(e.target.value) || 0 
+                          })}
+                        />
+                      </div>
+                      
+                      {/* Resource Cost Configuration */}
+                      <div className="space-y-2">
+                        <Label>Resource Cost (Optional)</Label>
+                        <div className="space-y-3 p-3 border rounded-md">
+                          <div className="space-y-2">
+                            <Label htmlFor="resource-id">Resource</Label>
+                            <Select
+                              value={newAbility.resourceCost?.resourceId || 'none'}
+                              onValueChange={(value) => 
+                                setNewAbility({
+                                  ...newAbility,
+                                  resourceCost: value === 'none' ? undefined : {
+                                    type: 'fixed',
+                                    resourceId: value,
+                                    amount: 1,
+                                  }
+                                })
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select resource" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">No resource cost</SelectItem>
+                                {character.resources.map(resource => (
+                                  <SelectItem key={resource.definition.id} value={resource.definition.id}>
+                                    {resource.definition.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          {newAbility.resourceCost && (
+                            <>
+                              <div className="space-y-2">
+                                <Label>Cost Type</Label>
+                                <Select
+                                  value={newAbility.resourceCost.type}
+                                  onValueChange={(value: 'fixed' | 'variable') => 
+                                    setNewAbility({
+                                      ...newAbility,
+                                      resourceCost: {
+                                        ...newAbility.resourceCost!,
+                                        type: value,
+                                        ...(value === 'fixed' ? { amount: 1 } : { minAmount: 1, maxAmount: 5 }),
+                                      }
+                                    })
+                                  }
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="fixed">Fixed Amount</SelectItem>
+                                    <SelectItem value="variable">Variable Amount</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              {newAbility.resourceCost.type === 'fixed' ? (
+                                <div className="space-y-2">
+                                  <Label htmlFor="resource-amount">Amount</Label>
+                                  <Input
+                                    id="resource-amount"
+                                    type="number"
+                                    min="1"
+                                    max="10"
+                                    value={newAbility.resourceCost.amount || 1}
+                                    onChange={(e) => setNewAbility({
+                                      ...newAbility,
+                                      resourceCost: {
+                                        ...newAbility.resourceCost!,
+                                        amount: parseInt(e.target.value) || 1
+                                      }
+                                    })}
+                                  />
+                                </div>
+                              ) : (
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="space-y-2">
+                                    <Label htmlFor="resource-min">Min Amount</Label>
+                                    <Input
+                                      id="resource-min"
+                                      type="number"
+                                      min="1"
+                                      max="10"
+                                      value={newAbility.resourceCost.minAmount || 1}
+                                      onChange={(e) => setNewAbility({
+                                        ...newAbility,
+                                        resourceCost: {
+                                          ...newAbility.resourceCost!,
+                                          minAmount: parseInt(e.target.value) || 1
+                                        }
+                                      })}
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor="resource-max">Max Amount</Label>
+                                    <Input
+                                      id="resource-max"
+                                      type="number"
+                                      min="1"
+                                      max="10"
+                                      value={newAbility.resourceCost.maxAmount || 5}
+                                      onChange={(e) => setNewAbility({
+                                        ...newAbility,
+                                        resourceCost: {
+                                          ...newAbility.resourceCost!,
+                                          maxAmount: parseInt(e.target.value) || 5
+                                        }
+                                      })}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      
                       {/* Roll Configuration */}
                       <div className="space-y-2">
                         <Label>Roll Configuration (Optional)</Label>
@@ -414,6 +634,7 @@ export function AbilitySection() {
                           type: 'freeform',
                           frequency: 'per_encounter',
                           maxUses: 1,
+                          actionCost: 0,
                         });
                       }}
                     >
