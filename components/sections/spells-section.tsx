@@ -10,14 +10,15 @@ import { Badge } from "../ui/badge";
 import { Sparkles, ChevronDown, ChevronRight, Zap, Lock } from "lucide-react";
 import { useCharacterService } from "@/lib/hooks/use-character-service";
 import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
-import { getSpellsBySchool } from "@/lib/data/example-abilities";
-import { getAllClassFeaturesUpToLevel } from "@/lib/data/classes/index";
+import { ContentRepositoryService } from "@/lib/services/content-repository-service";
 
 export function SpellsSection() {
   const { character, performUseAbility } = useCharacterService();
   const { uiState, updateCollapsibleState } = useUIStateService();
   const [openSchools, setOpenSchools] = useState<Record<string, boolean>>({});
   const [openLockedSchools, setOpenLockedSchools] = useState<Record<string, boolean>>({});
+  
+  const contentRepository = ContentRepositoryService.getInstance();
   const [isLockedSectionOpen, setIsLockedSectionOpen] = useState<boolean>(false);
   
   if (!character || character.spellTierAccess === 0) return null;
@@ -32,7 +33,7 @@ export function SpellsSection() {
   );
   
   // Get all spell schools the character has access to
-  const availableFeatures = getAllClassFeaturesUpToLevel(character.classId, character.level);
+  const availableFeatures = contentRepository.getAllClassFeaturesUpToLevel(character.classId, character.level);
   const spellSchoolFeatures = availableFeatures.filter(f => f.type === 'spell_school');
   
   // Get all locked spells by school
@@ -42,7 +43,7 @@ export function SpellsSection() {
     spellSchoolFeatures.forEach(feature => {
       if (feature.type === 'spell_school' && feature.spellSchool) {
         const schoolId = feature.spellSchool.schoolId;
-        const allSpells = getSpellsBySchool(schoolId);
+        const allSpells = contentRepository.getSpellsBySchool(schoolId);
         const lockedSpells = allSpells.filter(spell => spell.tier > character.spellTierAccess);
         
         if (lockedSpells.length > 0) {

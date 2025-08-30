@@ -12,7 +12,7 @@ import { getCharacterService } from "@/lib/services/service-factory";
 import { useCharacterService } from "@/lib/hooks/use-character-service";
 import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
 import { useDiceActions } from "@/lib/hooks/use-dice-actions";
-import { getClassDefinition } from "@/lib/data/classes/index";
+import { ContentRepositoryService } from "@/lib/services/content-repository-service";
 import { combineAdvantages } from "@/lib/utils/advantage";
 
 export function AttributesSection() {
@@ -26,7 +26,8 @@ export function AttributesSection() {
   const onToggle = (isOpen: boolean) => updateCollapsibleState('attributes', isOpen);
   
   // Get key attributes for the character's class
-  const characterClass = character ? getClassDefinition(character.classId) : null;
+  const contentRepository = ContentRepositoryService.getInstance();
+  const characterClass = character ? contentRepository.getClassDefinition(character.classId) : null;
   const keyAttributes = characterClass?.keyAttributes || [];
   
   const onAttributeChange = useCallback(async (attributeName: AttributeName, value: string) => {

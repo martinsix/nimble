@@ -199,6 +199,7 @@ export function CharacterConfigDialog({ onClose }: CharacterConfigDialogProps) {
     setNewResource(prev => prev ? { ...prev, [field]: value } : null);
   };
 
+
   return (
     <Dialog open={true} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-hidden flex flex-col">
@@ -759,6 +760,7 @@ export function CharacterConfigDialog({ onClose }: CharacterConfigDialogProps) {
             </CardContent>
           </Card>
         </div>
+
 
         <DialogFooter>
           <Button onClick={handleClose}>

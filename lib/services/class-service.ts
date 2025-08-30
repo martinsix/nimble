@@ -1,24 +1,27 @@
 import { Character } from '../types/character';
 import { ClassDefinition, ClassFeature, ClassFeatureGrant, AbilityFeature, StatBoostFeature, ProficiencyFeature, SpellSchoolFeature, SpellTierAccessFeature, ResourceFeature, SubclassChoiceFeature, SubclassDefinition } from '../types/class';
 import { ResourceInstance, createResourceInstance } from '../types/resources';
-import { getClassDefinition, getClassFeaturesForLevel, getAllClassFeaturesUpToLevel } from '../data/classes/index';
 import { getSubclassDefinition, getSubclassFeaturesForLevel, getAllSubclassFeaturesUpToLevel } from '../data/subclasses/index';
-import { getSpellsBySchool } from '../data/example-abilities';
 import { SpellAbility } from '../types/abilities';
 import { IClassService, ICharacterService } from './interfaces';
+import { ContentRepositoryService } from './content-repository-service';
 
 /**
  * Class Service with Dependency Injection
  * Manages class features and progression without tight coupling
  */
 export class ClassService implements IClassService {
-  constructor(private characterService: ICharacterService) {}
+  private contentRepository: ContentRepositoryService;
+
+  constructor(private characterService: ICharacterService) {
+    this.contentRepository = ContentRepositoryService.getInstance();
+  }
 
   /**
    * Get the class definition for a character
    */
   getCharacterClass(character: Character): ClassDefinition | null {
-    return getClassDefinition(character.classId);
+    return this.contentRepository.getClassDefinition(character.classId);
   }
 
   /**
@@ -33,7 +36,7 @@ export class ClassService implements IClassService {
    * Get all features that should be available to a character at their current level
    */
   getExpectedFeaturesForCharacter(character: Character): ClassFeature[] {
-    const classFeatures = getAllClassFeaturesUpToLevel(character.classId, character.level);
+    const classFeatures = this.contentRepository.getAllClassFeaturesUpToLevel(character.classId, character.level);
     
     // Add subclass features if character has a subclass
     if (character.subclassId) {
@@ -77,7 +80,7 @@ export class ClassService implements IClassService {
    * Get features that are granted for a specific level
    */
   getFeaturesForLevel(classId: string, level: number): ClassFeature[] {
-    return getClassFeaturesForLevel(classId, level);
+    return this.contentRepository.getClassFeaturesForLevel(classId, level);
   }
 
   /**
@@ -261,7 +264,7 @@ export class ClassService implements IClassService {
     const eligibleSpells: SpellAbility[] = [];
     
     for (const schoolFeature of spellSchoolFeatures) {
-      const schoolSpells = getSpellsBySchool(schoolFeature.spellSchool.schoolId);
+      const schoolSpells = this.contentRepository.getSpellsBySchool(schoolFeature.spellSchool.schoolId);
       
       // Filter by character's spell tier access
       const accessibleSpells = schoolSpells.filter(spell => spell.tier <= character.spellTierAccess);

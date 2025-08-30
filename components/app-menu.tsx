@@ -10,10 +10,11 @@ import {
   DropdownMenuTrigger 
 } from "./ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { Menu, Settings, Users, Plus } from "lucide-react";
+import { Menu, Settings, Users, Plus, Database } from "lucide-react";
 import { SettingsPanel } from "./settings-panel";
 import { CharacterSelector } from "./character-selector";
 import { CharacterCreateForm } from "./character-create-form";
+import { ContentManagementPanel } from "./content-management-panel";
 import { AppSettings } from "@/lib/services/settings-service";
 import { Character } from "@/lib/types/character";
 
@@ -37,6 +38,7 @@ export function AppMenu({
   const [showSettings, setShowSettings] = useState(false);
   const [showCharacterSelector, setShowCharacterSelector] = useState(false);
   const [showCreateCharacter, setShowCreateCharacter] = useState(false);
+  const [showContentManagement, setShowContentManagement] = useState(false);
 
   return (
     <>
@@ -50,6 +52,10 @@ export function AppMenu({
             <DropdownMenuItem onClick={() => setShowCharacterSelector(true)}>
               <Users className="w-4 h-4 mr-2" />
               Characters
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShowContentManagement(true)}>
+              <Database className="w-4 h-4 mr-2" />
+              Manage Content
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowSettings(true)}>
               <Settings className="w-4 h-4 mr-2" />
@@ -80,6 +86,11 @@ export function AppMenu({
         onCharacterSwitch={onCharacterSwitch}
         onCharacterDelete={onCharacterDelete}
         onCharacterCreate={onCharacterCreate}
+      />
+
+      <ContentManagementPanel 
+        isOpen={showContentManagement}
+        onClose={() => setShowContentManagement(false)}
       />
 
       <Dialog open={showCreateCharacter} onOpenChange={setShowCreateCharacter}>

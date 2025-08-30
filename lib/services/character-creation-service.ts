@@ -1,6 +1,6 @@
 import { Character } from '../types/character';
 import { ICharacterCreation, ICharacterStorage, ICharacterService, IClassService } from './interfaces';
-import { getClassDefinition } from '../data/classes/index';
+import { ContentRepositoryService } from './content-repository-service';
 import { 
   createDefaultCharacterConfiguration, 
   createDefaultHitPoints, 
@@ -33,11 +33,15 @@ export interface CreateCharacterOptions {
  * Handles character creation and initialization without tight coupling
  */
 export class CharacterCreationService implements ICharacterCreation {
+  private contentRepository: ContentRepositoryService;
+
   constructor(
     private characterStorage: ICharacterStorage,
     private characterService: ICharacterService,
     private classService: IClassService
-  ) {}
+  ) {
+    this.contentRepository = ContentRepositoryService.getInstance();
+  }
 
   /**
    * Creates a new character with proper initialization and class features
@@ -52,7 +56,7 @@ export class CharacterCreationService implements ICharacterCreation {
     } = options;
 
     // Validate class exists
-    const classDefinition = getClassDefinition(classId);
+    const classDefinition = this.contentRepository.getClassDefinition(classId);
     if (!classDefinition) {
       throw new Error(`Class not found: ${classId}`);
     }
@@ -108,7 +112,7 @@ export class CharacterCreationService implements ICharacterCreation {
    */
   async createSampleCharacter(name: string, classId: string): Promise<Character> {
     // Define sample attributes based on class
-    const classDefinition = getClassDefinition(classId);
+    const classDefinition = this.contentRepository.getClassDefinition(classId);
     let sampleAttributes = { strength: 1, dexterity: 1, intelligence: 1, will: 1 };
 
     if (classDefinition) {

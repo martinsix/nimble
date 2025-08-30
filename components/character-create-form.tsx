@@ -6,7 +6,7 @@ import { Card, CardContent } from "./ui/card";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Plus } from "lucide-react";
-import { getAllClasses } from "@/lib/data/classes/index";
+import { ContentRepositoryService } from "@/lib/services/content-repository-service";
 
 interface CharacterCreateFormProps {
   onCharacterCreate: (name: string, classId: string) => void;
@@ -24,7 +24,8 @@ export function CharacterCreateForm({
   const [newCharacterName, setNewCharacterName] = useState("");
   const [selectedClass, setSelectedClass] = useState("fighter");
 
-  const availableClasses = getAllClasses();
+  const contentRepository = ContentRepositoryService.getInstance();
+  const availableClasses = contentRepository.getAllClasses();
 
   const handleCreateCharacter = () => {
     if (newCharacterName.trim()) {

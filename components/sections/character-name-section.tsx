@@ -4,7 +4,7 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Settings, TrendingUp } from "lucide-react";
 import { useCharacterService } from "@/lib/hooks/use-character-service";
-import { getClassDefinition } from "@/lib/data/classes/index";
+import { ContentRepositoryService } from "@/lib/services/content-repository-service";
 import { getCharacterService, getClassService } from "@/lib/services/service-factory";
 
 interface CharacterNameSectionProps {
@@ -18,7 +18,8 @@ export function CharacterNameSection({ name, onNameChange, onOpenConfig }: Chara
   
   if (!character) return null;
   
-  const classDefinition = getClassDefinition(character.classId);
+  const contentRepository = ContentRepositoryService.getInstance();
+  const classDefinition = contentRepository.getClassDefinition(character.classId);
   const className = classDefinition?.name || character.classId;
 
   const handleLevelUp = async () => {

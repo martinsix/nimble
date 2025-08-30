@@ -17,6 +17,7 @@ import { activityLogService } from './activity-log-service';
 import { abilityService } from './ability-service';
 import { diceService } from './dice-service';
 import { settingsService } from './settings-service';
+import { ContentRepositoryService } from './content-repository-service';
 
 // Import types for external services
 import type { DiceService } from './dice-service';
@@ -124,3 +125,4 @@ export const getClassService = (): IClassService => ServiceFactory.getService(SE
 export const getCharacterCreation = (): ICharacterCreation => ServiceFactory.getService(SERVICE_KEYS.CHARACTER_CREATION);
 export const getDiceService = (): DiceService => ServiceFactory.getService(SERVICE_KEYS.DICE_SERVICE);
 export const getSettingsService = (): SettingsService => ServiceFactory.getService(SERVICE_KEYS.SETTINGS_SERVICE);
+export const getContentRepository = (): ContentRepositoryService => ContentRepositoryService.getInstance();

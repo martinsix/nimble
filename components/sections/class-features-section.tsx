@@ -8,10 +8,9 @@ import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 import { Badge } from "../ui/badge";
 import { Sparkles, ChevronDown, ChevronRight, Star, Zap, TrendingUp, Lock, Unlock } from "lucide-react";
-import { getAllClassFeaturesUpToLevel, getClassDefinition } from "@/lib/data/classes/index";
 import { useCharacterService } from "@/lib/hooks/use-character-service";
 import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
-import { getSpellsBySchool } from "@/lib/data/example-abilities";
+import { ContentRepositoryService } from "@/lib/services/content-repository-service";
 
 export function ClassFeaturesSection() {
   // Get everything we need from service hooks
@@ -19,19 +18,21 @@ export function ClassFeaturesSection() {
   const { uiState, updateCollapsibleState } = useUIStateService();
   const [expandedSpellSchools, setExpandedSpellSchools] = useState<Record<string, boolean>>({});
   
+  const contentRepository = ContentRepositoryService.getInstance();
+  
   // Early return if no character (shouldn't happen in normal usage)
   if (!character) return null;
   
   const isOpen = uiState.collapsibleSections.classFeatures;
   const onToggle = (isOpen: boolean) => updateCollapsibleState('classFeatures', isOpen);
-  const classDefinition = getClassDefinition(character.classId);
+  const classDefinition = contentRepository.getClassDefinition(character.classId);
   
   if (!classDefinition) {
     return null;
   }
 
   // Get all features the character should have at their level
-  const availableFeatures = getAllClassFeaturesUpToLevel(character.classId, character.level);
+  const availableFeatures = contentRepository.getAllClassFeaturesUpToLevel(character.classId, character.level);
   
   // Separate features by type for better organization
   const abilities = availableFeatures.filter(f => f.type === 'ability');
@@ -287,7 +288,7 @@ export function ClassFeaturesSection() {
                         
                         const schoolId = feature.spellSchool.schoolId;
                         const isExpanded = expandedSpellSchools[schoolId] ?? false;
-                        const spells = getSpellsBySchool(schoolId);
+                        const spells = contentRepository.getSpellsBySchool(schoolId);
                         
                         return (
                           <Collapsible 
