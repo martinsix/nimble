@@ -28,8 +28,7 @@ export const cleric: ClassDefinition = {
       spellSchool: {
         schoolId: 'radiant',
         name: 'Radiant Magic',
-        description: 'Divine spells that channel holy light and radiant energy',
-        spells: ['sacred-flame', 'guiding-bolt', 'spiritual-weapon', 'daylight', 'guardian-of-faith']
+        description: 'Divine spells that channel holy light and radiant energy'
       }
     },
     {

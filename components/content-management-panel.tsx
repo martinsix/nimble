@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
-import { Database, Upload, ChevronDown, ChevronRight, FileText, Wand2, Shield, Zap, Sparkles } from "lucide-react";
+import { Database, Upload, ChevronDown, ChevronRight, FileText, Wand2, Shield, Zap, Sparkles, BookOpen } from "lucide-react";
 import { ContentRepositoryService, ContentUploadResult } from "@/lib/services/content-repository-service";
+import { SCHEMA_DOCUMENTATION } from "@/lib/utils/schema-documentation";
 
 interface ContentManagementPanelProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
   const [uploadMessage, setUploadMessage] = useState<string>("");
   const [uploadError, setUploadError] = useState<string>("");
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  const [showSchemaHelp, setShowSchemaHelp] = useState<Record<string, boolean>>({});
   
   const contentRepository = ContentRepositoryService.getInstance();
   const customContentStats = contentRepository.getCustomContentStats();
@@ -81,6 +83,13 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
     }));
   };
 
+  const toggleSchemaHelp = (section: string) => {
+    setShowSchemaHelp(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
   const getCustomClasses = () => contentRepository.getAllClasses().filter(cls => 
     !['fighter', 'wizard', 'cleric', 'rogue'].includes(cls.id)
   );
@@ -136,7 +145,69 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
             <CardContent className="space-y-4">
               {/* Upload Section */}
               <div className="border rounded-lg p-4 bg-muted/30">
-                <Label className="text-sm font-medium mb-2 block">Upload {title}</Label>
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="text-sm font-medium">Upload {title}</Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleSchemaHelp(uploadType)}
+                    className="h-6 px-2"
+                  >
+                    <BookOpen className="h-3 w-3 mr-1" />
+                    Schema
+                  </Button>
+                </div>
+                
+                {showSchemaHelp[uploadType] && SCHEMA_DOCUMENTATION[uploadType as keyof typeof SCHEMA_DOCUMENTATION] && (
+                  <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded text-xs">
+                    <div className="font-semibold text-blue-900 mb-1">
+                      {SCHEMA_DOCUMENTATION[uploadType as keyof typeof SCHEMA_DOCUMENTATION].title} Format
+                    </div>
+                    <div className="text-blue-800 mb-2">
+                      {SCHEMA_DOCUMENTATION[uploadType as keyof typeof SCHEMA_DOCUMENTATION].description}
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <div className="font-medium text-blue-900">Required Fields:</div>
+                      {SCHEMA_DOCUMENTATION[uploadType as keyof typeof SCHEMA_DOCUMENTATION].fields
+                        .filter(field => field.required)
+                        .map(field => (
+                          <div key={field.name} className="ml-2">
+                            <span className="font-mono bg-blue-100 px-1 rounded">{field.name}</span>
+                            <span className="text-blue-700"> ({field.type})</span>
+                            {field.constraints && (
+                              <span className="text-blue-600 text-xs"> - {field.constraints.join(', ')}</span>
+                            )}
+                          </div>
+                        ))}
+                    </div>
+                    
+                    {SCHEMA_DOCUMENTATION[uploadType as keyof typeof SCHEMA_DOCUMENTATION].fields.some(f => !f.required) && (
+                      <div className="space-y-1 mt-2">
+                        <div className="font-medium text-blue-900">Optional Fields:</div>
+                        {SCHEMA_DOCUMENTATION[uploadType as keyof typeof SCHEMA_DOCUMENTATION].fields
+                          .filter(field => !field.required)
+                          .map(field => (
+                            <div key={field.name} className="ml-2">
+                              <span className="font-mono bg-blue-100 px-1 rounded">{field.name}</span>
+                              <span className="text-blue-700"> ({field.type})</span>
+                              {field.constraints && (
+                                <span className="text-blue-600 text-xs"> - {field.constraints.join(', ')}</span>
+                              )}
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                    
+                    <details className="mt-2">
+                      <summary className="font-medium text-blue-900 cursor-pointer">Example JSON</summary>
+                      <pre className="mt-1 p-2 bg-blue-100 rounded overflow-x-auto text-xs">
+                        {JSON.stringify(SCHEMA_DOCUMENTATION[uploadType as keyof typeof SCHEMA_DOCUMENTATION].example, null, 2)}
+                      </pre>
+                    </details>
+                  </div>
+                )}
+                
                 <div className="relative">
                   <input
                     type="file"

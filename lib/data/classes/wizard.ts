@@ -25,8 +25,7 @@ export const wizard: ClassDefinition = {
       spellSchool: {
         schoolId: 'fire',
         name: 'Fire Magic',
-        description: 'Spells that harness the destructive power of fire and flame',
-        spells: ['fire-bolt', 'burning-hands', 'fireball', 'fire-shield', 'wall-of-fire']
+        description: 'Spells that harness the destructive power of fire and flame'
       }
     },
     {

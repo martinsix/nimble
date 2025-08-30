@@ -19,7 +19,7 @@ export interface SpellSchool {
   schoolId: string; // Unique identifier for the school (e.g., 'fire', 'radiant')
   name: string; // Display name (e.g., 'Fire Magic', 'Radiant Magic')
   description: string; // Description of the school
-  spells: string[]; // Array of spell IDs available in this school
+  // Spells are accessed via ContentRepositoryService.getSpellsBySchool(schoolId)
 }
 
 
