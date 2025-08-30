@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
-import { Heart, Minus, Plus, Zap, Swords, Dice6, Square, ChevronDown, ChevronUp, Bandage, Skull, Circle, RotateCcw, Settings, HelpCircle } from "lucide-react";
+import { Heart, Minus, Plus, Zap, Swords, Dice6, Square, ChevronDown, ChevronUp, Bandage, Skull, Circle, RotateCcw, Settings, HelpCircle, Sparkles } from "lucide-react";
 import { useCharacterService } from "@/lib/hooks/use-character-service";
 import { useDiceActions } from "@/lib/hooks/use-dice-actions";
 import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
@@ -389,6 +389,57 @@ function ActionTracker() {
   );
 }
 
+// Resource Tracker Subcomponent
+function ResourceTracker() {
+  const { character } = useCharacterService();
+  
+  // All hooks called first, then safety check
+  if (!character || character.resources.length === 0) return null;
+  
+  const getResourceColor = (current: number, max: number) => {
+    const percentage = max > 0 ? (current / max) * 100 : 0;
+    if (percentage <= 25) return "bg-red-500";
+    if (percentage <= 50) return "bg-yellow-500";
+    return "bg-blue-500";
+  };
+
+  return (
+    <Card className="border border-gray-200">
+      <CardContent className="p-3">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-blue-500" />
+            <span className="text-sm font-medium">Resources</span>
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          {character.resources.map((resource) => (
+            <div key={resource.definition.id} className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700">
+                {resource.definition.name}
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">
+                  {resource.current}/{resource.definition.maxValue}
+                </span>
+                <div className="w-16 bg-gray-200 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full transition-all duration-300 ${getResourceColor(resource.current, resource.definition.maxValue)}`}
+                    style={{ 
+                      width: `${resource.definition.maxValue > 0 ? (resource.current / resource.definition.maxValue) * 100 : 0}%` 
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // Combat Status Bar Subcomponent
 function CombatStatusBar() {
   const { character, endEncounter, startEncounter } = useCharacterService();
@@ -482,6 +533,8 @@ export function CombatSummary() {
     <TooltipProvider>
       <div className="space-y-3">
         <CombatStatusBar />
+
+        <ResourceTracker />
 
         <ActionTracker />
       </div>
