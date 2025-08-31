@@ -1,6 +1,7 @@
 import { ClassDefinition, SubclassDefinition, SpellSchool } from '../types/class';
 import { ActionAbility, SpellAbility } from '../types/abilities';
 import { ContentValidationService } from './content-validation-service';
+import { CustomContentType } from '../types/custom-content';
 
 // Built-in content imports
 import { classDefinitions as builtInClasses } from '../data/classes/index';
@@ -144,8 +145,30 @@ export class ContentRepositoryService {
   private getCustomClasses(): ClassDefinition[] {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.customClasses);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
+      if (!stored) return [];
+      
+      const parsed = JSON.parse(stored);
+      if (!Array.isArray(parsed)) return [];
+      
+      // Validate each class and filter out invalid ones
+      const validClasses: ClassDefinition[] = [];
+      parsed.forEach((item, index) => {
+        const validation = ContentValidationService.validateClass(item);
+        if (validation.valid && validation.data) {
+          validClasses.push(validation.data);
+        } else {
+          console.warn(`Invalid class found in storage at index ${index}:`, validation.errors);
+        }
+      });
+      
+      // If we filtered out invalid items, update localStorage
+      if (validClasses.length !== parsed.length) {
+        localStorage.setItem(STORAGE_KEYS.customClasses, JSON.stringify(validClasses));
+      }
+      
+      return validClasses;
+    } catch (error) {
+      console.warn('Error reading custom classes from storage:', error);
       return [];
     }
   }
@@ -199,8 +222,30 @@ export class ContentRepositoryService {
   private getCustomSubclasses(): SubclassDefinition[] {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.customSubclasses);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
+      if (!stored) return [];
+      
+      const parsed = JSON.parse(stored);
+      if (!Array.isArray(parsed)) return [];
+      
+      // Validate each subclass and filter out invalid ones
+      const validSubclasses: SubclassDefinition[] = [];
+      parsed.forEach((item, index) => {
+        const validation = ContentValidationService.validateSubclass(item);
+        if (validation.valid && validation.data) {
+          validSubclasses.push(validation.data);
+        } else {
+          console.warn(`Invalid subclass found in storage at index ${index}:`, validation.errors);
+        }
+      });
+      
+      // If we filtered out invalid items, update localStorage
+      if (validSubclasses.length !== parsed.length) {
+        localStorage.setItem(STORAGE_KEYS.customSubclasses, JSON.stringify(validSubclasses));
+      }
+      
+      return validSubclasses;
+    } catch (error) {
+      console.warn('Error reading custom subclasses from storage:', error);
       return [];
     }
   }
@@ -347,8 +392,30 @@ export class ContentRepositoryService {
   private getStoredSpellSchools(): SpellSchoolDefinition[] {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.customSpellSchools);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
+      if (!stored) return [];
+      
+      const parsed = JSON.parse(stored);
+      if (!Array.isArray(parsed)) return [];
+      
+      // Validate each spell school and filter out invalid ones
+      const validSchools: SpellSchoolDefinition[] = [];
+      parsed.forEach((item, index) => {
+        const validation = ContentValidationService.validateSpellSchool(item);
+        if (validation.valid && validation.data) {
+          validSchools.push(validation.data);
+        } else {
+          console.warn(`Invalid spell school found in storage at index ${index}:`, validation.errors);
+        }
+      });
+      
+      // If we filtered out invalid items, update localStorage
+      if (validSchools.length !== parsed.length) {
+        localStorage.setItem(STORAGE_KEYS.customSpellSchools, JSON.stringify(validSchools));
+      }
+      
+      return validSchools;
+    } catch (error) {
+      console.warn('Error reading custom spell schools from storage:', error);
       return [];
     }
   }
@@ -419,8 +486,30 @@ export class ContentRepositoryService {
   private getCustomAbilities(): ActionAbility[] {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.customAbilities);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
+      if (!stored) return [];
+      
+      const parsed = JSON.parse(stored);
+      if (!Array.isArray(parsed)) return [];
+      
+      // Validate each ability and filter out invalid ones
+      const validAbilities: ActionAbility[] = [];
+      parsed.forEach((item, index) => {
+        const validation = ContentValidationService.validateActionAbility(item);
+        if (validation.valid && validation.data) {
+          validAbilities.push(validation.data);
+        } else {
+          console.warn(`Invalid action ability found in storage at index ${index}:`, validation.errors);
+        }
+      });
+      
+      // If we filtered out invalid items, update localStorage
+      if (validAbilities.length !== parsed.length) {
+        localStorage.setItem(STORAGE_KEYS.customAbilities, JSON.stringify(validAbilities));
+      }
+      
+      return validAbilities;
+    } catch (error) {
+      console.warn('Error reading custom abilities from storage:', error);
       return [];
     }
   }
@@ -499,8 +588,30 @@ export class ContentRepositoryService {
   private getCustomSpells(): SpellAbility[] {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.customSpells);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
+      if (!stored) return [];
+      
+      const parsed = JSON.parse(stored);
+      if (!Array.isArray(parsed)) return [];
+      
+      // Validate each spell and filter out invalid ones
+      const validSpells: SpellAbility[] = [];
+      parsed.forEach((item, index) => {
+        const validation = ContentValidationService.validateSpellAbility(item);
+        if (validation.valid && validation.data) {
+          validSpells.push(validation.data);
+        } else {
+          console.warn(`Invalid spell found in storage at index ${index}:`, validation.errors);
+        }
+      });
+      
+      // If we filtered out invalid items, update localStorage
+      if (validSpells.length !== parsed.length) {
+        localStorage.setItem(STORAGE_KEYS.customSpells, JSON.stringify(validSpells));
+      }
+      
+      return validSpells;
+    } catch (error) {
+      console.warn('Error reading custom spells from storage:', error);
       return [];
     }
   }
@@ -512,11 +623,9 @@ export class ContentRepositoryService {
     });
   }
 
-  public getCustomContentStats(): { classes: number; subclasses: number; spellSchools: number; abilities: number; spells: number } {
+  public getCustomContentStats(): Record<CustomContentType, number> {
     // For classes, only count truly custom ones (not built-in)
-    const customClasses = this.getCustomClasses().filter(cls => 
-      !['fighter', 'wizard', 'cleric', 'rogue'].includes(cls.id)
-    );
+    const customClasses = this.getCustomClasses();
     
     // For spell schools, count all since they're managed uniformly
     const allSpellSchools = this.getAllSpellSchools();
@@ -525,81 +634,11 @@ export class ContentRepositoryService {
     const customSpells = this.getCustomSpells();
     
     return {
-      classes: customClasses.length,
-      subclasses: this.getCustomSubclasses().length,
-      spellSchools: allSpellSchools.length,
-      abilities: this.getCustomAbilities().length,
-      spells: customSpells.length
+      [CustomContentType.CLASS_DEFINITION]: customClasses.length,
+      [CustomContentType.SUBCLASS_DEFINITION]: this.getCustomSubclasses().length,
+      [CustomContentType.SPELL_SCHOOL_DEFINITION]: allSpellSchools.length,
+      [CustomContentType.ACTION_ABILITY]: this.getCustomAbilities().length,
+      [CustomContentType.SPELL_ABILITY]: customSpells.length
     };
-  }
-
-  public exportCustomContent(): string {
-    return JSON.stringify({
-      classes: this.getCustomClasses(),
-      subclasses: this.getCustomSubclasses(),
-      spellSchools: this.getStoredSpellSchools(),
-      abilities: this.getCustomAbilities(),
-      spells: this.getCustomSpells()
-    }, null, 2);
-  }
-
-  public importCustomContent(contentJson: string): ContentUploadResult {
-    try {
-      const data = JSON.parse(contentJson);
-      let totalAdded = 0;
-      const results: string[] = [];
-
-      if (data.classes && Array.isArray(data.classes)) {
-        const result = this.uploadClasses(JSON.stringify(data.classes));
-        if (result.success) {
-          totalAdded += result.itemsAdded || 0;
-          results.push(`${result.itemsAdded} classes`);
-        }
-      }
-
-      if (data.subclasses && Array.isArray(data.subclasses)) {
-        const result = this.uploadSubclasses(JSON.stringify(data.subclasses));
-        if (result.success) {
-          totalAdded += result.itemsAdded || 0;
-          results.push(`${result.itemsAdded} subclasses`);
-        }
-      }
-
-      if (data.spellSchools && Array.isArray(data.spellSchools)) {
-        const result = this.uploadSpellSchools(JSON.stringify(data.spellSchools));
-        if (result.success) {
-          totalAdded += result.itemsAdded || 0;
-          results.push(`${result.itemsAdded} spell schools`);
-        }
-      }
-
-      if (data.abilities && Array.isArray(data.abilities)) {
-        const result = this.uploadAbilities(JSON.stringify(data.abilities));
-        if (result.success) {
-          totalAdded += result.itemsAdded || 0;
-          results.push(`${result.itemsAdded} abilities`);
-        }
-      }
-
-      if (data.spells && Array.isArray(data.spells)) {
-        const result = this.uploadSpells(JSON.stringify(data.spells));
-        if (result.success) {
-          totalAdded += result.itemsAdded || 0;
-          results.push(`${result.itemsAdded} spells`);
-        }
-      }
-
-      if (totalAdded === 0) {
-        return { success: false, message: 'No valid content found to import' };
-      }
-
-      return { 
-        success: true, 
-        message: `Successfully imported: ${results.join(', ')}`,
-        itemsAdded: totalAdded
-      };
-    } catch (error) {
-      return { success: false, message: 'Invalid JSON format' };
-    }
   }
 }

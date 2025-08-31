@@ -9,7 +9,19 @@ import { Badge } from "./ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import { Database, Upload, ChevronDown, ChevronRight, FileText, Wand2, Shield, Zap, Sparkles, BookOpen } from "lucide-react";
 import { ContentRepositoryService, ContentUploadResult } from "@/lib/services/content-repository-service";
-import { SCHEMA_DOCUMENTATION } from "@/lib/utils/schema-documentation";
+import { getSchemaDocumentation, getAllSchemaDocumentation } from "@/lib/utils/schema-documentation";
+import { 
+  CustomContentType, 
+  getAllContentTypes,
+  getContentTypeMetadata
+} from "@/lib/types/custom-content";
+import { SpellAbility, ActionAbility } from "@/lib/types/abilities";
+import { ClassDefinition, SubclassDefinition } from "@/lib/types/class";
+import { SpellSchoolDefinitionSchema } from "@/lib/schemas/class";
+import { z } from 'zod';
+
+type SpellSchoolDefinition = z.infer<typeof SpellSchoolDefinitionSchema>;
+type ContentItem = ClassDefinition | SubclassDefinition | SpellSchoolDefinition | ActionAbility | SpellAbility;
 
 interface ContentManagementPanelProps {
   isOpen: boolean;
@@ -19,13 +31,13 @@ interface ContentManagementPanelProps {
 export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPanelProps) {
   const [uploadMessage, setUploadMessage] = useState<string>("");
   const [uploadError, setUploadError] = useState<string>("");
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
-  const [showSchemaHelp, setShowSchemaHelp] = useState<Record<string, boolean>>({});
+  const [expandedSections, setExpandedSections] = useState<Partial<Record<CustomContentType, boolean>>>({});
+  const [showSchemaHelp, setShowSchemaHelp] = useState<Partial<Record<CustomContentType, boolean>>>({});
   
   const contentRepository = ContentRepositoryService.getInstance();
   const customContentStats = contentRepository.getCustomContentStats();
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, contentType: string) => {
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, contentType: CustomContentType) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -39,19 +51,19 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
         let result: ContentUploadResult;
 
         switch (contentType) {
-          case 'classes':
+          case CustomContentType.CLASS_DEFINITION:
             result = contentRepository.uploadClasses(content);
             break;
-          case 'subclasses':
+          case CustomContentType.SUBCLASS_DEFINITION:
             result = contentRepository.uploadSubclasses(content);
             break;
-          case 'spellSchools':
+          case CustomContentType.SPELL_SCHOOL_DEFINITION:
             result = contentRepository.uploadSpellSchools(content);
             break;
-          case 'abilities':
+          case CustomContentType.ACTION_ABILITY:
             result = contentRepository.uploadAbilities(content);
             break;
-          case 'spells':
+          case CustomContentType.SPELL_ABILITY:
             result = contentRepository.uploadSpells(content);
             break;
           default:
@@ -76,29 +88,53 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
     event.target.value = '';
   };
 
-  const toggleSection = (section: string) => {
+  const toggleSection = (section: CustomContentType) => {
     setExpandedSections(prev => ({
       ...prev,
       [section]: !prev[section]
     }));
   };
 
-  const toggleSchemaHelp = (section: string) => {
-    setShowSchemaHelp(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
+  const toggleSchemaHelp = (contentType: CustomContentType) => {
+    if (contentType) {
+      setShowSchemaHelp(prev => ({
+        ...prev,
+        [contentType]: !prev[contentType]
+      }));
+    }
   };
 
-  const getCustomClasses = () => contentRepository.getAllClasses().filter(cls => 
-    !['fighter', 'wizard', 'cleric', 'rogue'].includes(cls.id)
-  );
+  const getContentForType = (contentType: CustomContentType): ContentItem[] => {
+    switch (contentType) {
+      case CustomContentType.CLASS_DEFINITION:
+        return contentRepository.getAllClasses().filter(cls => 
+          !['fighter', 'wizard', 'cleric', 'rogue'].includes(cls.id)
+        );
+      case CustomContentType.SUBCLASS_DEFINITION:
+        return contentRepository.getAllSubclasses();
+      case CustomContentType.SPELL_SCHOOL_DEFINITION:
+        return contentRepository.getAllSpellSchools();
+      case CustomContentType.ACTION_ABILITY:
+        return contentRepository.getAllActionAbilities();
+      case CustomContentType.SPELL_ABILITY:
+        return getAllSpells();
+      default:
+        return [];
+    }
+  };
 
-  const getCustomSubclasses = () => contentRepository.getAllSubclasses();
-
-  const getAllSpellSchools = () => contentRepository.getAllSpellSchools();
-
-  const getCustomAbilities = () => contentRepository.getAllActionAbilities();
+  const getIconForType = (iconName: string) => {
+    const iconProps = { className: "h-4 w-4" };
+    switch (iconName) {
+      case 'Shield': return <Shield {...iconProps} />;
+      case 'Zap': return <Zap {...iconProps} />;
+      case 'Sparkles': return <Sparkles {...iconProps} />;
+      case 'FileText': return <FileText {...iconProps} />;
+      case 'Wand2': return <Wand2 {...iconProps} />;
+      case 'BookOpen': return <BookOpen {...iconProps} />;
+      default: return <FileText {...iconProps} />;
+    }
+  };
   
   const getAllSpells = () => {
     // Get all spells from all schools plus loose custom spells
@@ -116,25 +152,26 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
   };
 
   const renderContentSection = (
-    title: string, 
-    icon: React.ReactNode, 
-    items: any[], 
-    uploadType: string,
-    color: string
+    contentType: CustomContentType,
+    count: number,
   ) => {
-    const isExpanded = expandedSections[uploadType];
+    const metadata = getContentTypeMetadata(contentType);
+    const items = getContentForType(contentType);
+    const icon = getIconForType(metadata.icon);
+    
+    const isExpanded = expandedSections[contentType];
     
     return (
       <Card>
-        <Collapsible open={isExpanded} onOpenChange={() => toggleSection(uploadType)}>
+        <Collapsible open={isExpanded} onOpenChange={() => toggleSection(contentType)}>
           <CollapsibleTrigger asChild>
             <CardHeader className="cursor-pointer hover:bg-muted/50">
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {icon}
-                  {title}
-                  <Badge variant="secondary" className={`${color} text-white`}>
-                    {items.length}
+                  {metadata.title}
+                  <Badge variant="secondary" className={`${metadata.color} text-white`}>
+                    {count}
                   </Badge>
                 </div>
                 {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -146,11 +183,11 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
               {/* Upload Section */}
               <div className="border rounded-lg p-4 bg-muted/30">
                 <div className="flex items-center justify-between mb-2">
-                  <Label className="text-sm font-medium">Upload {title}</Label>
+                  <Label className="text-sm font-medium">Upload {metadata.title}</Label>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => toggleSchemaHelp(uploadType)}
+                    onClick={() => toggleSchemaHelp(contentType)}
                     className="h-6 px-2"
                   >
                     <BookOpen className="h-3 w-3 mr-1" />
@@ -158,61 +195,41 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
                   </Button>
                 </div>
                 
-                {showSchemaHelp[uploadType] && SCHEMA_DOCUMENTATION[uploadType as keyof typeof SCHEMA_DOCUMENTATION] && (
-                  <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded text-xs">
-                    <div className="font-semibold text-blue-900 mb-1">
-                      {SCHEMA_DOCUMENTATION[uploadType as keyof typeof SCHEMA_DOCUMENTATION].title} Format
-                    </div>
-                    <div className="text-blue-800 mb-2">
-                      {SCHEMA_DOCUMENTATION[uploadType as keyof typeof SCHEMA_DOCUMENTATION].description}
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <div className="font-medium text-blue-900">Required Fields:</div>
-                      {SCHEMA_DOCUMENTATION[uploadType as keyof typeof SCHEMA_DOCUMENTATION].fields
-                        .filter(field => field.required)
-                        .map(field => (
-                          <div key={field.name} className="ml-2">
-                            <span className="font-mono bg-blue-100 px-1 rounded">{field.name}</span>
-                            <span className="text-blue-700"> ({field.type})</span>
-                            {field.constraints && (
-                              <span className="text-blue-600 text-xs"> - {field.constraints.join(', ')}</span>
-                            )}
+                {(() => {
+                  if (contentType && showSchemaHelp[contentType]) {
+                    try {
+                      const schema = getSchemaDocumentation(contentType);
+                      return (
+                        <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded text-xs">
+                          <div className="font-semibold text-blue-900 mb-1">
+                            {schema.title || metadata.title} Format
                           </div>
-                        ))}
-                    </div>
-                    
-                    {SCHEMA_DOCUMENTATION[uploadType as keyof typeof SCHEMA_DOCUMENTATION].fields.some(f => !f.required) && (
-                      <div className="space-y-1 mt-2">
-                        <div className="font-medium text-blue-900">Optional Fields:</div>
-                        {SCHEMA_DOCUMENTATION[uploadType as keyof typeof SCHEMA_DOCUMENTATION].fields
-                          .filter(field => !field.required)
-                          .map(field => (
-                            <div key={field.name} className="ml-2">
-                              <span className="font-mono bg-blue-100 px-1 rounded">{field.name}</span>
-                              <span className="text-blue-700"> ({field.type})</span>
-                              {field.constraints && (
-                                <span className="text-blue-600 text-xs"> - {field.constraints.join(', ')}</span>
-                              )}
+                          {schema.description && (
+                            <div className="text-blue-800 mb-2">
+                              {schema.description}
                             </div>
-                          ))}
-                      </div>
-                    )}
-                    
-                    <details className="mt-2">
-                      <summary className="font-medium text-blue-900 cursor-pointer">Example JSON</summary>
-                      <pre className="mt-1 p-2 bg-blue-100 rounded overflow-x-auto text-xs">
-                        {JSON.stringify(SCHEMA_DOCUMENTATION[uploadType as keyof typeof SCHEMA_DOCUMENTATION].example, null, 2)}
-                      </pre>
-                    </details>
-                  </div>
-                )}
+                          )}
+                          
+                          <details className="mt-2">
+                            <summary className="font-medium text-blue-900 cursor-pointer">JSON Schema</summary>
+                            <pre className="mt-1 p-2 bg-blue-100 rounded overflow-x-auto text-xs">
+                              {JSON.stringify(schema, null, 2)}
+                            </pre>
+                          </details>
+                        </div>
+                      );
+                    } catch {
+                      return null;
+                    }
+                  }
+                  return null;
+                })()}
                 
                 <div className="relative">
                   <input
                     type="file"
                     accept=".json"
-                    onChange={(e) => handleFileUpload(e, uploadType)}
+                    onChange={(e) => handleFileUpload(e, contentType)}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
                   <Button variant="outline" size="sm" className="w-full">
@@ -225,12 +242,12 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
               {/* Content List */}
               {items.length > 0 ? (
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Current {title}</Label>
+                  <Label className="text-sm font-medium">Current {metadata.title}</Label>
                   <div className="space-y-1 max-h-48 overflow-y-auto">
-                    {uploadType === 'spells' ? (
+                    {contentType === CustomContentType.SPELL_ABILITY ? (
                       // Group spells by school
                       Object.entries(
-                        items.reduce((groups: Record<string, any[]>, spell) => {
+                        (items as SpellAbility[]).reduce((groups: Record<string, SpellAbility[]>, spell) => {
                           const school = spell.school || 'Unknown';
                           if (!groups[school]) groups[school] = [];
                           groups[school].push(spell);
@@ -265,7 +282,7 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
                                 {item.description}
                               </div>
                             )}
-                            {item.spells && (
+                            {'spells' in item && item.spells && (
                               <div className="text-xs text-muted-foreground">
                                 {item.spells.length} spells
                               </div>
@@ -281,7 +298,7 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
                 </div>
               ) : (
                 <div className="text-center py-4 text-muted-foreground text-sm">
-                  No custom {title.toLowerCase()} uploaded yet
+                  No custom {metadata.title.toLowerCase()} uploaded yet
                 </div>
               )}
             </CardContent>
@@ -316,45 +333,15 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
 
           {/* Content Sections */}
           <div className="space-y-4">
-            {renderContentSection(
-              "Classes", 
-              <Shield className="h-4 w-4" />, 
-              getCustomClasses(),
-              "classes",
-              "bg-blue-600"
-            )}
+            {getAllContentTypes().map(contentType => {
+              const count = customContentStats[contentType] || 0;
+              return (
+                <div key={contentType}>
+                  {renderContentSection(contentType, count)}
+                </div>
+              );
+            })}
 
-            {renderContentSection(
-              "Subclasses", 
-              <Zap className="h-4 w-4" />, 
-              getCustomSubclasses(),
-              "subclasses", 
-              "bg-green-600"
-            )}
-
-            {renderContentSection(
-              "Spell Schools", 
-              <Sparkles className="h-4 w-4" />, 
-              getAllSpellSchools(),
-              "spellSchools",
-              "bg-purple-600"
-            )}
-
-            {renderContentSection(
-              "Abilities", 
-              <FileText className="h-4 w-4" />, 
-              getCustomAbilities(),
-              "abilities",
-              "bg-orange-600"
-            )}
-
-            {renderContentSection(
-              "Spells", 
-              <Wand2 className="h-4 w-4" />, 
-              getAllSpells(),
-              "spells",
-              "bg-red-600"
-            )}
           </div>
 
           {/* Help Section */}

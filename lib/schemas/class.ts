@@ -2,29 +2,29 @@ import { z } from 'zod';
 
 // Basic building blocks with metadata
 const DiceExpressionSchema = z.object({
-  count: z.number().min(1).max(20).describe('Number of dice to roll'),
-  sides: z.union([z.literal(4), z.literal(6), z.literal(8), z.literal(10), z.literal(12), z.literal(20), z.literal(100)]).describe('Type of dice (d4, d6, d8, d10, d12, d20, d100)')
-}).describe('Dice expression for rolling');
+  count: z.number().min(1).max(20).meta({ title: 'Dice Count', description: 'Number of dice to roll' }),
+  sides: z.union([z.literal(4), z.literal(6), z.literal(8), z.literal(10), z.literal(12), z.literal(20), z.literal(100)]).meta({ title: 'Dice Type', description: 'Type of dice (d4, d6, d8, d10, d12, d20, d100)' })
+}).meta({ title: 'Dice Expression', description: 'Dice expression for rolling' });
 
 const AbilityRollSchema = z.object({
-  dice: DiceExpressionSchema.describe('Dice to roll for this ability'),
-  modifier: z.number().optional().describe('Fixed modifier to add to the roll'),
-  attribute: z.enum(['strength', 'dexterity', 'intelligence', 'will']).optional().describe('Attribute to add to the roll')
-}).describe('Roll configuration for abilities');
+  dice: DiceExpressionSchema.meta({ title: 'Dice', description: 'Dice to roll for this ability' }),
+  modifier: z.number().optional().meta({ title: 'Modifier', description: 'Fixed modifier to add to the roll' }),
+  attribute: z.enum(['strength', 'dexterity', 'intelligence', 'will']).optional().meta({ title: 'Attribute', description: 'Attribute to add to the roll' })
+}).meta({ title: 'Ability Roll', description: 'Roll configuration for abilities' });
 
 const ResourceCostSchema = z.union([
   z.object({
-    type: z.literal('fixed').describe('Fixed resource cost'),
-    resourceId: z.string().describe('ID of the resource to consume'),
-    amount: z.number().min(0).describe('Amount of resource to consume')
+    type: z.literal('fixed').meta({ title: 'Fixed Cost', description: 'Fixed resource cost' }),
+    resourceId: z.string().meta({ title: 'Resource ID', description: 'ID of the resource to consume' }),
+    amount: z.number().min(0).meta({ title: 'Amount', description: 'Amount of resource to consume' })
   }),
   z.object({
-    type: z.literal('variable').describe('Variable resource cost'),
-    resourceId: z.string().describe('ID of the resource to consume'),
-    minAmount: z.number().min(0).describe('Minimum amount of resource to consume'),
-    maxAmount: z.number().min(0).describe('Maximum amount of resource to consume')
+    type: z.literal('variable').meta({ title: 'Variable Cost', description: 'Variable resource cost' }),
+    resourceId: z.string().meta({ title: 'Resource ID', description: 'ID of the resource to consume' }),
+    minAmount: z.number().min(0).meta({ title: 'Minimum Amount', description: 'Minimum amount of resource to consume' }),
+    maxAmount: z.number().min(0).meta({ title: 'Maximum Amount', description: 'Maximum amount of resource to consume' })
   })
-]).describe('Resource cost for using this ability');
+]).meta({ title: 'Resource Cost', description: 'Resource cost for using this ability' });
 
 // Armor proficiency schemas
 const ArmorProficiencySchema = z.union([
@@ -51,29 +51,29 @@ const WeaponProficiencySchema = z.union([
 
 // Ability schemas (for class features)
 const ActionAbilitySchema = z.object({
-  id: z.string().min(1).describe('Unique identifier for the ability'),
-  name: z.string().min(1).describe('Display name of the ability'),
-  description: z.string().min(1).describe('Detailed description of what the ability does'),
-  type: z.literal('action').describe('Must be "action" for action abilities'),
-  frequency: z.enum(['per_turn', 'per_encounter', 'per_safe_rest', 'at_will']).describe('How often the ability can be used'),
-  maxUses: z.number().min(0).optional().describe('Maximum uses per frequency period'),
-  currentUses: z.number().min(0).optional().describe('Current remaining uses'),
-  roll: AbilityRollSchema.optional().describe('Dice roll configuration for the ability'),
-  actionCost: z.number().min(0).max(2).optional().describe('Action cost (0=bonus, 1=action, 2=full turn)'),
-  resourceCost: ResourceCostSchema.optional().describe('Resource cost to use the ability')
-}).describe('Non-spell ability that characters can use');
+  id: z.string().min(1).meta({ title: 'ID', description: 'Unique identifier for the ability' }),
+  name: z.string().min(1).meta({ title: 'Name', description: 'Display name of the ability' }),
+  description: z.string().min(1).meta({ title: 'Description', description: 'Detailed description of what the ability does' }),
+  type: z.literal('action').meta({ title: 'Type', description: 'Must be "action" for action abilities' }),
+  frequency: z.enum(['per_turn', 'per_encounter', 'per_safe_rest', 'at_will']).meta({ title: 'Frequency', description: 'How often the ability can be used' }),
+  maxUses: z.number().min(0).optional().meta({ title: 'Max Uses', description: 'Maximum uses per frequency period' }),
+  currentUses: z.number().min(0).optional().meta({ title: 'Current Uses', description: 'Current remaining uses' }),
+  roll: AbilityRollSchema.optional().meta({ title: 'Roll', description: 'Dice roll configuration for the ability' }),
+  actionCost: z.number().min(0).max(2).optional().meta({ title: 'Action Cost', description: 'Action cost (0=bonus, 1=action, 2=full turn)' }),
+  resourceCost: ResourceCostSchema.optional().meta({ title: 'Resource Cost', description: 'Resource cost to use the ability' })
+}).meta({ title: 'Action Ability', description: 'Non-spell ability that characters can use' });
 
 const SpellAbilitySchema = z.object({
-  id: z.string().min(1).describe('Unique identifier for the spell'),
-  name: z.string().min(1).describe('Display name of the spell'),
-  description: z.string().min(1).describe('Detailed description of the spell\'s effects'),
-  type: z.literal('spell').describe('Must be "spell" for spell abilities'),
-  school: z.string().min(1).describe('ID of the spell school this belongs to'),
-  tier: z.number().min(1).max(9).describe('Spell tier/level (1-9)'),
-  roll: AbilityRollSchema.optional().describe('Dice roll configuration for the spell'),
-  actionCost: z.number().min(0).max(2).optional().describe('Action cost (0=bonus, 1=action, 2=full turn)'),
-  resourceCost: ResourceCostSchema.optional().describe('Resource cost to cast the spell')
-}).describe('Spell that characters can cast');
+  id: z.string().min(1).meta({ title: 'ID', description: 'Unique identifier for the spell' }),
+  name: z.string().min(1).meta({ title: 'Name', description: 'Display name of the spell' }),
+  description: z.string().min(1).meta({ title: 'Description', description: 'Detailed description of the spell\'s effects' }),
+  type: z.literal('spell').meta({ title: 'Type', description: 'Must be "spell" for spell abilities' }),
+  school: z.string().min(1).meta({ title: 'School', description: 'ID of the spell school this belongs to' }),
+  tier: z.number().min(1).max(9).meta({ title: 'Tier', description: 'Spell tier/level (1-9)' }),
+  roll: AbilityRollSchema.optional().meta({ title: 'Roll', description: 'Dice roll configuration for the spell' }),
+  actionCost: z.number().min(0).max(2).optional().meta({ title: 'Action Cost', description: 'Action cost (0=bonus, 1=action, 2=full turn)' }),
+  resourceCost: ResourceCostSchema.optional().meta({ title: 'Resource Cost', description: 'Resource cost to cast the spell' })
+}).meta({ title: 'Spell Ability', description: 'Spell that characters can cast' });
 
 const AbilitySchema = z.union([ActionAbilitySchema, SpellAbilitySchema]);
 
@@ -165,44 +165,44 @@ export const ClassFeatureSchema = z.union([
 
 // Main schemas
 export const ClassDefinitionSchema = z.object({
-  id: z.string().min(1).describe('Unique identifier for the class'),
-  name: z.string().min(1).describe('Display name of the class'),
-  description: z.string().min(1).describe('Detailed description of the class'),
-  hitDieSize: z.union([z.literal(4), z.literal(6), z.literal(8), z.literal(10), z.literal(12)]).describe('Hit die size for this class (d4, d6, d8, d10, d12)'),
-  keyAttributes: z.array(z.enum(['strength', 'dexterity', 'intelligence', 'will'])).describe('Primary attributes for this class'),
-  startingHP: z.number().min(1).describe('Base hit points at level 1'),
-  armorProficiencies: z.array(ArmorProficiencySchema).describe('Types of armor this class can use'),
-  weaponProficiencies: z.array(WeaponProficiencySchema).describe('Types of weapons this class can use'),
+  id: z.string().min(1).meta({ title: 'ID', description: 'Unique identifier for the class' }),
+  name: z.string().min(1).meta({ title: 'Name', description: 'Display name of the class' }),
+  description: z.string().min(1).meta({ title: 'Description', description: 'Detailed description of the class' }),
+  hitDieSize: z.union([z.literal(4), z.literal(6), z.literal(8), z.literal(10), z.literal(12)]).meta({ title: 'Hit Die Size', description: 'Hit die size for this class (d4, d6, d8, d10, d12)' }),
+  keyAttributes: z.array(z.enum(['strength', 'dexterity', 'intelligence', 'will'])).meta({ title: 'Key Attributes', description: 'Primary attributes for this class' }),
+  startingHP: z.number().min(1).meta({ title: 'Starting HP', description: 'Base hit points at level 1' }),
+  armorProficiencies: z.array(ArmorProficiencySchema).meta({ title: 'Armor Proficiencies', description: 'Types of armor this class can use' }),
+  weaponProficiencies: z.array(WeaponProficiencySchema).meta({ title: 'Weapon Proficiencies', description: 'Types of weapons this class can use' }),
   saveAdvantages: z.object({
-    strength: z.enum(['advantage', 'disadvantage', 'normal']).optional().describe('Saving throw modifier for strength'),
-    dexterity: z.enum(['advantage', 'disadvantage', 'normal']).optional().describe('Saving throw modifier for dexterity'),
-    intelligence: z.enum(['advantage', 'disadvantage', 'normal']).optional().describe('Saving throw modifier for intelligence'),
-    will: z.enum(['advantage', 'disadvantage', 'normal']).optional().describe('Saving throw modifier for will')
-  }).describe('Saving throw advantages/disadvantages'),
-  features: z.array(ClassFeatureSchema).describe('Array of class features by level'),
+    strength: z.enum(['advantage', 'disadvantage', 'normal']).optional().meta({ title: 'Strength Saves', description: 'Saving throw modifier for strength' }),
+    dexterity: z.enum(['advantage', 'disadvantage', 'normal']).optional().meta({ title: 'Dexterity Saves', description: 'Saving throw modifier for dexterity' }),
+    intelligence: z.enum(['advantage', 'disadvantage', 'normal']).optional().meta({ title: 'Intelligence Saves', description: 'Saving throw modifier for intelligence' }),
+    will: z.enum(['advantage', 'disadvantage', 'normal']).optional().meta({ title: 'Will Saves', description: 'Saving throw modifier for will' })
+  }).meta({ title: 'Save Advantages', description: 'Saving throw advantages/disadvantages' }),
+  features: z.array(ClassFeatureSchema).meta({ title: 'Features', description: 'Array of class features by level' }),
   subclasses: z.array(z.object({
-    id: z.string().min(1).describe('Unique identifier for the subclass'),
-    name: z.string().min(1).describe('Display name of the subclass'),
-    description: z.string().min(1).describe('Detailed description of the subclass'),
-    parentClassId: z.string().min(1).describe('ID of the parent class'),
-    features: z.array(ClassFeatureSchema).describe('Array of subclass features by level')
-  })).optional().describe('Available subclasses for this class')
-}).describe('Character class definition with features, proficiencies, and progression');
+    id: z.string().min(1).meta({ title: 'ID', description: 'Unique identifier for the subclass' }),
+    name: z.string().min(1).meta({ title: 'Name', description: 'Display name of the subclass' }),
+    description: z.string().min(1).meta({ title: 'Description', description: 'Detailed description of the subclass' }),
+    parentClassId: z.string().min(1).meta({ title: 'Parent Class ID', description: 'ID of the parent class' }),
+    features: z.array(ClassFeatureSchema).meta({ title: 'Features', description: 'Array of subclass features by level' })
+  })).optional().meta({ title: 'Subclasses', description: 'Available subclasses for this class' })
+}).meta({ title: 'Class Definition', description: 'Character class definition with features, proficiencies, and progression' });
 
 export const SubclassDefinitionSchema = z.object({
-  id: z.string().min(1).describe('Unique identifier for the subclass'),
-  name: z.string().min(1).describe('Display name of the subclass'),
-  description: z.string().min(1).describe('Detailed description of the subclass'),
-  parentClassId: z.string().min(1).describe('ID of the parent class'),
-  features: z.array(ClassFeatureSchema).describe('Array of subclass features by level')
-}).describe('Character subclass specialization');
+  id: z.string().min(1).meta({ title: 'ID', description: 'Unique identifier for the subclass' }),
+  name: z.string().min(1).meta({ title: 'Name', description: 'Display name of the subclass' }),
+  description: z.string().min(1).meta({ title: 'Description', description: 'Detailed description of the subclass' }),
+  parentClassId: z.string().min(1).meta({ title: 'Parent Class ID', description: 'ID of the parent class' }),
+  features: z.array(ClassFeatureSchema).meta({ title: 'Features', description: 'Array of subclass features by level' })
+}).meta({ title: 'Subclass Definition', description: 'Character subclass specialization' });
 
 export const SpellSchoolDefinitionSchema = z.object({
-  id: z.string().min(1).describe('Unique identifier for the spell school'),
-  name: z.string().min(1).describe('Display name of the spell school'),
-  description: z.string().min(1).describe('Description of the school\'s magical focus'),
-  spells: z.array(SpellAbilitySchema).describe('Array of spells in this school')
-}).describe('School of magic with associated spells');
+  id: z.string().min(1).meta({ title: 'ID', description: 'Unique identifier for the spell school' }),
+  name: z.string().min(1).meta({ title: 'Name', description: 'Display name of the spell school' }),
+  description: z.string().min(1).meta({ title: 'Description', description: 'Description of the school\'s magical focus' }),
+  spells: z.array(SpellAbilitySchema).meta({ title: 'Spells', description: 'Array of spells in this school' })
+}).meta({ title: 'Spell School Definition', description: 'School of magic with associated spells' });
 
 // Export individual schemas for content validation
 export {
