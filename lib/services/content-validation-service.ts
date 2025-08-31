@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ClassDefinition, SubclassDefinition } from '../types/class';
 import { ActionAbility, SpellAbility } from '../types/abilities';
+import { SpellSchoolWithSpells } from './content-repository-service';
 import { 
   ClassDefinitionSchema,
   SubclassDefinitionSchema,
@@ -71,7 +72,7 @@ export class ContentValidationService {
     }
   }
 
-  static validateSpellSchool(data: unknown): { valid: boolean; data?: any; errors?: string[] } {
+  static validateSpellSchool(data: unknown): { valid: boolean; data?: SpellSchoolWithSpells; errors?: string[] } {
     try {
       const validatedData = SpellSchoolDefinitionSchema.parse(data);
       return { valid: true, data: validatedData };

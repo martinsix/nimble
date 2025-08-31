@@ -1,4 +1,5 @@
 import { ClassDefinition } from '../../types/class';
+import { getSpellSchoolDefinition } from '../spell-schools';
 
 export const wizard: ClassDefinition = {
   id: 'wizard',
@@ -22,11 +23,7 @@ export const wizard: ClassDefinition = {
       type: 'spell_school',
       name: 'Fire Magic',
       description: 'You gain access to the Fire school of magic, learning to harness the power of flame.',
-      spellSchool: {
-        schoolId: 'fire',
-        name: 'Fire Magic',
-        description: 'Spells that harness the destructive power of fire and flame'
-      }
+      spellSchool: getSpellSchoolDefinition('fire')!
     },
     {
       level: 1,

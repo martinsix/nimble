@@ -170,7 +170,17 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
                 <div className="flex items-center gap-2">
                   {icon}
                   {metadata.title}
-                  <Badge variant="secondary" className={`${metadata.color} text-white`}>
+                  <Badge 
+                    variant="secondary" 
+                    className={`text-white ${
+                      contentType === CustomContentType.CLASS_DEFINITION ? 'bg-blue-600' :
+                      contentType === CustomContentType.SUBCLASS_DEFINITION ? 'bg-green-600' :
+                      contentType === CustomContentType.SPELL_SCHOOL_DEFINITION ? 'bg-purple-600' :
+                      contentType === CustomContentType.ACTION_ABILITY ? 'bg-orange-600' :
+                      contentType === CustomContentType.SPELL_ABILITY ? 'bg-red-600' :
+                      'bg-gray-600'
+                    }`}
+                  >
                     {count}
                   </Badge>
                 </div>

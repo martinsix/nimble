@@ -1,4 +1,5 @@
 import { ClassDefinition } from '../../types/class';
+import { getSpellSchoolDefinition } from '../spell-schools';
 
 export const cleric: ClassDefinition = {
   id: 'cleric',
@@ -25,11 +26,7 @@ export const cleric: ClassDefinition = {
       type: 'spell_school',
       name: 'Radiant Magic',
       description: 'You gain access to the Radiant school of magic, wielding divine light.',
-      spellSchool: {
-        schoolId: 'radiant',
-        name: 'Radiant Magic',
-        description: 'Divine spells that channel holy light and radiant energy'
-      }
+      spellSchool: getSpellSchoolDefinition('radiant')!
     },
     {
       level: 1,

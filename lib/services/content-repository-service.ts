@@ -1,4 +1,4 @@
-import { ClassDefinition, SubclassDefinition, SpellSchool } from '../types/class';
+import { ClassDefinition, SubclassDefinition } from '../types/class';
 import { ActionAbility, SpellAbility } from '../types/abilities';
 import { ContentValidationService } from './content-validation-service';
 import { CustomContentType } from '../types/custom-content';
@@ -11,8 +11,10 @@ import {
   frostSchoolSpells,
   natureSchoolSpells,
   shadowSchoolSpells,
-  arcaneSchoolSpells
+  arcaneSchoolSpells,
+  getSpellsBySchool
 } from '../data/example-abilities';
+import { PREDEFINED_SPELL_SCHOOLS, getSpellSchoolDefinition } from '../data/spell-schools';
 
 // Storage keys for custom content
 const STORAGE_KEYS = {
@@ -30,7 +32,8 @@ export interface ContentUploadResult {
   itemsAdded?: number;
 }
 
-export interface SpellSchoolDefinition {
+// For content management - combines school definition with spells
+export interface SpellSchoolWithSpells {
   id: string;
   name: string;
   description: string;
@@ -251,7 +254,7 @@ export class ContentRepositoryService {
   }
 
   // Spell School Management
-  public getAllSpellSchools(): SpellSchoolDefinition[] {
+  public getAllSpellSchools(): SpellSchoolWithSpells[] {
     // Initialize built-in schools on first access
     this.initializeBuiltInSchools();
     
@@ -261,52 +264,20 @@ export class ContentRepositoryService {
 
   private initializeBuiltInSchools(): void {
     const stored = this.getStoredSpellSchools();
-    const builtInSchoolIds = ['fire', 'radiant', 'frost', 'nature', 'shadow', 'arcane'];
     
     // Check if built-in schools are already initialized
-    const hasBuiltInSchools = builtInSchoolIds.every(id => 
-      stored.some(school => school.id === id)
+    const hasBuiltInSchools = PREDEFINED_SPELL_SCHOOLS.every(predefinedSchool => 
+      stored.some(school => school.id === predefinedSchool.schoolId)
     );
     
     if (!hasBuiltInSchools) {
-      const builtInSchools: SpellSchoolDefinition[] = [
-        {
-          id: 'fire',
-          name: 'Fire Magic',
-          description: 'Destructive flames and burning magic',
-          spells: fireSchoolSpells
-        },
-        {
-          id: 'radiant',
-          name: 'Radiant Magic',
-          description: 'Divine light and healing magic',
-          spells: radiantSchoolSpells
-        },
-        {
-          id: 'frost',
-          name: 'Frost Magic',
-          description: 'Ice and cold elemental magic',
-          spells: frostSchoolSpells
-        },
-        {
-          id: 'nature',
-          name: 'Nature Magic',
-          description: 'Plant, animal, and natural magic',
-          spells: natureSchoolSpells
-        },
-        {
-          id: 'shadow',
-          name: 'Shadow Magic',
-          description: 'Necromancy and dark energy',
-          spells: shadowSchoolSpells
-        },
-        {
-          id: 'arcane',
-          name: 'Arcane Magic',
-          description: 'Pure magical force and manipulation',
-          spells: arcaneSchoolSpells
-        }
-      ];
+      // Create spell schools with spells from predefined definitions
+      const builtInSchools: SpellSchoolWithSpells[] = PREDEFINED_SPELL_SCHOOLS.map(schoolDef => ({
+        id: schoolDef.schoolId,
+        name: schoolDef.name,
+        description: schoolDef.description,
+        spells: getSpellsBySchool(schoolDef.schoolId)
+      }));
 
       // Merge with existing schools
       const updatedSchools = [...stored];
@@ -321,7 +292,7 @@ export class ContentRepositoryService {
     }
   }
 
-  public getSpellSchool(schoolId: string): SpellSchoolDefinition | null {
+  public getSpellSchool(schoolId: string): SpellSchoolWithSpells | null {
     const allSchools = this.getAllSpellSchools();
     return allSchools.find(school => school.id === schoolId) || null;
   }
@@ -342,7 +313,7 @@ export class ContentRepositoryService {
       const data = JSON.parse(schoolsJson);
       const schools = Array.isArray(data) ? data : [data];
       
-      const validSchools: SpellSchoolDefinition[] = [];
+      const validSchools: SpellSchoolWithSpells[] = [];
       const errors: string[] = [];
 
       schools.forEach((school, index) => {
@@ -389,7 +360,7 @@ export class ContentRepositoryService {
     }
   }
 
-  private getStoredSpellSchools(): SpellSchoolDefinition[] {
+  private getStoredSpellSchools(): SpellSchoolWithSpells[] {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.customSpellSchools);
       if (!stored) return [];
@@ -398,7 +369,7 @@ export class ContentRepositoryService {
       if (!Array.isArray(parsed)) return [];
       
       // Validate each spell school and filter out invalid ones
-      const validSchools: SpellSchoolDefinition[] = [];
+      const validSchools: SpellSchoolWithSpells[] = [];
       parsed.forEach((item, index) => {
         const validation = ContentValidationService.validateSpellSchool(item);
         if (validation.valid && validation.data) {
