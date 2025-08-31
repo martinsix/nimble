@@ -29,6 +29,8 @@ interface Character {
   level: number
   classId: string
   subclassId?: string
+  ancestry: AncestryTrait // Ancestry with features and size category
+  background: BackgroundTrait // Background with passive features
   attributes: { strength, dexterity, intelligence, will }
   hitPoints: { current, max, temporary }
   hitDice: { size, current, max }
@@ -67,16 +69,17 @@ interface ResourceInstance {
 ```
 
 #### Service Architecture
-- **CharacterCreationService** handles character creation with proper initialization and class features (primary responsibility for character creation)
-- **CharacterStorageService** handles character persistence operations (CRUD only, no creation logic)
+- **CharacterCreationService** handles character creation with proper initialization and class/ancestry/background features
 - **CharacterService** handles character CRUD operations with validation and business logic
+- **ClassService** handles class definitions, subclass management, feature progression, and spell tier system
+- **AncestryService** manages ancestry definitions, features (stat boosts, proficiencies, darkvision, resistances)
+- **BackgroundService** manages background definitions with passive features
+- **ContentRepositoryService** unified storage for all custom content (classes, ancestries, backgrounds, abilities, spells)
 - **ResourceService** manages generic resource system (mana, fury, focus, etc.) with configurable reset conditions
 - **DiceService** manages all dice rolling mechanics with advantage/disadvantage and critical hits
 - **ActivityLogService** tracks character actions, dice rolls, and resource usage
 - **AbilityService** handles ability usage, cooldowns, and roll calculations
 - **SettingsService** manages app settings and character selection
-- **ClassService** handles class definitions, subclass management, feature progression, and spell tier system
-- **UIStateService** manages collapsible sections and UI preferences
 - **Singleton pattern** for direct service access without React Context overhead
 
 #### Storage & State
@@ -127,11 +130,12 @@ app/page.tsx (main orchestrator)
 1. **Character Management**
    - Editable name and attributes (-2 to 10 range)
    - Class and subclass system with automatic feature progression
+   - Ancestry system with size categories, stat boosts, proficiencies, darkvision, and resistances
+   - Background system with passive features and cultural descriptions
    - Level-based character advancement with hit dice tracking
-   - Auto-saving to local storage
-   - Validation with Zod schemas
-   - Hit points with current/max/temporary tracking
-   - Dying status indicator at 0 HP
+   - Custom content upload for classes, ancestries, backgrounds, abilities, and spells
+   - Auto-saving to local storage with Zod validation
+   - Hit points with current/max/temporary tracking and dying status
 
 2. **Combat & Health System**
    - Hit points with temporary HP (D&D 5e rules)
@@ -245,42 +249,27 @@ app/page.tsx (main orchestrator)
     - Automatic feature synchronization when gaining levels or choosing subclasses
     - Feature tracking with unique identifiers and grant history
 
-16. **Advanced UI Features**
+16. **Custom Content Management**
+    - Unified content management panel for all custom content types
+    - JSON file upload with schema validation and error reporting
+    - Support for classes, subclasses, ancestries, backgrounds, abilities, and spells
+    - Auto-generated JSON examples and schema documentation
+    - Visual content browser with collapsible sections and item counts
+    - Custom vs built-in content filtering and organization
+
+17. **Advanced UI Features**
     - Collapsible sections with persistent preferences
     - Mobile-responsive design with adaptive grids
     - Consistent visual feedback and state indicators
     - Mode-aware component rendering
 
-## Key Design Decisions
+## Key Design Principles
 
-### Type Safety and Reusability
-- **Reuse Type Definitions**: Always import and reuse existing type definitions rather than duplicating them. For example, use `AttributeName` type consistently across all files instead of recreating `'strength' | 'dexterity' | 'intelligence' | 'will'`
-- **Single Source of Truth**: Maintain centralized type definitions that other modules can import and extend
-- **DRY Principle**: Avoid duplicate type definitions that can lead to inconsistencies and maintenance issues
-
-### Offline-First Architecture
-- **No server dependency** for core functionality
-- **Local storage** as primary data persistence
-- **Abstract repository pattern** enables future server integration
-- **Client-side validation** with Zod schemas
-
-### Type Safety
-- **TypeScript throughout** with strict type checking
-- **Runtime validation** with Zod for data integrity
-- **Typed interfaces** for all component props
-- **Type-safe** localStorage operations
-
-### Mobile-First Design
-- **Responsive grid layouts** (1/2/3/4 columns based on screen size)
-- **Touch-friendly** buttons and inputs
-- **Collapsible sections** to manage screen real estate
-- **Clean visual hierarchy** with shadcn/ui components
-
-### Extensible Data Models
-- **Modular skill system** easy to extend
-- **Flexible inventory** with type-specific properties
-- **Character traits** can be added without breaking changes
-- **Validation schemas** enforce data integrity
+- **Type Safety**: TypeScript throughout with Zod runtime validation
+- **Offline-First**: Local storage with repository abstraction for future server sync
+- **Mobile-First**: Responsive design with collapsible sections and touch-friendly interface
+- **Extensible**: Modular systems allow easy addition of new content and features
+- **DRY Principle**: Centralized type definitions and reusable components
 
 ## File Structure
 
@@ -295,12 +284,27 @@ lib/
 │   │   ├── wizard.ts # Wizard class with spell school access
 │   │   ├── cleric.ts # Cleric class with divine magic
 │   │   └── rogue.ts # Rogue class features and abilities
+│   ├── ancestries/  # Built-in ancestry definitions
+│   │   ├── index.ts # Ancestry registry and utilities
+│   │   ├── human.ts # Human ancestry traits
+│   │   ├── elf.ts # Elf ancestry with darkvision
+│   │   ├── dwarf.ts # Dwarf ancestry with resistances
+│   │   └── halfling.ts # Halfling ancestry traits
+│   ├── backgrounds/ # Built-in background definitions
+│   │   ├── index.ts # Background registry and utilities
+│   │   ├── noble.ts # Noble background
+│   │   ├── scholar.ts # Scholar background
+│   │   ├── soldier.ts # Soldier background
+│   │   └── folk-hero.ts # Folk hero background
 │   ├── subclasses/  # Specialization options for classes
 │   │   └── index.ts # Subclass registry and utilities
 │   └── example-abilities.ts # Predefined spells and abilities by school
 ├── types/           # TypeScript type definitions
-│   ├── character.ts # Character model with spell tier access
+│   ├── character.ts # Character model with ancestry and background traits
 │   ├── class.ts # Class features including spell schools
+│   ├── ancestry.ts # Ancestry definitions with size and features
+│   ├── background.ts # Background definitions with passive features
+│   ├── custom-content.ts # Shared types for content management
 │   ├── inventory.ts # Equipment and item type definitions
 │   ├── abilities.ts # Action and spell ability types
 │   ├── resources.ts # Generic resource system types
@@ -309,18 +313,23 @@ lib/
 │   └── log-entries.ts # Activity logging including spell casting
 ├── schemas/         # Runtime validation with Zod
 │   ├── character.ts # Character data validation schemas
+│   ├── ancestry.ts # Ancestry validation schemas
+│   ├── background.ts # Background validation schemas
+│   ├── class.ts # Class and spell school validation
 │   └── dice.ts # Dice roll and log entry validation
 ├── services/        # Business logic and state management
 │   ├── character-service.ts # Core character operations and spell casting
+│   ├── character-creation-service.ts # New character generation with ancestry/background
 │   ├── class-service.ts # Class progression and feature management
+│   ├── ancestry-service.ts # Ancestry feature management and validation
+│   ├── background-service.ts # Background feature management
+│   ├── content-repository-service.ts # Unified storage for all custom content
+│   ├── content-validation-service.ts # Zod validation for custom content
 │   ├── resource-service.ts # Generic resource tracking and resets
 │   ├── dice-service.ts # Dice rolling with advantage/disadvantage
 │   ├── activity-log-service.ts # Action and spell cast logging
 │   ├── ability-service.ts # Ability usage for actions and spells
 │   ├── settings-service.ts # App configuration and preferences
-│   ├── ui-state-service.ts # UI state including tab management
-│   ├── character-storage-service.ts # Local storage abstraction
-│   ├── character-creation-service.ts # New character generation
 │   ├── service-factory.ts # Singleton service access pattern
 │   └── interfaces.ts # Service interface definitions
 ├── hooks/           # React hooks for service integration
@@ -397,36 +406,20 @@ app/
 - **Tooltip System**: Icon-only buttons with informative hover tooltips
 - **Generic Resource System**: Flexible resource management with color schemes
 
-## Development Commands
+## Development & Configuration
 
+### Development Commands
 ```bash
 npm run dev      # Start development server
 npm run build    # Build for production
 npm run lint     # Run ESLint checks
+npm run typecheck # Type checking
 ```
 
-## Local Storage Keys
-
-- `nimble-navigator-characters`: Character data array
-- `nimble-navigator-activity-log`: Activity log entries (character actions and dice rolls)
-- `nimble-navigator-settings`: App settings (mode, active character)
-
-## Game Configuration
-
-All game rules are centralized in `lib/config/game-config.ts`:
-
-- **Critical Hits**: Max consecutive critical hits (default: 20)
-- **Combat Rules**: Miss on first die = 1, critical on max roll
-- **Character Limits**: Attribute range (-2 to 10), skill modifiers (0-20)
-- **Storage Limits**: Maximum roll history (100 rolls)
-
-## Validation Rules
-
-- **Attributes**: Configurable range (default: -2 to 10)
-- **Skills**: Configurable modifier range (default: 0-20)
-- **Character Name**: 1-50 characters
-- **Inventory Size**: Non-negative numbers
-- **Item Names**: Required, non-empty strings
+### Storage & Configuration
+- **Local Storage Keys**: `nimble-navigator-characters`, `nimble-navigator-activity-log`, `nimble-navigator-settings`
+- **Game Rules**: Centralized in `lib/config/game-config.ts` (dice mechanics, attribute ranges, equipment limits)
+- **Validation**: Zod schemas enforce data integrity with configurable limits
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.

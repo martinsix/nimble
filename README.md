@@ -14,6 +14,9 @@ A comprehensive digital character sheet application for the Nimble RPG system. N
 - **App Modes**: Basic mode (simplified) or Full mode (complete character sheet)
 - **Class System**: Four core classes (Fighter, Wizard, Cleric, Rogue) with level progression
 - **Subclass System**: Specialized subclasses unlock at appropriate levels with unique features
+- **Ancestry System**: Character origins with size categories, stat boosts, proficiencies, darkvision, and resistances
+- **Background System**: Character histories with passive features and cultural descriptions
+- **Custom Content**: Upload and manage custom classes, ancestries, backgrounds, abilities, and spells
 - **Level Progression**: Automatic feature grants and hit dice advancement
 - **Attributes**: Strength, Dexterity, Intelligence, Will (range: -2 to 10)
 - **Hit Points**: Current/Max HP with temporary HP support (D&D 5e rules)
@@ -106,13 +109,15 @@ npm start
 ### Character Setup
 1. **Name**: Click the character name to edit
 2. **Class Selection**: Choose from Fighter, Wizard, Cleric, or Rogue
-3. **Level Progression**: Set character level to automatically grant class features
-4. **Subclass Choice**: Select subclass specializations when they become available
-5. **Attributes**: Use the number inputs to set attribute values (-2 to 10)
-6. **Hit Points**: Set max HP and track current/temporary HP with hit dice
-7. **Skills**: Adjust skill modifiers (0-20) for each of the 10 skills
-8. **Resources**: Configure custom resource pools with color schemes and icons
-9. **Abilities**: Add custom abilities with usage frequencies and roll mechanics
+3. **Ancestry Selection**: Choose from Human, Elf, Dwarf, Halfling, or upload custom ancestries
+4. **Background Selection**: Choose from Noble, Scholar, Soldier, Folk Hero, or upload custom backgrounds
+5. **Level Progression**: Set character level to automatically grant class features
+6. **Subclass Choice**: Select subclass specializations when they become available
+7. **Attributes**: Use the number inputs to set attribute values (-2 to 10)
+8. **Hit Points**: Set max HP and track current/temporary HP with hit dice
+9. **Skills**: Adjust skill modifiers (0-20) for each of the 10 skills
+10. **Resources**: Configure custom resource pools with color schemes and icons
+11. **Abilities**: Add custom abilities with usage frequencies and roll mechanics
 
 ### Combat & Rolling
 1. **Advantage/Disadvantage**: Use the global toggle at the top
@@ -128,27 +133,11 @@ npm start
 3. **End Encounter**: Exit combat and reset all abilities
 4. **Actions Panel**: Quick access to weapons and abilities
 
-### Equipment Management
-1. **Add Items**: Use the "Add Item" button in inventory (Full mode)
-2. **Equip Gear**: Toggle equip/unequip for weapons and armor
-3. **Main Armor**: Only one main armor piece can be equipped at a time
-4. **Size Limits**: Weapons have a total size limit (default: 2)
-5. **Armor Display**: View total armor value with dexterity bonus calculations
-
-### Resource Management
-1. **Add Resources**: Create custom resource pools in character configuration
-2. **Color Schemes**: Choose from 8 predefined color schemes for visual distinction
-3. **Icon Selection**: Select from 23+ categorized icons (magic, combat, nature, etc.)
-4. **Reset Configuration**: Set when resources reset (turn, encounter, rest, etc.)
-5. **Quick Actions**: Use -1/-3/-5 and +1/+3/+5 buttons for fast adjustments
-6. **Custom Amounts**: Enter specific amounts to spend or restore
-7. **Visual Feedback**: Progress bars show current/max with color-coded status
-
-### Health Management
-1. **Damage**: Use quick buttons (-1, -5, -10) or custom amounts
-2. **Healing**: Heal up to maximum HP with quick or custom amounts
-3. **Temporary HP**: Add temp HP (takes higher value, doesn't stack)
-4. **Dying Status**: Automatic "(Dying)" indicator at 0 HP
+### Quick Tips
+- **Equipment**: Use inventory to add items, toggle equip/unequip for weapons and armor
+- **Resources**: Create custom pools with color schemes and icons, use quick adjustment buttons
+- **Health**: Use quick damage/heal buttons or enter custom amounts, temporary HP absorbs damage first
+- **Combat**: Roll initiative to start encounters, use action tracker to manage turn-based combat
 
 ## 🏗️ Technology Stack
 
@@ -158,100 +147,6 @@ npm start
 - **Validation**: Zod for runtime type checking
 - **Storage**: Local Storage with repository abstraction
 - **Icons**: Lucide React icons
-
-## 📁 Project Structure
-
-```
-nimble-navigator/
-├── app/                    # Next.js app router
-│   └── page.tsx           # Main application page
-├── components/            # React components
-│   ├── sections/         # Character sheet sections
-│   ├── ui/               # shadcn/ui components
-│   ├── character-sheet.tsx
-│   ├── advantage-toggle.tsx
-│   ├── activity-log.tsx
-│   ├── actions.tsx
-│   ├── app-menu.tsx
-│   ├── settings-panel.tsx
-│   └── character-selector.tsx
-├── lib/                   # Core application logic
-│   ├── config/           # Game configuration
-│   ├── data/             # Game data (classes, subclasses)
-│   ├── types/            # TypeScript interfaces
-│   ├── schemas/          # Zod validation schemas
-│   ├── services/         # Business logic services
-│   └── utils/            # Helper functions
-└── public/               # Static assets
-```
-
-## 🎯 Game Mechanics
-
-### Dice Rolling
-- **Basic Rolls**: d20 + modifier (attributes, skills, saves)
-- **Attack Rolls**: Multi-die expressions with exploding crits
-- **Ability Rolls**: Custom dice with modifiers and attribute bonuses
-- **Advantage/Disadvantage**: Roll extra dice, keep best/worst
-- **Critical Hits**: Max roll triggers additional dice (attacks only)
-- **Misses**: Natural 1 on first die = miss (attacks only)
-
-### Ability System
-- **Frequencies**: Per-turn, per-encounter, and at-will usage
-- **Roll Integration**: Abilities can trigger automatic dice rolls
-- **Smart Resets**: Per-turn abilities reset on turn end, per-encounter on encounter end
-- **Usage Tracking**: Visual indicators for remaining uses
-
-### Combat & Actions
-- **Action Tracker**: Current/base/bonus action management
-- **Initiative System**: d20 + dex + modifier determines starting actions
-- **Turn Management**: End turn resets actions and per-turn abilities
-- **Encounter Management**: Start/end encounters with automatic ability resets
-
-### Equipment Rules
-- **Weapon Limits**: Total equipped weapon size ≤ 2 (configurable)
-- **Main Armor**: Only one main armor piece can be equipped
-- **Supplementary Armor**: Helmets, shields, etc. can stack with main armor
-- **Dex Bonus**: Automatic calculation based on armor restrictions
-- **Inventory Size**: Equipped items don't count toward capacity
-- **Actions**: Only equipped weapons and usable abilities appear in actions
-
-### Health System
-- **Regular HP**: Standard current/maximum tracking
-- **Temporary HP**: Absorbs damage first, doesn't stack (higher value wins)
-- **Damage Order**: Temp HP → Regular HP
-- **Dying**: Clear status indicator at 0 HP
-
-## ⚙️ Configuration
-
-All game rules are centralized in `lib/config/game-config.ts`:
-
-```typescript
-export const gameConfig = {
-  dice: {
-    maxCriticalHitsInRow: 20,
-  },
-  combat: {
-    missOnFirstDieOne: true,
-  },
-  character: {
-    attributeRange: { min: -2, max: 10 },
-    skillModifierRange: { min: 0, max: 20 },
-  },
-  equipment: {
-    maxWeaponSize: 2,
-  },
-  storage: {
-    maxRollHistory: 100,
-  },
-};
-```
-
-## 💾 Data Storage
-
-The app uses local storage with the following keys:
-- `nimble-navigator-characters`: Character data array
-- `nimble-navigator-activity-log`: Activity log entries (character actions and dice rolls)
-- `nimble-navigator-settings`: App settings (mode, active character)
 
 ## 🔧 Development
 
