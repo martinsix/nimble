@@ -1,5 +1,5 @@
 import { Character } from '../types/character';
-import { AncestryDefinition, AncestryFeature, AncestryFeatureGrant, AncestryAbilityFeature, AncestryStatBoostFeature, AncestryProficiencyFeature, AncestrySpellSchoolFeature, AncestryResourceFeature, AncestryTrait } from '../types/ancestry';
+import { AncestryDefinition, AncestryFeature, AncestryFeatureGrant, AncestryAbilityFeature, AncestryStatBoostFeature, AncestryProficiencyFeature, AncestryTrait } from '../types/ancestry';
 import { ResourceInstance, createResourceInstance } from '../types/resources';
 import { IAncestryService, ICharacterService, ICharacterStorage } from './interfaces';
 import { ContentRepositoryService } from './content-repository-service';
@@ -84,14 +84,7 @@ export class AncestryService implements IAncestryService {
       case 'proficiency':
         await this.applyProficiencyFeature(character, feature as AncestryProficiencyFeature);
         break;
-      case 'spell_school':
-        await this.applySpellSchoolFeature(character, feature as AncestrySpellSchoolFeature);
-        break;
-      case 'resource':
-        await this.applyResourceFeature(character, feature as AncestryResourceFeature);
-        break;
       case 'passive_feature':
-      case 'speed_modifier':
       case 'darkvision':
       case 'resistance':
         // These features are informational and don't require mechanical changes
@@ -133,25 +126,6 @@ export class AncestryService implements IAncestryService {
     }
   }
 
-  /**
-   * Apply spell school feature from ancestry
-   */
-  private async applySpellSchoolFeature(character: Character, feature: AncestrySpellSchoolFeature): Promise<void> {
-    // Spell school access is handled by the content repository
-    // This is informational for the character sheet
-  }
-
-  /**
-   * Apply resource feature from ancestry
-   */
-  private async applyResourceFeature(character: Character, feature: AncestryResourceFeature): Promise<void> {
-    const resourceInstance = createResourceInstance(
-      feature.resourceDefinition,
-      feature.startingAmount
-    );
-    
-    character.resources.push(resourceInstance);
-  }
 
   /**
    * Create ancestry trait for character creation

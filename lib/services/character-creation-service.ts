@@ -1,5 +1,5 @@
 import { Character } from '../types/character';
-import { ICharacterCreation, ICharacterStorage, ICharacterService, IClassService, IAncestryService } from './interfaces';
+import { ICharacterCreation, ICharacterStorage, ICharacterService, IClassService, IAncestryService, IBackgroundService } from './interfaces';
 import { ContentRepositoryService } from './content-repository-service';
 import { 
   createDefaultCharacterConfiguration, 
@@ -18,6 +18,7 @@ import {
 export interface CreateCharacterOptions {
   name: string;
   ancestryId?: string;
+  backgroundId?: string;
   classId: string;
   level?: number;
   attributes?: {
@@ -39,7 +40,8 @@ export class CharacterCreationService implements ICharacterCreation {
     private characterStorage: ICharacterStorage,
     private characterService: ICharacterService,
     private classService: IClassService,
-    private ancestryService: IAncestryService
+    private ancestryService: IAncestryService,
+    private backgroundService: IBackgroundService
   ) {
     this.contentRepository = ContentRepositoryService.getInstance();
   }
@@ -51,6 +53,7 @@ export class CharacterCreationService implements ICharacterCreation {
     const {
       name,
       ancestryId = 'human',
+      backgroundId = 'folk-hero',
       classId,
       level = 1,
       attributes = { strength: 0, dexterity: 0, intelligence: 0, will: 0 }
@@ -68,8 +71,15 @@ export class CharacterCreationService implements ICharacterCreation {
       throw new Error(`Ancestry not found: ${ancestryId}`);
     }
 
-    // Create ancestry trait
+    // Validate background exists
+    const backgroundDefinition = this.contentRepository.getBackgroundDefinition(backgroundId);
+    if (!backgroundDefinition) {
+      throw new Error(`Background not found: ${backgroundId}`);
+    }
+
+    // Create ancestry and background traits
     const ancestry = this.ancestryService.createAncestryTrait(ancestryId);
+    const background = this.backgroundService.createBackgroundTrait(backgroundId);
 
     // Create base character configuration
     const config = createDefaultCharacterConfiguration();
@@ -82,6 +92,7 @@ export class CharacterCreationService implements ICharacterCreation {
     const baseCharacter = await this.characterStorage.createCharacter({
       name,
       ancestry,
+      background,
       level,
       classId,
       grantedFeatures: [], // Start with no features
@@ -110,6 +121,9 @@ export class CharacterCreationService implements ICharacterCreation {
 
     // Apply ancestry features
     await this.ancestryService.grantAncestryFeatures(baseCharacter.id);
+
+    // Apply background features
+    await this.backgroundService.grantBackgroundFeatures(baseCharacter.id);
 
     // Get the final character with all features applied
     const finalCharacter = await this.characterStorage.getCharacter(baseCharacter.id);

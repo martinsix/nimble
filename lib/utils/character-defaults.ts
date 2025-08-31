@@ -151,6 +151,7 @@ export const createDefaultCharacterTemplate = (): Omit<Character, 'id'> => {
   return {
     name: 'Unnamed Character',
     ancestry: { ancestryId: 'human', grantedFeatures: [] },
+    background: { backgroundId: 'folk-hero', grantedFeatures: [] },
     level: 1,
     classId: 'fighter', // Default to fighter as the most basic class
     subclassId: undefined,

@@ -6,6 +6,8 @@ import {
   ActionAbilitySchema,
   SpellAbilitySchema
 } from '../schemas/class';
+import { AncestryDefinitionSchema } from '../schemas/ancestry';
+import { BackgroundDefinitionSchema } from '../schemas/background';
 import { CustomContentType } from '../types/custom-content';
 
 // Registry of supported schemas for custom import
@@ -13,6 +15,8 @@ export const SCHEMA_REGISTRY: Record<CustomContentType, z.ZodSchema> = {
   [CustomContentType.CLASS_DEFINITION]: ClassDefinitionSchema,
   [CustomContentType.SUBCLASS_DEFINITION]: SubclassDefinitionSchema,
   [CustomContentType.SPELL_SCHOOL_DEFINITION]: SpellSchoolDefinitionSchema,
+  [CustomContentType.ANCESTRY_DEFINITION]: AncestryDefinitionSchema,
+  [CustomContentType.BACKGROUND_DEFINITION]: BackgroundDefinitionSchema,
   [CustomContentType.ACTION_ABILITY]: ActionAbilitySchema,
   [CustomContentType.SPELL_ABILITY]: SpellAbilitySchema
 };

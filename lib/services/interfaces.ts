@@ -4,6 +4,7 @@ import { LogEntry, SingleDie } from '../types/log-entries';
 import { ClassFeatureGrant, ClassFeature } from '../types/class';
 import { ResourceInstance } from '../types/resources';
 import { AncestryDefinition, AncestryFeature, AncestryTrait } from '../types/ancestry';
+import { BackgroundDefinition, BackgroundFeature, BackgroundTrait } from '../types/background';
 
 /**
  * Character Storage Interface
@@ -117,6 +118,22 @@ export interface IAncestryService {
 }
 
 /**
+ * Background Service Interface
+ * Handles background features and traits
+ */
+export interface IBackgroundService {
+  getCharacterBackground(character: Character): BackgroundDefinition | null;
+  getExpectedFeaturesForCharacter(character: Character): BackgroundFeature[];
+  getMissingFeatures(character: Character): BackgroundFeature[];
+  grantBackgroundFeatures(characterId: string): Promise<void>;
+  createBackgroundTrait(backgroundId: string): BackgroundTrait;
+  getAvailableBackgrounds(): BackgroundDefinition[];
+  addCustomBackground(background: BackgroundDefinition): Promise<void>;
+  removeCustomBackground(backgroundId: string): Promise<void>;
+  validateBackgroundDefinition(background: Partial<BackgroundDefinition>): boolean;
+}
+
+/**
  * Character Creation Service Interface
  * Handles character creation and initialization
  */
@@ -129,6 +146,7 @@ export interface ICharacterCreation {
 export interface CreateCharacterOptions {
   name: string;
   ancestryId?: string;
+  backgroundId?: string;
   classId: string;
   level?: number;
   attributes?: Record<string, number>;

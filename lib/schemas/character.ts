@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { gameConfig } from '../config/game-config';
 import { AncestryTraitSchema } from './ancestry';
+import { BackgroundTraitSchema } from './background';
 
 const attributeNameSchema = z.enum(['strength', 'dexterity', 'intelligence', 'will']);
 
@@ -219,6 +220,7 @@ export const proficienciesSchema = z.object({
 export const createCharacterSchema = z.object({
   name: z.string().min(1).max(50),
   ancestry: AncestryTraitSchema,
+  background: BackgroundTraitSchema,
   level: z.number().min(1).max(20),
   classId: z.string().min(1),
   subclassId: z.string().optional(),
@@ -244,6 +246,7 @@ export const characterSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1).max(50),
   ancestry: AncestryTraitSchema,
+  background: BackgroundTraitSchema,
   level: z.number().min(1).max(20),
   classId: z.string().min(1),
   subclassId: z.string().optional(),

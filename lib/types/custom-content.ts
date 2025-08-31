@@ -7,6 +7,8 @@ export enum CustomContentType {
   CLASS_DEFINITION = 'class-definition',
   SUBCLASS_DEFINITION = 'subclass-definition', 
   SPELL_SCHOOL_DEFINITION = 'spell-school-definition',
+  ANCESTRY_DEFINITION = 'ancestry-definition',
+  BACKGROUND_DEFINITION = 'background-definition',
   ACTION_ABILITY = 'action-ability',
   SPELL_ABILITY = 'spell-ability'
 }
@@ -34,6 +36,16 @@ export const CONTENT_TYPE_METADATA: Record<CustomContentType, ContentTypeMetadat
     title: 'Spell Schools',
     description: 'Schools of magic with themed spells',
     icon: 'Sparkles',
+  },
+  [CustomContentType.ANCESTRY_DEFINITION]: {
+    title: 'Ancestries',
+    description: 'Character ancestries with traits and features',
+    icon: 'Users',
+  },
+  [CustomContentType.BACKGROUND_DEFINITION]: {
+    title: 'Backgrounds',
+    description: 'Character backgrounds with passive features',
+    icon: 'BookOpen',
   },
   [CustomContentType.ACTION_ABILITY]: {
     title: 'Abilities',

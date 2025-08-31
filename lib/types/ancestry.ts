@@ -3,7 +3,7 @@ import { Ability } from './abilities';
 import { ResourceDefinition } from './resources';
 import { ArmorProficiency, WeaponProficiency, StatBoost, ProficiencyGrant, SpellSchool } from './class';
 
-export type AncestryFeatureType = 'ability' | 'passive_feature' | 'stat_boost' | 'proficiency' | 'spell_school' | 'resource' | 'speed_modifier' | 'darkvision' | 'resistance';
+export type AncestryFeatureType = 'ability' | 'passive_feature' | 'stat_boost' | 'proficiency' | 'darkvision' | 'resistance';
 
 // Size categories for different ancestries
 export type SizeCategory = 'tiny' | 'small' | 'medium' | 'large' | 'huge' | 'gargantuan';
@@ -45,25 +45,7 @@ export interface AncestryProficiencyFeature extends BaseAncestryFeature {
   proficiencies: ProficiencyGrant[];
 }
 
-// Spell school - ancestral magic traditions
-export interface AncestrySpellSchoolFeature extends BaseAncestryFeature {
-  type: 'spell_school';
-  spellSchool: SpellSchool;
-}
-
-// Resource - ancestral resources (like draconic breath, bardic inspiration, etc.)
-export interface AncestryResourceFeature extends BaseAncestryFeature {
-  type: 'resource';
-  resourceDefinition: ResourceDefinition;
-  startingAmount?: number;
-}
-
-// Speed modifier - adjusts base movement speed
-export interface AncestrySpeedModifierFeature extends BaseAncestryFeature {
-  type: 'speed_modifier';
-  speedModifier: number; // Modifier to base speed (in feet)
-  movementTypes?: string[]; // Additional movement types like 'swimming', 'climbing', 'flying'
-}
+// Speed modifier and other special movement handled through passive features
 
 // Darkvision - enhanced vision in darkness
 export interface AncestryDarkvisionFeature extends BaseAncestryFeature {
@@ -82,9 +64,6 @@ export type AncestryFeature =
   | AncestryPassiveFeature 
   | AncestryStatBoostFeature 
   | AncestryProficiencyFeature 
-  | AncestrySpellSchoolFeature
-  | AncestryResourceFeature
-  | AncestrySpeedModifierFeature
   | AncestryDarkvisionFeature
   | AncestryResistanceFeature;
 

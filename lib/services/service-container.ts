@@ -48,6 +48,7 @@ export const SERVICE_KEYS = {
   CHARACTER_SERVICE: 'characterService',
   CLASS_SERVICE: 'classService',
   ANCESTRY_SERVICE: 'ancestryService',
+  BACKGROUND_SERVICE: 'backgroundService',
   CHARACTER_CREATION: 'characterCreation',
   DICE_SERVICE: 'diceService',
   SETTINGS_SERVICE: 'settingsService',

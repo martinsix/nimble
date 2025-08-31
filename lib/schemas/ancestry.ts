@@ -48,40 +48,7 @@ const AncestryProficiencyFeatureSchema = BaseAncestryFeatureSchema.extend({
   })).meta({ title: 'Proficiencies', description: 'Granted proficiencies' })
 });
 
-// Spell school - ancestral magic traditions
-const AncestrySpellSchoolFeatureSchema = BaseAncestryFeatureSchema.extend({
-  type: z.literal('spell_school'),
-  spellSchool: z.object({
-    schoolId: z.string().min(1),
-    name: z.string().min(1),
-    description: z.string().min(1)
-  }).meta({ title: 'Spell School', description: 'Ancestral spell school access' })
-});
-
-// Resource - ancestral resources
-const AncestryResourceFeatureSchema = BaseAncestryFeatureSchema.extend({
-  type: z.literal('resource'),
-  resourceDefinition: z.object({
-    id: z.string().min(1),
-    name: z.string().min(1),
-    description: z.string().optional(),
-    colorScheme: z.string(),
-    icon: z.string().optional(),
-    resetCondition: z.enum(['safe_rest', 'encounter_end', 'turn_end', 'never', 'manual']),
-    resetType: z.enum(['to_max', 'to_zero', 'to_default']),
-    resetValue: z.number().int().optional(),
-    minValue: z.number().int(),
-    maxValue: z.number().int()
-  }),
-  startingAmount: z.number().int().optional().meta({ title: 'Starting Amount', description: 'Initial resource amount' })
-});
-
-// Speed modifier - adjusts base movement speed
-const AncestrySpeedModifierFeatureSchema = BaseAncestryFeatureSchema.extend({
-  type: z.literal('speed_modifier'),
-  speedModifier: z.number().int().meta({ title: 'Speed Modifier', description: 'Modifier to base speed in feet' }),
-  movementTypes: z.array(z.string()).optional().meta({ title: 'Movement Types', description: 'Additional movement types (swimming, climbing, flying)' })
-});
+// Speed and special movement handled through passive features
 
 // Darkvision - enhanced vision in darkness
 const AncestryDarkvisionFeatureSchema = BaseAncestryFeatureSchema.extend({
@@ -100,9 +67,6 @@ export const AncestryFeatureSchema = z.union([
   AncestryPassiveFeatureSchema,
   AncestryStatBoostFeatureSchema,
   AncestryProficiencyFeatureSchema,
-  AncestrySpellSchoolFeatureSchema,
-  AncestryResourceFeatureSchema,
-  AncestrySpeedModifierFeatureSchema,
   AncestryDarkvisionFeatureSchema,
   AncestryResistanceFeatureSchema
 ]);

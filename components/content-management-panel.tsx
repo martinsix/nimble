@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
-import { Database, Upload, ChevronDown, ChevronRight, FileText, Wand2, Shield, Zap, Sparkles, BookOpen } from "lucide-react";
+import { Database, Upload, ChevronDown, ChevronRight, FileText, Wand2, Shield, Zap, Sparkles, BookOpen, Users } from "lucide-react";
 import { ContentRepositoryService, ContentUploadResult } from "@/lib/services/content-repository-service";
 import { getSchemaDocumentation, getAllSchemaDocumentation } from "@/lib/utils/schema-documentation";
 import { ExampleGenerator } from "@/lib/utils/example-generator";
@@ -19,10 +19,12 @@ import {
 import { SpellAbility, ActionAbility } from "@/lib/types/abilities";
 import { ClassDefinition, SubclassDefinition } from "@/lib/types/class";
 import { SpellSchoolDefinitionSchema } from "@/lib/schemas/class";
+import { AncestryDefinition } from "@/lib/types/ancestry";
+import { BackgroundDefinition } from "@/lib/types/background";
 import { z } from 'zod';
 
 type SpellSchoolDefinition = z.infer<typeof SpellSchoolDefinitionSchema>;
-type ContentItem = ClassDefinition | SubclassDefinition | SpellSchoolDefinition | ActionAbility | SpellAbility;
+type ContentItem = ClassDefinition | SubclassDefinition | SpellSchoolDefinition | AncestryDefinition | BackgroundDefinition | ActionAbility | SpellAbility;
 
 interface ContentManagementPanelProps {
   isOpen: boolean;
@@ -60,6 +62,12 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
             break;
           case CustomContentType.SPELL_SCHOOL_DEFINITION:
             result = contentRepository.uploadSpellSchools(content);
+            break;
+          case CustomContentType.ANCESTRY_DEFINITION:
+            result = contentRepository.uploadAncestries(content);
+            break;
+          case CustomContentType.BACKGROUND_DEFINITION:
+            result = contentRepository.uploadBackgrounds(content);
             break;
           case CustomContentType.ACTION_ABILITY:
             result = contentRepository.uploadAbilities(content);
@@ -115,6 +123,14 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
         return contentRepository.getAllSubclasses();
       case CustomContentType.SPELL_SCHOOL_DEFINITION:
         return contentRepository.getAllSpellSchools();
+      case CustomContentType.ANCESTRY_DEFINITION:
+        return contentRepository.getAllAncestries().filter(ancestry => 
+          !['human', 'elf', 'dwarf', 'halfling'].includes(ancestry.id)
+        );
+      case CustomContentType.BACKGROUND_DEFINITION:
+        return contentRepository.getAllBackgrounds().filter(background => 
+          !['noble', 'scholar', 'soldier', 'folk-hero'].includes(background.id)
+        );
       case CustomContentType.ACTION_ABILITY:
         return contentRepository.getAllActionAbilities();
       case CustomContentType.SPELL_ABILITY:
@@ -130,6 +146,7 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
       case 'Shield': return <Shield {...iconProps} />;
       case 'Zap': return <Zap {...iconProps} />;
       case 'Sparkles': return <Sparkles {...iconProps} />;
+      case 'Users': return <Users {...iconProps} />;
       case 'FileText': return <FileText {...iconProps} />;
       case 'Wand2': return <Wand2 {...iconProps} />;
       case 'BookOpen': return <BookOpen {...iconProps} />;
@@ -177,6 +194,8 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
                       contentType === CustomContentType.CLASS_DEFINITION ? 'bg-blue-600' :
                       contentType === CustomContentType.SUBCLASS_DEFINITION ? 'bg-green-600' :
                       contentType === CustomContentType.SPELL_SCHOOL_DEFINITION ? 'bg-purple-600' :
+                      contentType === CustomContentType.ANCESTRY_DEFINITION ? 'bg-teal-600' :
+                      contentType === CustomContentType.BACKGROUND_DEFINITION ? 'bg-indigo-600' :
                       contentType === CustomContentType.ACTION_ABILITY ? 'bg-orange-600' :
                       contentType === CustomContentType.SPELL_ABILITY ? 'bg-red-600' :
                       'bg-gray-600'
@@ -303,6 +322,16 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
                             {'spells' in item && item.spells && (
                               <div className="text-xs text-muted-foreground">
                                 {item.spells.length} spells
+                              </div>
+                            )}
+                            {'size' in item && (item as AncestryDefinition).size && (
+                              <div className="text-xs text-muted-foreground">
+                                Size: {(item as AncestryDefinition).size}
+                              </div>
+                            )}
+                            {'features' in item && (item as AncestryDefinition | BackgroundDefinition).features && (
+                              <div className="text-xs text-muted-foreground">
+                                {(item as AncestryDefinition | BackgroundDefinition).features.length} features
                               </div>
                             )}
                           </div>

@@ -1,5 +1,6 @@
 import { ClassDefinition, SubclassDefinition } from '../types/class';
 import { AncestryDefinition } from '../types/ancestry';
+import { BackgroundDefinition } from '../types/background';
 import { ActionAbility, SpellAbility } from '../types/abilities';
 import { ContentValidationService } from './content-validation-service';
 import { CustomContentType } from '../types/custom-content';
@@ -7,6 +8,7 @@ import { CustomContentType } from '../types/custom-content';
 // Built-in content imports
 import { classDefinitions as builtInClasses } from '../data/classes/index';
 import { ancestryDefinitions as builtInAncestries } from '../data/ancestries/index';
+import { backgroundDefinitions as builtInBackgrounds } from '../data/backgrounds/index';
 import { 
   fireSchoolSpells, 
   radiantSchoolSpells,
@@ -23,6 +25,7 @@ const STORAGE_KEYS = {
   customClasses: 'nimble-navigator-custom-classes',
   customSubclasses: 'nimble-navigator-custom-subclasses',
   customAncestries: 'nimble-navigator-custom-ancestries',
+  customBackgrounds: 'nimble-navigator-custom-backgrounds',
   customSpellSchools: 'nimble-navigator-custom-spell-schools',
   customAbilities: 'nimble-navigator-custom-abilities',
   customSpells: 'nimble-navigator-custom-spells'
@@ -165,6 +168,191 @@ export class ContentRepositoryService {
     } catch (error) {
       console.warn('Error reading custom ancestries from storage:', error);
       return [];
+    }
+  }
+
+  // Background Management
+  public getAllBackgrounds(): BackgroundDefinition[] {
+    const customBackgrounds = this.getCustomBackgrounds();
+    return [...Object.values(builtInBackgrounds), ...customBackgrounds];
+  }
+
+  public getBackgroundDefinition(backgroundId: string): BackgroundDefinition | null {
+    // Check built-in backgrounds first
+    const builtInBackground = builtInBackgrounds[backgroundId];
+    if (builtInBackground) return builtInBackground;
+
+    // Check custom backgrounds
+    const customBackgrounds = this.getCustomBackgrounds();
+    return customBackgrounds.find(background => background.id === backgroundId) || null;
+  }
+
+  public addCustomBackground(background: BackgroundDefinition): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        const customBackgrounds = this.getCustomBackgrounds();
+        
+        // Check for duplicate IDs
+        if (customBackgrounds.some(existing => existing.id === background.id)) {
+          reject(new Error(`Background with ID '${background.id}' already exists`));
+          return;
+        }
+        
+        // Add the new background
+        customBackgrounds.push(background);
+        
+        // Save to storage
+        localStorage.setItem(STORAGE_KEYS.customBackgrounds, JSON.stringify(customBackgrounds));
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  public removeCustomBackground(backgroundId: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        const customBackgrounds = this.getCustomBackgrounds();
+        const filteredBackgrounds = customBackgrounds.filter(background => background.id !== backgroundId);
+        
+        if (filteredBackgrounds.length === customBackgrounds.length) {
+          reject(new Error(`Custom background with ID '${backgroundId}' not found`));
+          return;
+        }
+        
+        localStorage.setItem(STORAGE_KEYS.customBackgrounds, JSON.stringify(filteredBackgrounds));
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  private getCustomBackgrounds(): BackgroundDefinition[] {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.customBackgrounds);
+      if (!stored) return [];
+      
+      const parsed = JSON.parse(stored);
+      if (!Array.isArray(parsed)) return [];
+      
+      // Validate each background and filter out invalid ones
+      const validBackgrounds: BackgroundDefinition[] = [];
+      parsed.forEach((item, index) => {
+        // TODO: Add background validation when ContentValidationService is updated
+        // For now, just do basic validation
+        if (item && typeof item === 'object' && item.id && item.name && item.description) {
+          validBackgrounds.push(item);
+        } else {
+          console.warn(`Invalid custom background at index ${index}:`, item);
+        }
+      });
+      
+      return validBackgrounds;
+    } catch (error) {
+      console.warn('Error reading custom backgrounds from storage:', error);
+      return [];
+    }
+  }
+
+  public uploadAncestries(ancestriesJson: string): ContentUploadResult {
+    try {
+      const data = JSON.parse(ancestriesJson);
+      const ancestries = Array.isArray(data) ? data : [data];
+      
+      // Validate using Zod schemas
+      const validAncestries: AncestryDefinition[] = [];
+      const errors: string[] = [];
+      ancestries.forEach((ancestry, index) => {
+        const validation = ContentValidationService.validateAncestry(ancestry);
+        if (validation.valid && validation.data) {
+          validAncestries.push(validation.data);
+        } else {
+          errors.push(`Ancestry ${index + 1}: ${validation.errors?.join(', ') || 'Invalid format'}`);
+        }
+      });
+
+      if (validAncestries.length === 0) {
+        return { 
+          success: false, 
+          message: `No valid ancestry definitions found. Errors: ${errors.join('; ')}`
+        };
+      }
+
+      const existingAncestries = this.getCustomAncestries();
+      const updatedAncestries = [...existingAncestries];
+      validAncestries.forEach(newAncestry => {
+        const existingIndex = updatedAncestries.findIndex(ancestry => ancestry.id === newAncestry.id);
+        if (existingIndex >= 0) {
+          updatedAncestries[existingIndex] = newAncestry; // Replace existing
+        } else {
+          updatedAncestries.push(newAncestry); // Add new
+        }
+      });
+
+      localStorage.setItem(STORAGE_KEYS.customAncestries, JSON.stringify(updatedAncestries));
+      const message = validAncestries.length === 1 
+        ? `Successfully added/updated ancestry: ${validAncestries[0].name}`
+        : `Successfully added/updated ${validAncestries.length} ancestries`;
+
+      return {
+        success: true,
+        message,
+        itemsAdded: validAncestries.length
+      };
+    } catch (error) {
+      return { success: false, message: 'Invalid JSON format' };
+    }
+  }
+
+  public uploadBackgrounds(backgroundsJson: string): ContentUploadResult {
+    try {
+      const data = JSON.parse(backgroundsJson);
+      const backgrounds = Array.isArray(data) ? data : [data];
+      
+      // Validate using Zod schemas
+      const validBackgrounds: BackgroundDefinition[] = [];
+      const errors: string[] = [];
+      backgrounds.forEach((background, index) => {
+        const validation = ContentValidationService.validateBackground(background);
+        if (validation.valid && validation.data) {
+          validBackgrounds.push(validation.data);
+        } else {
+          errors.push(`Background ${index + 1}: ${validation.errors?.join(', ') || 'Invalid format'}`);
+        }
+      });
+
+      if (validBackgrounds.length === 0) {
+        return { 
+          success: false, 
+          message: `No valid background definitions found. Errors: ${errors.join('; ')}`
+        };
+      }
+
+      const existingBackgrounds = this.getCustomBackgrounds();
+      const updatedBackgrounds = [...existingBackgrounds];
+      validBackgrounds.forEach(newBackground => {
+        const existingIndex = updatedBackgrounds.findIndex(background => background.id === newBackground.id);
+        if (existingIndex >= 0) {
+          updatedBackgrounds[existingIndex] = newBackground; // Replace existing
+        } else {
+          updatedBackgrounds.push(newBackground); // Add new
+        }
+      });
+
+      localStorage.setItem(STORAGE_KEYS.customBackgrounds, JSON.stringify(updatedBackgrounds));
+      const message = validBackgrounds.length === 1 
+        ? `Successfully added/updated background: ${validBackgrounds[0].name}`
+        : `Successfully added/updated ${validBackgrounds.length} backgrounds`;
+
+      return {
+        success: true,
+        message,
+        itemsAdded: validBackgrounds.length
+      };
+    } catch (error) {
+      return { success: false, message: 'Invalid JSON format' };
     }
   }
 
@@ -696,6 +884,8 @@ export class ContentRepositoryService {
       [CustomContentType.CLASS_DEFINITION]: customClasses.length,
       [CustomContentType.SUBCLASS_DEFINITION]: this.getCustomSubclasses().length,
       [CustomContentType.SPELL_SCHOOL_DEFINITION]: allSpellSchools.length,
+      [CustomContentType.ANCESTRY_DEFINITION]: this.getCustomAncestries().length,
+      [CustomContentType.BACKGROUND_DEFINITION]: this.getCustomBackgrounds().length,
       [CustomContentType.ACTION_ABILITY]: this.getCustomAbilities().length,
       [CustomContentType.SPELL_ABILITY]: customSpells.length
     };

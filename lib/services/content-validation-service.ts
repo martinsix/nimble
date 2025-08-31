@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { ClassDefinition, SubclassDefinition } from '../types/class';
+import { AncestryDefinition } from '../types/ancestry';
+import { BackgroundDefinition } from '../types/background';
 import { ActionAbility, SpellAbility } from '../types/abilities';
 import { SpellSchoolWithSpells } from './content-repository-service';
 import { 
@@ -9,6 +11,8 @@ import {
   ActionAbilitySchema,
   SpellAbilitySchema
 } from '../schemas/class';
+import { AncestryDefinitionSchema } from '../schemas/ancestry';
+import { BackgroundDefinitionSchema } from '../schemas/background';
 
 // Validation functions
 export class ContentValidationService {
@@ -75,6 +79,36 @@ export class ContentValidationService {
   static validateSpellSchool(data: unknown): { valid: boolean; data?: SpellSchoolWithSpells; errors?: string[] } {
     try {
       const validatedData = SpellSchoolDefinitionSchema.parse(data);
+      return { valid: true, data: validatedData };
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return { 
+          valid: false, 
+          errors: error.issues.map(err => `${err.path.join('.')}: ${err.message}`)
+        };
+      }
+      return { valid: false, errors: ['Unknown validation error'] };
+    }
+  }
+
+  static validateAncestry(data: unknown): { valid: boolean; data?: AncestryDefinition; errors?: string[] } {
+    try {
+      const validatedData = AncestryDefinitionSchema.parse(data);
+      return { valid: true, data: validatedData };
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return { 
+          valid: false, 
+          errors: error.issues.map(err => `${err.path.join('.')}: ${err.message}`)
+        };
+      }
+      return { valid: false, errors: ['Unknown validation error'] };
+    }
+  }
+
+  static validateBackground(data: unknown): { valid: boolean; data?: BackgroundDefinition; errors?: string[] } {
+    try {
+      const validatedData = BackgroundDefinitionSchema.parse(data);
       return { valid: true, data: validatedData };
     } catch (error) {
       if (error instanceof z.ZodError) {

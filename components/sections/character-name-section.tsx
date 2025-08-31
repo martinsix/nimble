@@ -24,6 +24,9 @@ export function CharacterNameSection({ name, onNameChange, onOpenConfig }: Chara
   
   const ancestryDefinition = contentRepository.getAncestryDefinition(character.ancestry.ancestryId);
   const ancestryName = ancestryDefinition?.name || character.ancestry.ancestryId;
+  
+  const backgroundDefinition = contentRepository.getBackgroundDefinition(character.background.backgroundId);
+  const backgroundName = backgroundDefinition?.name || character.background.backgroundId;
 
   const handleLevelUp = async () => {
     if (!character || character.level >= 20) return;
@@ -74,9 +77,9 @@ export function CharacterNameSection({ name, onNameChange, onOpenConfig }: Chara
         </Button>
       </div>
       
-      {/* Ancestry, Class, Level */}
+      {/* Ancestry, Background, Class, Level */}
       <div className="text-center text-lg text-muted-foreground">
-        {ancestryName} • {className} • Level {character.level}
+        {ancestryName} {backgroundName} • {className} • Level {character.level}
       </div>
     </div>
   );
