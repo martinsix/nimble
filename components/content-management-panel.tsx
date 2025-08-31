@@ -10,6 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collap
 import { Database, Upload, ChevronDown, ChevronRight, FileText, Wand2, Shield, Zap, Sparkles, BookOpen } from "lucide-react";
 import { ContentRepositoryService, ContentUploadResult } from "@/lib/services/content-repository-service";
 import { getSchemaDocumentation, getAllSchemaDocumentation } from "@/lib/utils/schema-documentation";
+import { ExampleGenerator } from "@/lib/utils/example-generator";
 import { 
   CustomContentType, 
   getAllContentTypes,
@@ -219,6 +220,13 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
                               {schema.description}
                             </div>
                           )}
+                          
+                          <details className="mt-2">
+                            <summary className="font-medium text-blue-900 cursor-pointer">Example JSON</summary>
+                            <pre className="mt-1 p-2 bg-green-100 rounded overflow-x-auto text-xs">
+                              {ExampleGenerator.generateExampleJSON(contentType) || 'Failed to generate example'}
+                            </pre>
+                          </details>
                           
                           <details className="mt-2">
                             <summary className="font-medium text-blue-900 cursor-pointer">JSON Schema</summary>
