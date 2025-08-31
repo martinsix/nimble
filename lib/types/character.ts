@@ -14,6 +14,7 @@ import { Inventory } from './inventory';
 import { Abilities } from './abilities';
 import { ArmorProficiency, WeaponProficiency } from './class';
 import { ResourceInstance } from './resources';
+import { AncestryTrait } from './ancestry';
 
 export interface ActionTracker {
   current: number; // Currently available actions
@@ -47,7 +48,7 @@ export interface CharacterConfiguration {
 export interface Character {
   id: string;
   name: string;
-  ancestry: string; // Character's ancestry/race (e.g., 'Human', 'Elf', 'Dwarf')
+  ancestry: AncestryTrait; // Character's ancestry with granted features
   level: number; // Character level (starting at 1)
   classId: string; // Character's class (e.g., 'fighter', 'wizard')
   subclassId?: string; // Character's subclass (e.g., 'fighter-champion', 'wizard-evocation')
@@ -93,7 +94,7 @@ export interface Character {
 
 export interface CreateCharacterData {
   name: string;
-  ancestry: string;
+  ancestry: AncestryTrait;
   level: number;
   classId: string;
   subclassId?: string;

@@ -1,5 +1,5 @@
 import { Character } from '../types/character';
-import { ICharacterCreation, ICharacterStorage, ICharacterService, IClassService } from './interfaces';
+import { ICharacterCreation, ICharacterStorage, ICharacterService, IClassService, IAncestryService } from './interfaces';
 import { ContentRepositoryService } from './content-repository-service';
 import { 
   createDefaultCharacterConfiguration, 
@@ -17,7 +17,7 @@ import {
 
 export interface CreateCharacterOptions {
   name: string;
-  ancestry?: string;
+  ancestryId?: string;
   classId: string;
   level?: number;
   attributes?: {
@@ -38,7 +38,8 @@ export class CharacterCreationService implements ICharacterCreation {
   constructor(
     private characterStorage: ICharacterStorage,
     private characterService: ICharacterService,
-    private classService: IClassService
+    private classService: IClassService,
+    private ancestryService: IAncestryService
   ) {
     this.contentRepository = ContentRepositoryService.getInstance();
   }
@@ -49,7 +50,7 @@ export class CharacterCreationService implements ICharacterCreation {
   async createCharacterWithClass(options: CreateCharacterOptions): Promise<Character> {
     const {
       name,
-      ancestry = 'Human',
+      ancestryId = 'human',
       classId,
       level = 1,
       attributes = { strength: 0, dexterity: 0, intelligence: 0, will: 0 }
@@ -60,6 +61,15 @@ export class CharacterCreationService implements ICharacterCreation {
     if (!classDefinition) {
       throw new Error(`Class not found: ${classId}`);
     }
+
+    // Validate ancestry exists
+    const ancestryDefinition = this.contentRepository.getAncestryDefinition(ancestryId);
+    if (!ancestryDefinition) {
+      throw new Error(`Ancestry not found: ${ancestryId}`);
+    }
+
+    // Create ancestry trait
+    const ancestry = this.ancestryService.createAncestryTrait(ancestryId);
 
     // Create base character configuration
     const config = createDefaultCharacterConfiguration();
@@ -97,6 +107,9 @@ export class CharacterCreationService implements ICharacterCreation {
 
     // Apply class features for the character's level
     await this.classService.syncCharacterFeatures();
+
+    // Apply ancestry features
+    await this.ancestryService.grantAncestryFeatures(baseCharacter.id);
 
     // Get the final character with all features applied
     const finalCharacter = await this.characterStorage.getCharacter(baseCharacter.id);

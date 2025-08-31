@@ -21,6 +21,9 @@ export function CharacterNameSection({ name, onNameChange, onOpenConfig }: Chara
   const contentRepository = ContentRepositoryService.getInstance();
   const classDefinition = contentRepository.getClassDefinition(character.classId);
   const className = classDefinition?.name || character.classId;
+  
+  const ancestryDefinition = contentRepository.getAncestryDefinition(character.ancestry.ancestryId);
+  const ancestryName = ancestryDefinition?.name || character.ancestry.ancestryId;
 
   const handleLevelUp = async () => {
     if (!character || character.level >= 20) return;
@@ -73,7 +76,7 @@ export function CharacterNameSection({ name, onNameChange, onOpenConfig }: Chara
       
       {/* Ancestry, Class, Level */}
       <div className="text-center text-lg text-muted-foreground">
-        {character.ancestry} • {className} • Level {character.level}
+        {ancestryName} • {className} • Level {character.level}
       </div>
     </div>
   );

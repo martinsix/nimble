@@ -1,10 +1,12 @@
 import { ClassDefinition, SubclassDefinition } from '../types/class';
+import { AncestryDefinition } from '../types/ancestry';
 import { ActionAbility, SpellAbility } from '../types/abilities';
 import { ContentValidationService } from './content-validation-service';
 import { CustomContentType } from '../types/custom-content';
 
 // Built-in content imports
 import { classDefinitions as builtInClasses } from '../data/classes/index';
+import { ancestryDefinitions as builtInAncestries } from '../data/ancestries/index';
 import { 
   fireSchoolSpells, 
   radiantSchoolSpells,
@@ -20,6 +22,7 @@ import { PREDEFINED_SPELL_SCHOOLS, getSpellSchoolDefinition } from '../data/spel
 const STORAGE_KEYS = {
   customClasses: 'nimble-navigator-custom-classes',
   customSubclasses: 'nimble-navigator-custom-subclasses',
+  customAncestries: 'nimble-navigator-custom-ancestries',
   customSpellSchools: 'nimble-navigator-custom-spell-schools',
   customAbilities: 'nimble-navigator-custom-abilities',
   customSpells: 'nimble-navigator-custom-spells'
@@ -78,6 +81,91 @@ export class ContentRepositoryService {
     if (!classDef) return [];
     
     return classDef.features.filter(feature => feature.level <= level);
+  }
+
+  // Ancestry Management
+  public getAllAncestries(): AncestryDefinition[] {
+    const customAncestries = this.getCustomAncestries();
+    return [...Object.values(builtInAncestries), ...customAncestries];
+  }
+
+  public getAncestryDefinition(ancestryId: string): AncestryDefinition | null {
+    // Check built-in ancestries first
+    const builtInAncestry = builtInAncestries[ancestryId];
+    if (builtInAncestry) return builtInAncestry;
+
+    // Check custom ancestries
+    const customAncestries = this.getCustomAncestries();
+    return customAncestries.find(ancestry => ancestry.id === ancestryId) || null;
+  }
+
+  public addCustomAncestry(ancestry: AncestryDefinition): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        const customAncestries = this.getCustomAncestries();
+        
+        // Check for duplicate IDs
+        if (customAncestries.some(existing => existing.id === ancestry.id)) {
+          reject(new Error(`Ancestry with ID '${ancestry.id}' already exists`));
+          return;
+        }
+        
+        // Add the new ancestry
+        customAncestries.push(ancestry);
+        
+        // Save to storage
+        localStorage.setItem(STORAGE_KEYS.customAncestries, JSON.stringify(customAncestries));
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  public removeCustomAncestry(ancestryId: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        const customAncestries = this.getCustomAncestries();
+        const filteredAncestries = customAncestries.filter(ancestry => ancestry.id !== ancestryId);
+        
+        if (filteredAncestries.length === customAncestries.length) {
+          reject(new Error(`Custom ancestry with ID '${ancestryId}' not found`));
+          return;
+        }
+        
+        localStorage.setItem(STORAGE_KEYS.customAncestries, JSON.stringify(filteredAncestries));
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  private getCustomAncestries(): AncestryDefinition[] {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.customAncestries);
+      if (!stored) return [];
+      
+      const parsed = JSON.parse(stored);
+      if (!Array.isArray(parsed)) return [];
+      
+      // Validate each ancestry and filter out invalid ones
+      const validAncestries: AncestryDefinition[] = [];
+      parsed.forEach((item, index) => {
+        // TODO: Add ancestry validation when ContentValidationService is updated
+        // For now, just do basic validation
+        if (item && typeof item === 'object' && item.id && item.name && item.description) {
+          validAncestries.push(item);
+        } else {
+          console.warn(`Invalid custom ancestry at index ${index}:`, item);
+        }
+      });
+      
+      return validAncestries;
+    } catch (error) {
+      console.warn('Error reading custom ancestries from storage:', error);
+      return [];
+    }
   }
 
   public uploadClasses(classesJson: string): ContentUploadResult {

@@ -1,13 +1,15 @@
 import { serviceContainer, SERVICE_KEYS } from './service-container';
 import { CharacterService } from './character-service';
 import { ClassService } from './class-service';
+import { AncestryService } from './ancestry-service';
 import { CharacterCreationService } from './character-creation-service';
 import { 
   ICharacterService, 
   ICharacterStorage, 
   IActivityLog, 
   IAbilityService, 
-  IClassService, 
+  IClassService,
+  IAncestryService, 
   ICharacterCreation 
 } from './interfaces';
 
@@ -87,11 +89,21 @@ export class ServiceFactory {
     );
 
     serviceContainer.register(
+      SERVICE_KEYS.ANCESTRY_SERVICE,
+      (container) => new AncestryService(
+        container.get(SERVICE_KEYS.CHARACTER_SERVICE),
+        container.get(SERVICE_KEYS.CHARACTER_STORAGE)
+      ),
+      true // singleton
+    );
+
+    serviceContainer.register(
       SERVICE_KEYS.CHARACTER_CREATION,
       (container) => new CharacterCreationService(
         container.get(SERVICE_KEYS.CHARACTER_STORAGE),
         container.get(SERVICE_KEYS.CHARACTER_SERVICE),
-        container.get(SERVICE_KEYS.CLASS_SERVICE)
+        container.get(SERVICE_KEYS.CLASS_SERVICE),
+        container.get(SERVICE_KEYS.ANCESTRY_SERVICE)
       ),
       true // singleton
     );
@@ -122,6 +134,7 @@ export const getCharacterStorage = (): ICharacterStorage => ServiceFactory.getSe
 export const getActivityLog = (): IActivityLog => ServiceFactory.getService(SERVICE_KEYS.ACTIVITY_LOG);
 export const getAbilityService = (): IAbilityService => ServiceFactory.getService(SERVICE_KEYS.ABILITY_SERVICE);
 export const getClassService = (): IClassService => ServiceFactory.getService(SERVICE_KEYS.CLASS_SERVICE);
+export const getAncestryService = (): IAncestryService => ServiceFactory.getService(SERVICE_KEYS.ANCESTRY_SERVICE);
 export const getCharacterCreation = (): ICharacterCreation => ServiceFactory.getService(SERVICE_KEYS.CHARACTER_CREATION);
 export const getDiceService = (): DiceService => ServiceFactory.getService(SERVICE_KEYS.DICE_SERVICE);
 export const getSettingsService = (): SettingsService => ServiceFactory.getService(SERVICE_KEYS.SETTINGS_SERVICE);

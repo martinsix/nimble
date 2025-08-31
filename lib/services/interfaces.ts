@@ -3,6 +3,7 @@ import { Abilities, ActionAbility, SpellAbility, AbilityRoll } from '../types/ab
 import { LogEntry, SingleDie } from '../types/log-entries';
 import { ClassFeatureGrant, ClassFeature } from '../types/class';
 import { ResourceInstance } from '../types/resources';
+import { AncestryDefinition, AncestryFeature, AncestryTrait } from '../types/ancestry';
 
 /**
  * Character Storage Interface
@@ -100,6 +101,22 @@ export interface IClassService {
 }
 
 /**
+ * Ancestry Service Interface
+ * Handles ancestry features and traits
+ */
+export interface IAncestryService {
+  getCharacterAncestry(character: Character): AncestryDefinition | null;
+  getExpectedFeaturesForCharacter(character: Character): AncestryFeature[];
+  getMissingFeatures(character: Character): AncestryFeature[];
+  grantAncestryFeatures(characterId: string): Promise<void>;
+  createAncestryTrait(ancestryId: string): AncestryTrait;
+  getAvailableAncestries(): AncestryDefinition[];
+  addCustomAncestry(ancestry: AncestryDefinition): Promise<void>;
+  removeCustomAncestry(ancestryId: string): Promise<void>;
+  validateAncestryDefinition(ancestry: Partial<AncestryDefinition>): boolean;
+}
+
+/**
  * Character Creation Service Interface
  * Handles character creation and initialization
  */
@@ -111,7 +128,7 @@ export interface ICharacterCreation {
 
 export interface CreateCharacterOptions {
   name: string;
-  ancestry?: string;
+  ancestryId?: string;
   classId: string;
   level?: number;
   attributes?: Record<string, number>;

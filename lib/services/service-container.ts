@@ -1,12 +1,3 @@
-import { 
-  ICharacterStorage, 
-  IActivityLog, 
-  IAbilityService, 
-  ICharacterService, 
-  IClassService, 
-  ICharacterCreation 
-} from './interfaces';
-
 /**
  * Service Container for Dependency Injection
  * Manages service dependencies and provides controlled access to services
@@ -56,6 +47,7 @@ export const SERVICE_KEYS = {
   ABILITY_SERVICE: 'abilityService',
   CHARACTER_SERVICE: 'characterService',
   CLASS_SERVICE: 'classService',
+  ANCESTRY_SERVICE: 'ancestryService',
   CHARACTER_CREATION: 'characterCreation',
   DICE_SERVICE: 'diceService',
   SETTINGS_SERVICE: 'settingsService',
