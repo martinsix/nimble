@@ -50,9 +50,6 @@ export function CharacterCreateForm({
       // Load the new character (this will automatically update settings)
       await characterService.loadCharacter(newCharacter.id);
       
-      // Notify creation
-      characterService.notifyCharacterCreated(newCharacter);
-
       showSuccess("Character created", `${name} has been created successfully!`);
       
       // Reset form

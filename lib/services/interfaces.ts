@@ -143,7 +143,6 @@ export interface IBackgroundService {
 export interface ICharacterCreation {
   createCharacterWithClass(options: CreateCharacterOptions): Promise<Character>;
   createSampleCharacter(name: string, classId: string): Promise<Character>;
-  initializeCharacter(characterId: string): Promise<Character | null>;
 }
 
 export interface CreateCharacterOptions {

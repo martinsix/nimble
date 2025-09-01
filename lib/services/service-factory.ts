@@ -113,7 +113,6 @@ export class ServiceFactory {
       (container) => new CharacterCreationService(
         container.get(SERVICE_KEYS.CHARACTER_STORAGE),
         container.get(SERVICE_KEYS.CHARACTER_SERVICE),
-        container.get(SERVICE_KEYS.CLASS_SERVICE),
         container.get(SERVICE_KEYS.ANCESTRY_SERVICE),
         container.get(SERVICE_KEYS.BACKGROUND_SERVICE)
       ),

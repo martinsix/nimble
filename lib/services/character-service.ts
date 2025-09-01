@@ -1,9 +1,9 @@
 import { Character, ActionTracker, CharacterConfiguration } from '../types/character';
 import { Abilities, ActionAbility, SpellAbility } from '../types/abilities';
 import { DiceType } from '../types/dice';
-import { ICharacterService, ICharacterStorage, IActivityLog, IAbilityService } from './interfaces';
+import { ICharacterService, ICharacterStorage, IActivityLog, IAbilityService, IClassService, IAncestryService, IBackgroundService } from './interfaces';
 import { resourceService } from './resource-service';
-import { getDiceService, getSettingsService } from './service-factory';
+import { getDiceService, getSettingsService, getClassService, getAncestryService, getBackgroundService } from './service-factory';
 
 // Character event types
 export type CharacterEventType = 'created' | 'switched' | 'deleted' | 'updated';
@@ -72,11 +72,13 @@ export class CharacterService implements ICharacterService {
   async loadCharacter(characterId: string): Promise<Character | null> {
     const character = await this.storageService.getCharacter(characterId);
     if (character) {
-      // Determine if this is a switch (there was already a character loaded)
-      const isSwitch = this._character !== null;
-      
-      if (isSwitch && this._character) {
+      if (this._character) {
         await this.storageService.updateLastPlayed(this._character.id);
+        this.emitEvent({
+          type: 'switched',
+          characterId,
+          character
+        });
       }
       
       this._character = character;
@@ -87,16 +89,10 @@ export class CharacterService implements ICharacterService {
       const newSettings = { ...settings, activeCharacterId: characterId };
       await settingsService.saveSettings(newSettings);
       
-      this.notifyCharacterChanged();
+      // Sync any missing features
+      await this.syncCharacterFeatures();
       
-      // Emit appropriate event based on context
-      if (isSwitch) {
-        this.emitEvent({
-          type: 'switched',
-          characterId,
-          character
-        });
-      }
+      this.notifyCharacterChanged();
     }
     return character;
   }
@@ -109,6 +105,32 @@ export class CharacterService implements ICharacterService {
         characterId: this.character.id,
         character: this.character
       });
+    }
+  }
+
+  /**
+   * Sync all character features (class, ancestry, background)
+   */
+  private async syncCharacterFeatures(): Promise<void> {
+    if (!this._character) return;
+
+    const classService = getClassService();
+    const ancestryService = getAncestryService();
+    const backgroundService = getBackgroundService();
+
+    // Sync class features
+    await classService.syncCharacterFeatures();
+
+    // Sync ancestry features
+    await ancestryService.grantAncestryFeatures(this._character.id);
+
+    // Sync background features
+    await backgroundService.grantBackgroundFeatures(this._character.id);
+
+    // Reload character to get updated features
+    const updatedCharacter = await this.storageService.getCharacter(this._character.id);
+    if (updatedCharacter) {
+      this._character = updatedCharacter;
     }
   }
 

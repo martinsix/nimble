@@ -53,23 +53,19 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
           setLoadError("No characters found. Please create your first character.");
         } else {
           // Load active character through CharacterService
-          let activeCharacter = await characterCreation.initializeCharacter(loadedSettings.activeCharacterId);
+          const characterService = getCharacterService();
+          let activeCharacter = await characterService.loadCharacter(loadedSettings.activeCharacterId);
           if (!activeCharacter) {
             // Use the first available character instead
             try {
               const firstCharacter = characterList[0];
-              activeCharacter = await characterCreation.initializeCharacter(firstCharacter.id);
+              activeCharacter = await characterService.loadCharacter(firstCharacter.id);
               
-              if (activeCharacter) {
-                // Update settings to reflect the new active character
-                const newSettings = { ...loadedSettings, activeCharacterId: firstCharacter.id };
-                await settingsService.saveSettings(newSettings);
-                setSettings(newSettings);
-              } else {
-                throw new Error("Failed to initialize first available character");
+              if (!activeCharacter) {
+                throw new Error("Failed to load first available character");
               }
             } catch (initError) {
-              console.error("Failed to initialize first character:", initError);
+              console.error("Failed to load first character:", initError);
               setShowCharacterSelection(true);
               setLoadError("Failed to load character. Please select or create a character.");
             }

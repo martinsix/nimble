@@ -1,5 +1,5 @@
 import { Character, Attributes } from '../types/character';
-import { ICharacterCreation, ICharacterStorage, ICharacterService, IClassService, IAncestryService, IBackgroundService } from './interfaces';
+import { ICharacterCreation, ICharacterStorage, ICharacterService, IAncestryService, IBackgroundService } from './interfaces';
 import { ContentRepositoryService } from './content-repository-service';
 import { 
   createDefaultCharacterConfiguration, 
@@ -34,7 +34,6 @@ export class CharacterCreationService implements ICharacterCreation {
   constructor(
     private characterStorage: ICharacterStorage,
     private characterService: ICharacterService,
-    private classService: IClassService,
     private ancestryService: IAncestryService,
     private backgroundService: IBackgroundService
   ) {
@@ -108,25 +107,9 @@ export class CharacterCreationService implements ICharacterCreation {
       abilities: createDefaultAbilities(),
     }, characterId);
 
-    // Initialize the character service with the new character
-    await this.characterService.loadCharacter(baseCharacter.id);
+    this.characterService.notifyCharacterCreated(baseCharacter);
 
-    // Apply class features for the character's level
-    await this.classService.syncCharacterFeatures();
-
-    // Apply ancestry features
-    await this.ancestryService.grantAncestryFeatures(baseCharacter.id);
-
-    // Apply background features
-    await this.backgroundService.grantBackgroundFeatures(baseCharacter.id);
-
-    // Get the final character with all features applied
-    const finalCharacter = await this.characterStorage.getCharacter(baseCharacter.id);
-    if (!finalCharacter) {
-      throw new Error('Failed to retrieve created character');
-    }
-
-    return finalCharacter;
+    return baseCharacter;
   }
 
   /**
@@ -155,20 +138,4 @@ export class CharacterCreationService implements ICharacterCreation {
     });
   }
 
-  /**
-   * Initializes a character in the character service and applies missing features
-   */
-  async initializeCharacter(characterId: string): Promise<Character | null> {
-    // Load character into character service
-    const character = await this.characterService.loadCharacter(characterId);
-    if (!character) {
-      return null;
-    }
-
-    // Sync any missing class features
-    await this.classService.syncCharacterFeatures();
-
-    // Return the updated character
-    return this.characterService.getCurrentCharacter();
-  }
 }
