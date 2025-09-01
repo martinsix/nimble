@@ -9,8 +9,6 @@ import { getCharacterCreation } from "@/lib/services/service-factory";
 import { StepIndicator } from "./character-builder/step-indicator";
 import { ClassSelection } from "./character-builder/class-selection";
 import { HeritageSelection } from "./character-builder/heritage-selection";
-import { NameGenerator } from "@/lib/utils/name-generator";
-import { genericNames } from "@/lib/data/name-configs";
 
 // Character builder state for first 2 steps
 interface CharacterBuilderState {
@@ -66,20 +64,6 @@ export function CharacterBuilder({
     setBuilderState(prev => ({ ...prev, name }));
   };
 
-  const suggestName = () => {
-    if (builderState.ancestryId) {
-      const ancestry = availableAncestries.find(a => a.id === builderState.ancestryId);
-      const config = ancestry?.nameConfig || genericNames;
-      
-      try {
-        const randomGender = Math.random() > 0.5 ? 'male' : 'female';
-        const randomName = NameGenerator.generateFullName(config, randomGender);
-        handleNameChange(randomName);
-      } catch (error) {
-        console.error('Failed to generate name:', error);
-      }
-    }
-  };
 
   const canProceedFromStep2 = (): boolean => {
     return !!(builderState.classId && 
@@ -127,7 +111,6 @@ export function CharacterBuilder({
             onAncestrySelect={handleAncestrySelect}
             onBackgroundSelect={handleBackgroundSelect}
             onNameChange={handleNameChange}
-            onSuggestName={suggestName}
             onBack={() => setCurrentStep('class')}
             onNext={handleCreateCharacter}
             canProceed={canProceedFromStep2()}

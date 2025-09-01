@@ -7,6 +7,8 @@ import { Input } from "../ui/input";
 import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { AncestryDefinition } from "@/lib/types/ancestry";
 import { BackgroundDefinition } from "@/lib/types/background";
+import { NameGenerator } from "@/lib/utils/name-generator";
+import { genericNames } from "@/lib/data/name-configs";
 
 interface HeritageSelectionProps {
   availableAncestries: AncestryDefinition[];
@@ -17,7 +19,6 @@ interface HeritageSelectionProps {
   onAncestrySelect: (ancestryId: string) => void;
   onBackgroundSelect: (backgroundId: string) => void;
   onNameChange: (name: string) => void;
-  onSuggestName: () => void;
   onBack: () => void;
   onNext: () => void;
   canProceed: boolean;
@@ -32,11 +33,25 @@ export function HeritageSelection({
   onAncestrySelect,
   onBackgroundSelect,
   onNameChange,
-  onSuggestName,
   onBack,
   onNext,
   canProceed
 }: HeritageSelectionProps) {
+  const handleSuggestName = () => {
+    if (selectedAncestryId) {
+      const ancestry = availableAncestries.find(a => a.id === selectedAncestryId);
+      const config = ancestry?.nameConfig || genericNames;
+      
+      try {
+        const randomGender = Math.random() > 0.5 ? 'male' : 'female';
+        const randomName = NameGenerator.generateFullName(config, randomGender);
+        onNameChange(randomName);
+      } catch (error) {
+        console.error('Failed to generate name:', error);
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -61,7 +76,7 @@ export function HeritageSelection({
             </div>
             <Button 
               variant="outline" 
-              onClick={onSuggestName}
+              onClick={handleSuggestName}
               disabled={!selectedAncestryId}
             >
               <Sparkles className="w-4 h-4 mr-2" />
