@@ -94,6 +94,31 @@ const WeaponProficiencySchema = z.union([
   })
 ]);
 
+// Name generator configuration schemas
+const NameGeneratorConfigSchema = z.object({
+  syllables: z.object({
+    prefixes: z.array(z.string().min(1)).meta({ title: 'Prefixes', description: 'Syllable prefixes for name generation' }),
+    middle: z.array(z.string().min(1)).meta({ title: 'Middle', description: 'Middle syllables for name generation' }),
+    suffixes: z.array(z.string().min(1)).meta({ title: 'Suffixes', description: 'Syllable suffixes for name generation' })
+  }).meta({ title: 'Syllables', description: 'Syllable collections for name generation' }),
+  patterns: z.array(z.string().min(1)).meta({ title: 'Patterns', description: 'Name generation patterns (P=prefix, M=middle, S=suffix)' }),
+  constraints: z.object({
+    minLength: z.number().int().min(1).meta({ title: 'Min Length', description: 'Minimum name length' }),
+    maxLength: z.number().int().min(1).meta({ title: 'Max Length', description: 'Maximum name length' }),
+    syllableCount: z.object({
+      min: z.number().int().min(1).meta({ title: 'Min Syllables', description: 'Minimum syllable count' }),
+      max: z.number().int().min(1).meta({ title: 'Max Syllables', description: 'Maximum syllable count' })
+    }).meta({ title: 'Syllable Count', description: 'Syllable count constraints' })
+  }).meta({ title: 'Constraints', description: 'Name generation constraints' })
+}).meta({ title: 'Name Generator Config', description: 'Configuration for generating names' });
+
+const AncestryNameConfigSchema = z.object({
+  male: NameGeneratorConfigSchema.optional().meta({ title: 'Male Names', description: 'Configuration for male names' }),
+  female: NameGeneratorConfigSchema.optional().meta({ title: 'Female Names', description: 'Configuration for female names' }),
+  surnames: NameGeneratorConfigSchema.optional().meta({ title: 'Surnames', description: 'Configuration for surnames' }),
+  unisex: NameGeneratorConfigSchema.optional().meta({ title: 'Unisex Names', description: 'Configuration for unisex names' })
+}).meta({ title: 'Ancestry Name Config', description: 'Name generation configuration for an ancestry' });
+
 export const AncestryDefinitionSchema = z.object({
   id: z.string().min(1).meta({ title: 'ID', description: 'Unique identifier for the ancestry' }),
   name: z.string().min(1).meta({ title: 'Name', description: 'Display name of the ancestry' }),
@@ -104,7 +129,8 @@ export const AncestryDefinitionSchema = z.object({
   lifespan: z.string().optional().meta({ title: 'Lifespan', description: 'Typical lifespan description' }),
   culture: z.string().optional().meta({ title: 'Culture', description: 'Cultural background description' }),
   physicalTraits: z.string().optional().meta({ title: 'Physical Traits', description: 'Physical appearance description' }),
-  features: z.array(AncestryFeatureSchema).meta({ title: 'Features', description: 'All features provided by this ancestry' })
+  features: z.array(AncestryFeatureSchema).meta({ title: 'Features', description: 'All features provided by this ancestry' }),
+  nameConfig: AncestryNameConfigSchema.optional().meta({ title: 'Name Config', description: 'Optional name generation configuration' })
 }).meta({ title: 'Ancestry Definition', description: 'Character ancestry definition with features and traits' });
 
 export const AncestryTraitSchema = z.object({
@@ -115,5 +141,7 @@ export const AncestryTraitSchema = z.object({
 // Export individual schemas for specific use cases
 export {
   SizeCategorySchema,
-  ResistanceSchema
+  ResistanceSchema,
+  AncestryNameConfigSchema,
+  NameGeneratorConfigSchema
 };
