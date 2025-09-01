@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { BottomTabBar } from "./bottom-tab-bar";
 import { CombatTab } from "./tabs/combat-tab";
 import { SkillsTab } from "./tabs/skills-tab";
 import { CharacterTab } from "./tabs/character-tab";
@@ -13,33 +12,35 @@ import { useCharacterService } from "@/lib/hooks/use-character-service";
 
 export function TabbedCharacterSheet() {
   const { uiState, updateActiveTab } = useUIStateService();
-  const { character } = useCharacterService();
   const activeTab = uiState.activeTab;
-  
+  const { character } = useCharacterService();
+
   // Check if spells tab should be accessible
-  const hasSpellAccess = character && character.spellTierAccess > 0 && 
-    character.abilities.abilities.some(ability => ability.type === 'spell');
-  
+  const hasSpellAccess =
+    character &&
+    character.spellTierAccess > 0 &&
+    character.abilities.abilities.some((ability) => ability.type === "spell");
+
   // Auto-switch away from spells tab if character loses spell access
   useEffect(() => {
-    if (activeTab === 'spells' && !hasSpellAccess) {
-      updateActiveTab('combat'); // Default to combat tab
+    if (activeTab === "spells" && !hasSpellAccess) {
+      updateActiveTab("combat"); // Default to combat tab
     }
   }, [activeTab, hasSpellAccess, updateActiveTab]);
 
   const renderActiveTab = () => {
     switch (activeTab) {
-      case 'combat':
+      case "combat":
         return <CombatTab />;
-      case 'skills':
+      case "skills":
         return <SkillsTab />;
-      case 'character':
+      case "character":
         return <CharacterTab />;
-      case 'equipment':
+      case "equipment":
         return <EquipmentTab />;
-      case 'spells':
+      case "spells":
         return <SpellsTab />;
-      case 'log':
+      case "log":
         return <LogTab />;
       default:
         return <CombatTab />;
@@ -52,9 +53,6 @@ export function TabbedCharacterSheet() {
       <div className="pb-20 sm:pb-24 min-h-[calc(100vh-8rem)]">
         {renderActiveTab()}
       </div>
-      
-      {/* Bottom tab navigation */}
-      <BottomTabBar activeTab={activeTab} onTabChange={updateActiveTab} />
     </div>
   );
 }

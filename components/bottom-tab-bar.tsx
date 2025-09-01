@@ -2,14 +2,17 @@
 
 import { useState } from "react";
 import { Button } from "./ui/button";
-import { Sword, Target, User, Package, Sparkles, ScrollText } from "lucide-react";
+import {
+  Sword,
+  Target,
+  User,
+  Package,
+  Sparkles,
+  ScrollText,
+} from "lucide-react";
 import { TabType } from "@/lib/services/ui-state-service";
 import { useCharacterService } from "@/lib/hooks/use-character-service";
-
-interface BottomTabBarProps {
-  activeTab: TabType;
-  onTabChange: (tab: TabType) => void;
-}
+import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
 
 interface TabDefinition {
   id: TabType;
@@ -18,51 +21,61 @@ interface TabDefinition {
 }
 
 const tabs: TabDefinition[] = [
-  { id: 'combat', label: 'Combat', icon: Sword },
-  { id: 'spells', label: 'Spells', icon: Sparkles },
-  { id: 'skills', label: 'Skills', icon: Target },
-  { id: 'character', label: 'Character', icon: User },
-  { id: 'equipment', label: 'Equipment', icon: Package },
-  { id: 'log', label: 'Log', icon: ScrollText },
+  { id: "combat", label: "Combat", icon: Sword },
+  { id: "spells", label: "Spells", icon: Sparkles },
+  { id: "skills", label: "Skills", icon: Target },
+  { id: "character", label: "Character", icon: User },
+  { id: "equipment", label: "Equipment", icon: Package },
+  { id: "log", label: "Log", icon: ScrollText },
 ];
 
-export function BottomTabBar({ activeTab, onTabChange }: BottomTabBarProps) {
+export function BottomTabBar() {
   const { character } = useCharacterService();
-  
+
+  const { uiState, updateActiveTab } = useUIStateService();
+  const activeTab = uiState.activeTab;
+
   // Filter tabs based on character capabilities
-  const visibleTabs = tabs.filter(tab => {
+  const visibleTabs = tabs.filter((tab) => {
     // Hide spells tab if character has no spell access or no spells
-    if (tab.id === 'spells') {
+    if (tab.id === "spells") {
       if (!character || character.spellTierAccess === 0) return false;
       // Also check if character has any spell abilities
-      const hasSpells = character.abilities.abilities.some(ability => ability.type === 'spell');
+      const hasSpells = character.abilities.abilities.some(
+        (ability) => ability.type === "spell"
+      );
       return hasSpells;
     }
     return true;
   });
-  
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background border-t z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <div
+      className="fixed bottom-0 left-0 right-0 bg-background border-t z-50"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
       <div className="w-full px-2 sm:px-4">
         <div className="flex justify-around items-center h-16 max-w-(--breakpoint-sm) mx-auto">
           {visibleTabs.map((tab) => {
             const IconComponent = tab.icon;
             const isActive = activeTab === tab.id;
-            
+
             return (
               <Button
                 key={tab.id}
                 variant="ghost"
                 size="sm"
-                onClick={() => onTabChange(tab.id)}
+                onClick={() => updateActiveTab(tab.id)}
                 className={`flex flex-col items-center gap-1 h-12 px-1 sm:px-2 min-w-0 flex-1 max-w-20 ${
-                  isActive 
-                    ? 'text-primary bg-primary/10' 
-                    : 'text-muted-foreground hover:text-foreground'
+                  isActive
+                    ? "text-primary bg-primary/10"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <IconComponent className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-                <span className="text-xs font-medium leading-tight truncate">{tab.label}</span>
+                <span className="text-xs font-medium leading-tight truncate">
+                  {tab.label}
+                </span>
               </Button>
             );
           })}

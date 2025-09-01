@@ -14,14 +14,8 @@ import { useCallback, useEffect, useState } from "react";
 
 function HomeContent() {
   // App state management
-  const {
-    characters,
-    settings,
-    isLoaded,
-    loadError,
-    showCharacterSelection,
-    handleSettingsChange,
-  } = useCharacterManagement();
+  const { characters, isLoaded, loadError, showCharacterSelection } =
+    useCharacterManagement();
 
   // Character operations
   const { character, updateCharacter } = useCharacterService();
@@ -30,12 +24,15 @@ function HomeContent() {
   const [showConfigDialog, setShowConfigDialog] = useState(false);
 
   // Simple name change handler for character header
-  const onNameChange = useCallback(async (name: string) => {
-    if (character) {
-      const updatedCharacter = { ...character, name };
-      await updateCharacter(updatedCharacter);
-    }
-  }, [character, updateCharacter]);
+  const onNameChange = useCallback(
+    async (name: string) => {
+      if (character) {
+        const updatedCharacter = { ...character, name };
+        await updateCharacter(updatedCharacter);
+      }
+    },
+    [character, updateCharacter]
+  );
 
   // Character config handlers
   const onOpenConfig = useCallback(() => {
@@ -45,7 +42,6 @@ function HomeContent() {
   const onCloseConfig = useCallback(() => {
     setShowConfigDialog(false);
   }, []);
-
 
   // Update page title based on character name
   useEffect(() => {
@@ -73,25 +69,16 @@ function HomeContent() {
 
   return (
     <main className="min-h-screen bg-background">
-      <TopBar 
-        settings={settings}
-        characters={characters}
-        onSettingsChange={handleSettingsChange}
-      />
       <div className="container mx-auto py-6 px-4 space-y-6">
-        <CharacterHeader 
+        <CharacterHeader
           onNameChange={onNameChange}
           onOpenConfig={onOpenConfig}
         />
         <TabbedCharacterSheet />
       </div>
-      
+
       {/* Character Config Dialog */}
-      {showConfigDialog && (
-        <CharacterConfigDialog
-          onClose={onCloseConfig}
-        />
-      )}
+      {showConfigDialog && <CharacterConfigDialog onClose={onCloseConfig} />}
     </main>
   );
 }

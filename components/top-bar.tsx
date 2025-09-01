@@ -7,15 +7,11 @@ import { RollPanel } from "./roll-panel";
 import { AppMenu } from "./app-menu";
 import { AppSettings } from "@/lib/services/settings-service";
 import { Character } from "@/lib/types/character";
-
-interface TopBarProps {
-  settings: AppSettings;
-  characters: Character[];
-  onSettingsChange: (settings: AppSettings) => void;
-}
+import { useCharacterManagement } from "@/lib/hooks/use-character-management";
 
 function CompactAdvantageToggle() {
   const { uiState, updateAdvantageLevel } = useUIStateService();
+
   const advantageLevel = uiState.advantageLevel;
 
   const getDisplayText = () => {
@@ -64,7 +60,7 @@ function CompactAdvantageToggle() {
         >
           <ChevronDown className="h-3 w-3" />
         </Button>
-        
+
         <Button
           variant="ghost"
           size="sm"
@@ -74,7 +70,7 @@ function CompactAdvantageToggle() {
         >
           <Equal className="h-3 w-3" />
         </Button>
-        
+
         <Button
           variant="ghost"
           size="sm"
@@ -88,20 +84,18 @@ function CompactAdvantageToggle() {
   );
 }
 
-export function TopBar({ 
-  settings, 
-  characters,
-  onSettingsChange
-}: TopBarProps) {
+export function TopBar() {
+  const { characters, settings, handleSettingsChange } =
+    useCharacterManagement();
   return (
     <div className="sticky top-0 z-50 bg-background border-b">
       <div className="container mx-auto px-4 h-14 flex items-center justify-between">
         {/* Left side - Menu */}
         <div className="flex items-center">
-          <AppMenu 
+          <AppMenu
             settings={settings}
             characters={characters}
-            onSettingsChange={onSettingsChange}
+            onSettingsChange={handleSettingsChange}
           />
         </div>
 
