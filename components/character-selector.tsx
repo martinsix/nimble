@@ -101,6 +101,11 @@ export function CharacterSelector({
               onCancel={handleCancelCreate}
               showAsCard={true}
               autoFocus={true}
+              onCharacterCreated={(characterId) => {
+                setShowCreateForm(false);
+                onCharacterSwitch(characterId);
+                onClose?.();
+              }}
             />
           )}
 
