@@ -3,11 +3,11 @@ import { Toaster } from "sonner";
 import "./globals.css";
 import { TopBar } from "@/components/top-bar";
 import { BottomTabBar } from "@/components/bottom-tab-bar";
+import { APP_NAME, APP_DESCRIPTION } from "@/lib/config/app-constants";
 
 export const metadata: Metadata = {
-  title: "Nimble Navigator",
-  description:
-    "Navigate your adventures with ease - A digital character sheet for Nimble RPG",
+  title: APP_NAME,
+  description: APP_DESCRIPTION,
 };
 
 export default function RootLayout({

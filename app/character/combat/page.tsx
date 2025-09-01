@@ -6,6 +6,7 @@ import { ActionsSection } from "@/components/sections/actions-section";
 import { useCharacterService } from "@/lib/hooks/use-character-service";
 import { useEffect } from "react";
 import { redirect } from "next/navigation";
+import { APP_NAME } from "@/lib/config/app-constants";
 
 export default function CombatPage() {
   const { character } = useCharacterService();
