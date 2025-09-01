@@ -10,6 +10,7 @@ import { StepIndicator } from "./character-builder/step-indicator";
 import { ClassSelection } from "./character-builder/class-selection";
 import { HeritageSelection } from "./character-builder/heritage-selection";
 import { AttributeSelection } from "./character-builder/attribute-selection";
+import { SkillsSelection } from "./character-builder/skills-selection";
 import { Attributes, AttributeName } from "@/lib/types/character";
 
 // Character builder state
@@ -22,7 +23,7 @@ interface CharacterBuilderState {
 }
 
 // Builder steps
-type BuilderStep = 'class' | 'ancestry-background' | 'attributes' | 'final';
+type BuilderStep = 'class' | 'ancestry-background' | 'attributes' | 'skills' | 'final';
 
 interface CharacterBuilderProps {
   isOpen: boolean;
@@ -114,6 +115,8 @@ export function CharacterBuilder({
         return canProceedFromStep2();
       case 'attributes':
         return !!builderState.characterId;
+      case 'skills':
+        return !!builderState.characterId; // Skills are optional, can always proceed
       default:
         return false;
     }
@@ -128,6 +131,9 @@ export function CharacterBuilder({
         await proceedToAttributes();
         break;
       case 'attributes':
+        setCurrentStep('skills');
+        break;
+      case 'skills':
         handleCreateCharacter();
         break;
     }
@@ -141,6 +147,9 @@ export function CharacterBuilder({
       case 'attributes':
         setCurrentStep('ancestry-background');
         break;
+      case 'skills':
+        setCurrentStep('attributes');
+        break;
       // Class step has no previous step
     }
   };
@@ -152,6 +161,8 @@ export function CharacterBuilder({
       case 'ancestry-background':
         return 'Create Character';
       case 'attributes':
+        return 'Next: Skills';
+      case 'skills':
         return 'Finish Character';
       default:
         return 'Next';
@@ -164,6 +175,8 @@ export function CharacterBuilder({
         return 'Back to Class';
       case 'attributes':
         return 'Back to Heritage';
+      case 'skills':
+        return 'Back to Attributes';
       default:
         return 'Previous';
     }
@@ -197,6 +210,11 @@ export function CharacterBuilder({
         return (
           <AttributeSelection />
         );
+      case 'skills':
+        if (!builderState.characterId) return null;
+        return (
+          <SkillsSelection />
+        );
       default:
         return null;
     }
@@ -216,6 +234,7 @@ export function CharacterBuilder({
               classSelected={!!builderState.classId}
               heritageComplete={canProceedFromStep2()}
               attributesComplete={!!builderState.characterId}
+              skillsComplete={!!builderState.characterId} // Skills are optional, considered complete when character exists
             />
             <div className="min-w-0">
               {renderStepContent()}

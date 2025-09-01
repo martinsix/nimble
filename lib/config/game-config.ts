@@ -15,6 +15,7 @@ export interface GameConfig {
       min: number;
       max: number;
     };
+    initialSkillPoints: number;
   };
   storage: {
     maxRollHistory: number;
@@ -41,6 +42,7 @@ export const gameConfig: GameConfig = {
       min: 0,
       max: 20,
     },
+    initialSkillPoints: 4,
   },
   storage: {
     maxRollHistory: 100,

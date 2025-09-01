@@ -55,11 +55,8 @@ export function ClassSelection({ availableClasses, selectedClassId, onClassSelec
               <CardHeader className="pb-2 pt-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center justify-between mb-1">
                       <CardTitle className="text-base">{cls.name}</CardTitle>
-                      {selectedClassId === cls.id && (
-                        <Badge className="text-xs px-1">Selected</Badge>
-                      )}
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-2 break-words">
                       {cls.description}
