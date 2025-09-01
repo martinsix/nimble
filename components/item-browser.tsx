@@ -31,9 +31,22 @@ import { ItemType } from "@/lib/types/inventory";
 interface ItemBrowserProps {
   isOpen: boolean;
   onClose: () => void;
+  // Multi-select mode props
+  multiSelect?: boolean;
+  selectedItems?: string[]; // Array of repository item IDs
+  onItemsChange?: (itemIds: string[]) => void;
+  // Single-select mode props (existing behavior)
+  onItemAdd?: (repositoryId: string) => void;
 }
 
-export function ItemBrowser({ isOpen, onClose }: ItemBrowserProps) {
+export function ItemBrowser({ 
+  isOpen, 
+  onClose, 
+  multiSelect = false, 
+  selectedItems = [], 
+  onItemsChange,
+  onItemAdd 
+}: ItemBrowserProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState<ItemType | "all">("all");
   const [selectedCategory, setSelectedCategory] = useState<"all" | "mundane" | "magical">("all");
@@ -70,24 +83,38 @@ export function ItemBrowser({ isOpen, onClose }: ItemBrowserProps) {
   }, [filteredItems]);
 
   const handleAddItem = (repositoryId: string) => {
-    const inventoryItem = itemService.createInventoryItem(repositoryId);
-    if (!inventoryItem) {
-      console.error("Failed to create inventory item");
-      return;
-    }
+    if (multiSelect && onItemsChange) {
+      // Multi-select mode: toggle item in selection
+      const isSelected = selectedItems.includes(repositoryId);
+      if (isSelected) {
+        onItemsChange(selectedItems.filter(id => id !== repositoryId));
+      } else {
+        onItemsChange([...selectedItems, repositoryId]);
+      }
+    } else if (onItemAdd) {
+      // Single-select mode: use custom handler
+      onItemAdd(repositoryId);
+    } else {
+      // Default single-select mode: add to current character's inventory
+      const inventoryItem = itemService.createInventoryItem(repositoryId);
+      if (!inventoryItem) {
+        console.error("Failed to create inventory item");
+        return;
+      }
 
-    const character = characterService.getCurrentCharacter();
-    if (!character) {
-      console.error("No current character");
-      return;
-    }
+      const character = characterService.getCurrentCharacter();
+      if (!character) {
+        console.error("No current character");
+        return;
+      }
 
-    try {
-      characterService.addItemToInventory(inventoryItem);
-      setAddedMessage(`Added ${inventoryItem.name} to inventory`);
-      setTimeout(() => setAddedMessage(""), 2000);
-    } catch (error) {
-      console.error("Failed to add item to inventory:", error);
+      try {
+        characterService.addItemToInventory(inventoryItem);
+        setAddedMessage(`Added ${inventoryItem.name} to inventory`);
+        setTimeout(() => setAddedMessage(""), 2000);
+      } catch (error) {
+        console.error("Failed to add item to inventory:", error);
+      }
     }
   };
 
@@ -292,11 +319,28 @@ export function ItemBrowser({ isOpen, onClose }: ItemBrowserProps) {
                                 
                                 <Button
                                   size="sm"
+                                  variant={multiSelect && selectedItems.includes(repositoryItem.item.id) ? "default" : "outline"}
                                   onClick={() => handleAddItem(repositoryItem.item.id)}
                                   className="ml-4"
                                 >
-                                  <Plus className="h-4 w-4 mr-1" />
-                                  Add
+                                  {multiSelect ? (
+                                    selectedItems.includes(repositoryItem.item.id) ? (
+                                      <>
+                                        <span className="h-4 w-4 mr-1">✓</span>
+                                        Selected
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Plus className="h-4 w-4 mr-1" />
+                                        Select
+                                      </>
+                                    )
+                                  ) : (
+                                    <>
+                                      <Plus className="h-4 w-4 mr-1" />
+                                      Add
+                                    </>
+                                  )}
                                 </Button>
                               </div>
                             ))}
@@ -313,6 +357,11 @@ export function ItemBrowser({ isOpen, onClose }: ItemBrowserProps) {
           {/* Footer Summary */}
           <div className="border-t pt-4 text-sm text-muted-foreground">
             Showing {filteredItems.length} items • Repository contains {itemService.getAllItems().length} total items
+            {multiSelect && selectedItems.length > 0 && (
+              <span className="ml-2 text-primary font-medium">
+                • {selectedItems.length} selected
+              </span>
+            )}
           </div>
         </div>
       </DialogContent>

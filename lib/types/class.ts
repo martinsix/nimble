@@ -137,6 +137,7 @@ export interface ClassDefinition {
   armorProficiencies: ArmorProficiency[]; // Armor types the class is proficient with
   weaponProficiencies: WeaponProficiency[]; // Weapon categories the class is proficient with
   saveAdvantages: SaveAdvantageMap; // Default save advantages/disadvantages for this class
+  startingEquipment: string[]; // Array of repository item IDs for starting equipment
   features: ClassFeature[]; // All features available to this class
   featurePools?: FeaturePool[]; // Feature pools available for selection
   subclasses?: SubclassDefinition[]; // Available subclasses for this class

@@ -20,6 +20,20 @@ export const fighter: ClassDefinition = {
   saveAdvantages: {
     strength: 'advantage'
   },
+  startingEquipment: [
+    'longsword',
+    'chain-mail',
+    'shield',
+    'javelin',
+    'javelin',
+    'javelin',
+    'backpack',
+    'bedroll',
+    'rope',
+    'rations',
+    'rations',
+    'rations'
+  ],
   features: [
     {
       id: 'fighter-second-wind',

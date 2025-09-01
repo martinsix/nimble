@@ -17,6 +17,19 @@ export const rogue: ClassDefinition = {
   saveAdvantages: {
     dexterity: 'advantage'
   },
+  startingEquipment: [
+    'rapier',
+    'shortsword',
+    'leather-armor',
+    'shortbow',
+    'arrows',
+    'arrows',
+    'thieves-tools',
+    'backpack',
+    'bedroll',
+    'rations',
+    'rations'
+  ],
   features: [
     {
       id: 'rogue-expertise',

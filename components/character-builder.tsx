@@ -11,6 +11,7 @@ import { ClassSelection } from "./character-builder/class-selection";
 import { HeritageSelection } from "./character-builder/heritage-selection";
 import { AttributeSelection } from "./character-builder/attribute-selection";
 import { SkillsSelection } from "./character-builder/skills-selection";
+import { EquipmentSelection } from "./character-builder/equipment-selection";
 import { Attributes, AttributeName } from "@/lib/types/character";
 
 // Character builder state
@@ -20,10 +21,11 @@ interface CharacterBuilderState {
   backgroundId?: string;
   name: string;
   characterId?: string; // Set after character creation in step 2
+  equipmentReady?: boolean; // Whether equipment step is ready
 }
 
 // Builder steps
-type BuilderStep = 'class' | 'ancestry-background' | 'attributes' | 'skills' | 'final';
+type BuilderStep = 'class' | 'ancestry-background' | 'attributes' | 'skills' | 'equipment' | 'final';
 
 interface CharacterBuilderProps {
   isOpen: boolean;
@@ -66,6 +68,10 @@ export function CharacterBuilder({
 
   const handleNameChange = (name: string) => {
     setBuilderState(prev => ({ ...prev, name }));
+  };
+
+  const handleEquipmentReady = () => {
+    setBuilderState(prev => ({ ...prev, equipmentReady: true }));
   };
 
 
@@ -117,6 +123,8 @@ export function CharacterBuilder({
         return !!builderState.characterId;
       case 'skills':
         return !!builderState.characterId; // Skills are optional, can always proceed
+      case 'equipment':
+        return !!builderState.equipmentReady; // Equipment step is ready when items are loaded
       default:
         return false;
     }
@@ -134,6 +142,9 @@ export function CharacterBuilder({
         setCurrentStep('skills');
         break;
       case 'skills':
+        setCurrentStep('equipment');
+        break;
+      case 'equipment':
         handleCreateCharacter();
         break;
     }
@@ -150,6 +161,9 @@ export function CharacterBuilder({
       case 'skills':
         setCurrentStep('attributes');
         break;
+      case 'equipment':
+        setCurrentStep('skills');
+        break;
       // Class step has no previous step
     }
   };
@@ -163,6 +177,8 @@ export function CharacterBuilder({
       case 'attributes':
         return 'Next: Skills';
       case 'skills':
+        return 'Next: Equipment';
+      case 'equipment':
         return 'Finish Character';
       default:
         return 'Next';
@@ -177,6 +193,8 @@ export function CharacterBuilder({
         return 'Back to Heritage';
       case 'skills':
         return 'Back to Attributes';
+      case 'equipment':
+        return 'Back to Skills';
       default:
         return 'Previous';
     }
@@ -215,6 +233,11 @@ export function CharacterBuilder({
         return (
           <SkillsSelection />
         );
+      case 'equipment':
+        if (!builderState.characterId) return null;
+        return (
+          <EquipmentSelection onEquipmentReady={handleEquipmentReady} />
+        );
       default:
         return null;
     }
@@ -235,6 +258,7 @@ export function CharacterBuilder({
               heritageComplete={canProceedFromStep2()}
               attributesComplete={!!builderState.characterId}
               skillsComplete={!!builderState.characterId} // Skills are optional, considered complete when character exists
+              equipmentComplete={!!builderState.equipmentReady} // Equipment step completion tracked separately
             />
             <div className="min-w-0">
               {renderStepContent()}

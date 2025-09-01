@@ -194,6 +194,7 @@ export const ClassDefinitionSchema = z.object({
     intelligence: z.enum(['advantage', 'disadvantage', 'normal']).optional().meta({ title: 'Intelligence Saves', description: 'Saving throw modifier for intelligence' }),
     will: z.enum(['advantage', 'disadvantage', 'normal']).optional().meta({ title: 'Will Saves', description: 'Saving throw modifier for will' })
   }).meta({ title: 'Save Advantages', description: 'Saving throw advantages/disadvantages' }),
+  startingEquipment: z.array(z.string()).meta({ title: 'Starting Equipment', description: 'Array of repository item IDs for starting equipment' }),
   features: z.array(ClassFeatureSchema).meta({ title: 'Features', description: 'Array of class features by level' }),
   featurePools: z.array(FeaturePoolSchema).optional().meta({ title: 'Feature Pools', description: 'Pools of features for player selection' }),
   subclasses: z.array(z.object({

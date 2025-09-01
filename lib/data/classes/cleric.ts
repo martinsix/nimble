@@ -20,6 +20,20 @@ export const cleric: ClassDefinition = {
   saveAdvantages: {
     will: 'advantage'
   },
+  startingEquipment: [
+    'mace',
+    'scale-mail',
+    'shield',
+    'light-crossbow',
+    'crossbow-bolts',
+    'crossbow-bolts',
+    'holy-symbol',
+    'backpack',
+    'bedroll',
+    'rations',
+    'rations',
+    'rations'
+  ],
   features: [
     {
       id: 'cleric-radiant-magic',

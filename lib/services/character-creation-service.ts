@@ -1,6 +1,7 @@
 import { Character, Attributes } from '../types/character';
 import { ICharacterCreation, ICharacterStorage, ICharacterService, IAncestryService, IBackgroundService } from './interfaces';
 import { ContentRepositoryService } from './content-repository-service';
+import { ItemService } from './item-service';
 import { 
   createDefaultCharacterConfiguration, 
   createDefaultHitPoints, 
@@ -30,6 +31,7 @@ export interface CreateCharacterOptions {
  */
 export class CharacterCreationService implements ICharacterCreation {
   private contentRepository: ContentRepositoryService;
+  private itemService: ItemService;
 
   constructor(
     private characterStorage: ICharacterStorage,
@@ -38,6 +40,7 @@ export class CharacterCreationService implements ICharacterCreation {
     private backgroundService: IBackgroundService
   ) {
     this.contentRepository = ContentRepositoryService.getInstance();
+    this.itemService = ItemService.getInstance();
   }
 
   /**
@@ -137,6 +140,47 @@ export class CharacterCreationService implements ICharacterCreation {
       level: 1,
       attributes: sampleAttributes
     });
+  }
+
+  /**
+   * Applies starting equipment to a character based on their class
+   */
+  async applyStartingEquipment(characterId: string, equipmentIds: string[]): Promise<void> {
+    const character = await this.characterStorage.getCharacter(characterId);
+    if (!character) {
+      throw new Error(`Character not found: ${characterId}`);
+    }
+
+    // Convert repository item IDs to inventory items
+    const equipmentItems = equipmentIds.map(repositoryId => {
+      const inventoryItem = this.itemService.createInventoryItem(repositoryId);
+      if (!inventoryItem) {
+        console.warn(`Failed to create inventory item for repository ID: ${repositoryId}`);
+        return null;
+      }
+      return inventoryItem;
+    }).filter(item => item !== null);
+
+    // Add items to character's inventory
+    const updatedInventory = {
+      ...character.inventory,
+      items: [...character.inventory.items, ...equipmentItems]
+    };
+
+    const updatedCharacter = {
+      ...character,
+      inventory: updatedInventory
+    };
+
+    await this.characterStorage.updateCharacter(updatedCharacter);
+  }
+
+  /**
+   * Gets the standard starting equipment for a class
+   */
+  getClassStartingEquipment(classId: string): string[] {
+    const classDefinition = this.contentRepository.getClassDefinition(classId);
+    return classDefinition?.startingEquipment || [];
   }
 
 }

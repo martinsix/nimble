@@ -17,6 +17,18 @@ export const wizard: ClassDefinition = {
   saveAdvantages: {
     intelligence: 'advantage'
   },
+  startingEquipment: [
+    'quarterstaff',
+    'dagger',
+    'cloth-robes',
+    'spellbook',
+    'component-pouch',
+    'backpack',
+    'ink-and-quill',
+    'parchment',
+    'rations',
+    'rations'
+  ],
   features: [
     {
       id: 'wizard-fire-magic',

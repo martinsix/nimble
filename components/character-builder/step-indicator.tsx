@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { ChevronRight } from "lucide-react";
 
-type BuilderStep = 'class' | 'ancestry-background' | 'attributes' | 'skills' | 'final';
+type BuilderStep = 'class' | 'ancestry-background' | 'attributes' | 'skills' | 'equipment' | 'final';
 
 interface StepIndicatorProps {
   currentStep: BuilderStep;
@@ -11,9 +11,10 @@ interface StepIndicatorProps {
   heritageComplete: boolean;
   attributesComplete: boolean;
   skillsComplete: boolean;
+  equipmentComplete: boolean;
 }
 
-export function StepIndicator({ currentStep, classSelected, heritageComplete, attributesComplete, skillsComplete }: StepIndicatorProps) {
+export function StepIndicator({ currentStep, classSelected, heritageComplete, attributesComplete, skillsComplete, equipmentComplete }: StepIndicatorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const activeStepRef = useRef<HTMLDivElement>(null);
 
@@ -22,6 +23,7 @@ export function StepIndicator({ currentStep, classSelected, heritageComplete, at
     { id: 'ancestry-background', name: 'Heritage', completed: heritageComplete },
     { id: 'attributes', name: 'Attributes', completed: attributesComplete },
     { id: 'skills', name: 'Skills', completed: skillsComplete },
+    { id: 'equipment', name: 'Equipment', completed: equipmentComplete },
     { id: 'final', name: 'Review', completed: false }
   ];
 
