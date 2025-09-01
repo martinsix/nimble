@@ -22,7 +22,7 @@ export class ExampleGenerator {
       const jsonSchema = z.toJSONSchema(zodSchema);
       
       // Generate fake data using json-schema-faker
-      return JSONSchemaFaker.generate(jsonSchema);
+      return JSONSchemaFaker.generate(jsonSchema as any);
     } catch (error) {
       console.warn(`Failed to generate example for ${contentType}:`, error);
       return null;
