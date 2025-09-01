@@ -186,7 +186,7 @@ export function AttributeSelection({
                       variant={attributes[attributeName] === value ? "default" : "outline"}
                       size="sm"
                       onClick={() => onAttributeChange(attributeName, value)}
-                      className="px-2 py-1 h-7 text-xs min-w-[2rem]"
+                      className="px-2 py-1 h-7 text-xs min-w-8"
                     >
                       {value >= 0 ? `+${value}` : value}
                     </Button>

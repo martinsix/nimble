@@ -89,7 +89,7 @@ export function SkillsSection() {
                       <div className="flex items-center gap-3">
                         {(() => {
                           const IconComponent = getSkillIcon(skillName);
-                          return <IconComponent className="w-6 h-6 text-muted-foreground flex-shrink-0" />;
+                          return <IconComponent className="w-6 h-6 text-muted-foreground shrink-0" />;
                         })()}
                         <div className="min-w-0 flex-1">
                           <h3 className="font-medium text-sm">

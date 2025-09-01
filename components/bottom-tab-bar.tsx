@@ -44,7 +44,7 @@ export function BottomTabBar({ activeTab, onTabChange }: BottomTabBarProps) {
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background border-t z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
       <div className="w-full px-2 sm:px-4">
-        <div className="flex justify-around items-center h-16 max-w-screen-sm mx-auto">
+        <div className="flex justify-around items-center h-16 max-w-(--breakpoint-sm) mx-auto">
           {visibleTabs.map((tab) => {
             const IconComponent = tab.icon;
             const isActive = activeTab === tab.id;
@@ -61,7 +61,7 @@ export function BottomTabBar({ activeTab, onTabChange }: BottomTabBarProps) {
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                <IconComponent className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                <IconComponent className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
                 <span className="text-xs font-medium leading-tight truncate">{tab.label}</span>
               </Button>
             );

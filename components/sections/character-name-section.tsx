@@ -61,7 +61,7 @@ export function CharacterNameSection({ name, onNameChange, onOpenConfig }: Chara
           size="sm"
           onClick={handleLevelUp}
           disabled={character.level >= 20}
-          className="h-10 w-10 p-0 flex-shrink-0"
+          className="h-10 w-10 p-0 shrink-0"
           title={character.level >= 20 ? "Maximum level reached" : `Level up to ${character.level + 1}`}
         >
           <TrendingUp className="h-4 w-4" />
@@ -70,7 +70,7 @@ export function CharacterNameSection({ name, onNameChange, onOpenConfig }: Chara
           variant="ghost"
           size="sm"
           onClick={onOpenConfig}
-          className="h-10 w-10 p-0 flex-shrink-0"
+          className="h-10 w-10 p-0 shrink-0"
           title="Character Configuration"
         >
           <Settings className="h-4 w-4" />

@@ -59,7 +59,7 @@ export function ClassSelection({ availableClasses, selectedClassId, onClassSelec
                       {cls.description}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
+                  <div className="flex items-center gap-1 shrink-0">
                     <Button
                       variant={selectedClassId === cls.id ? "default" : "outline"}
                       size="sm"

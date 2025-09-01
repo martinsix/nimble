@@ -89,7 +89,7 @@ function RollEntryDisplay({ roll, formatTime }: { roll: DiceRollEntry, formatTim
         <span className="text-muted-foreground">{formatTime(roll.timestamp)}</span>
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className={`font-bold text-lg min-w-[2rem] text-right cursor-help ${
+            <span className={`font-bold text-lg min-w-8 text-right cursor-help ${
               roll.isMiss ? 'text-destructive' : ''
             }`}>
               {roll.isMiss ? 'MISS' : roll.total}
@@ -208,7 +208,7 @@ function NonRollEntryDisplay({ entry, formatTime }: { entry: DamageEntry | Heali
       </div>
       <div className="flex items-center space-x-2">
         <span className="text-muted-foreground">{formatTime(entry.timestamp)}</span>
-        <span className={`font-bold text-lg min-w-[2rem] text-right ${getEntryColor()}`}>
+        <span className={`font-bold text-lg min-w-8 text-right ${getEntryColor()}`}>
           {entry.type === 'damage' ? `-${entry.amount}` : 
            entry.type === 'healing' ? `+${entry.amount}` :
            entry.type === 'temp_hp' ? `+${entry.amount}` :

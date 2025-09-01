@@ -587,7 +587,7 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
               <CardContent className="p-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 mt-1">
+                    <div className="shrink-0 mt-1">
                       {getItemIcon(item)}
                     </div>
                     <div className="flex-1">
