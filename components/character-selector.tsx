@@ -28,11 +28,10 @@ export function CharacterSelector({
   fullScreen = false
 }: CharacterSelectorProps) {
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const { createCharacter, switchCharacter, deleteCharacter } = useCharacterService();
+  const { switchCharacter, deleteCharacter } = useCharacterService();
 
-  const handleCreateCharacter = (name: string, classId: string) => {
+  const handleCreateCharacter = () => {
     setShowCreateForm(false);
-    createCharacter(name, classId);
   };
 
   const handleCancelCreate = () => {
@@ -91,15 +90,10 @@ export function CharacterSelector({
             </Button>
           ) : (
             <CharacterCreateForm
-              onCharacterCreate={handleCreateCharacter}
+              onComplete={handleCreateCharacter}
               onCancel={handleCancelCreate}
               showAsCard={true}
               autoFocus={true}
-              onCharacterCreated={(characterId) => {
-                setShowCreateForm(false);
-                switchCharacter(characterId);
-                onClose?.();
-              }}
             />
           )}
 

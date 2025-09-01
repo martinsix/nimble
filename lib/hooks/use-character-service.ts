@@ -1,11 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Character } from '../types/character';
 import { CharacterEventType, CharacterEvent } from '../services/character-service';
-import { 
-  getCharacterService, 
-  getCharacterCreation, 
-  getSettingsService 
-} from '../services/service-factory';
+import { getCharacterService } from '../services/service-factory';
 import { useToastService } from './use-toast-service';
 
 /**
@@ -48,51 +44,18 @@ export function useCharacterService() {
 
   // Character lifecycle operations
   const characterService = getCharacterService();
-  const characterCreation = getCharacterCreation();
-  const settingsService = getSettingsService();
-
-  const createCharacter = useCallback(async (name: string, classId: string) => {
-    try {
-      const newCharacter = await characterCreation.createSampleCharacter(name, classId);
-      
-      // Load the new character
-      await characterService.loadCharacter(newCharacter.id);
-      
-      // Update settings
-      const settings = await settingsService.getSettings();
-      const newSettings = { ...settings, activeCharacterId: newCharacter.id };
-      await settingsService.saveSettings(newSettings);
-      
-      // Notify creation
-      characterService.notifyCharacterCreated(newCharacter);
-
-      showSuccess("Character created", `${name} has been created successfully!`);
-      return newCharacter;
-    } catch (error) {
-      console.error("Failed to create character:", error);
-      showError("Failed to create character", "Unable to create the character. Please try again.");
-      throw error;
-    }
-  }, [characterCreation, characterService, settingsService, showError, showSuccess]);
 
   const switchCharacter = useCallback(async (characterId: string) => {
     try {
+      // Load character (this will automatically update settings)
       const newCharacter = await characterService.loadCharacter(characterId);
-      
-      if (newCharacter) {
-        // Update settings with new active character
-        const settings = await settingsService.getSettings();
-        const newSettings = { ...settings, activeCharacterId: characterId };
-        await settingsService.saveSettings(newSettings);
-      }
-      
       return newCharacter;
     } catch (error) {
       console.error("Failed to switch character:", error);
       showError("Failed to switch character", "Unable to load the selected character. Please try again.");
       throw error;
     }
-  }, [characterService, settingsService, showError]);
+  }, [characterService, showError]);
 
   const deleteCharacter = useCallback(async (characterId: string) => {
     try {
@@ -114,7 +77,6 @@ export function useCharacterService() {
     character,
     
     // Character lifecycle operations
-    createCharacter,
     switchCharacter,
     deleteCharacter,
     subscribeToEvent,

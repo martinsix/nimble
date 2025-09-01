@@ -17,7 +17,6 @@ import { CharacterCreateForm } from "./character-create-form";
 import { ContentManagementPanel } from "./content-management-panel";
 import { AppSettings } from "@/lib/services/settings-service";
 import { Character } from "@/lib/types/character";
-import { useCharacterService } from "@/lib/hooks/use-character-service";
 
 interface AppMenuProps {
   settings: AppSettings;
@@ -34,8 +33,6 @@ export function AppMenu({
   const [showCharacterSelector, setShowCharacterSelector] = useState(false);
   const [showCreateCharacter, setShowCreateCharacter] = useState(false);
   const [showContentManagement, setShowContentManagement] = useState(false);
-  
-  const { createCharacter } = useCharacterService();
 
   return (
     <>
@@ -93,10 +90,7 @@ export function AppMenu({
             <DialogTitle>Create New Character</DialogTitle>
           </DialogHeader>
           <CharacterCreateForm
-            onCharacterCreate={(name, classId) => {
-              createCharacter(name, classId);
-              setShowCreateCharacter(false);
-            }}
+            onComplete={() => setShowCreateCharacter(false)}
             onCancel={() => setShowCreateCharacter(false)}
             showAsCard={false}
             autoFocus={true}

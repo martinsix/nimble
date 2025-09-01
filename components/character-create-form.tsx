@@ -8,37 +8,64 @@ import { Label } from "./ui/label";
 import { Plus, Wand2 } from "lucide-react";
 import { ContentRepositoryService } from "@/lib/services/content-repository-service";
 import { CharacterBuilder } from "./character-builder";
+import { 
+  getCharacterCreation, 
+  getCharacterService
+} from "@/lib/services/service-factory";
+import { useToastService } from "@/lib/hooks/use-toast-service";
 
 interface CharacterCreateFormProps {
-  onCharacterCreate: (name: string, classId: string) => void;
+  onComplete?: () => void; // Called when character is successfully created
   onCancel?: () => void;
   showAsCard?: boolean; // Whether to wrap in a card or just show the form
   autoFocus?: boolean;
-  onCharacterCreated?: (characterId: string) => void; // For builder integration
 }
 
 export function CharacterCreateForm({ 
-  onCharacterCreate, 
+  onComplete, 
   onCancel,
   showAsCard = true,
-  autoFocus = true,
-  onCharacterCreated
+  autoFocus = true
 }: CharacterCreateFormProps) {
   const [newCharacterName, setNewCharacterName] = useState("");
   const [selectedClass, setSelectedClass] = useState("fighter");
   const [showBuilder, setShowBuilder] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
   const contentRepository = ContentRepositoryService.getInstance();
   const availableClasses = contentRepository.getAllClasses();
+  const { showError, showSuccess } = useToastService();
 
-  const handleCreateCharacter = () => {
-    if (newCharacterName.trim()) {
+  const handleCreateCharacter = async () => {
+    if (!newCharacterName.trim() || isCreating) return;
+
+    setIsCreating(true);
+    try {
+      const characterCreation = getCharacterCreation();
+      const characterService = getCharacterService();
+      
       const name = newCharacterName.trim();
-      onCharacterCreate(name, selectedClass);
+      const newCharacter = await characterCreation.createSampleCharacter(name, selectedClass);
+      
+      // Load the new character (this will automatically update settings)
+      await characterService.loadCharacter(newCharacter.id);
+      
+      // Notify creation
+      characterService.notifyCharacterCreated(newCharacter);
+
+      showSuccess("Character created", `${name} has been created successfully!`);
       
       // Reset form
       setNewCharacterName("");
       setSelectedClass("fighter");
+      
+      // Notify parent that creation is complete
+      onComplete?.();
+    } catch (error) {
+      console.error("Failed to create character:", error);
+      showError("Failed to create character", "Unable to create the character. Please try again.");
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -50,10 +77,7 @@ export function CharacterCreateForm({
 
   const handleBuilderCharacterCreated = (characterId: string) => {
     setShowBuilder(false);
-    if (onCharacterCreated) {
-      onCharacterCreated(characterId);
-    }
-    onCancel?.(); // Close the form as well
+    onComplete?.(); // Notify parent that creation is complete
   };
 
   const formContent = (
@@ -113,11 +137,11 @@ export function CharacterCreateForm({
       <div className="flex gap-2">
         <Button 
           onClick={handleCreateCharacter}
-          disabled={!newCharacterName.trim()}
+          disabled={!newCharacterName.trim() || isCreating}
           size="sm"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Quick Create
+          {isCreating ? "Creating..." : "Quick Create"}
         </Button>
         {onCancel && (
           <Button 

@@ -3,7 +3,7 @@ import { Abilities, ActionAbility, SpellAbility } from '../types/abilities';
 import { DiceType } from '../types/dice';
 import { ICharacterService, ICharacterStorage, IActivityLog, IAbilityService } from './interfaces';
 import { resourceService } from './resource-service';
-import { getDiceService } from './service-factory';
+import { getDiceService, getSettingsService } from './service-factory';
 
 // Character event types
 export type CharacterEventType = 'created' | 'switched' | 'deleted' | 'updated';
@@ -73,22 +73,30 @@ export class CharacterService implements ICharacterService {
     const character = await this.storageService.getCharacter(characterId);
     if (character) {
       // Determine if this is a switch (there was already a character loaded)
-      if(this._character !== null) {
+      const isSwitch = this._character !== null;
+      
+      if (isSwitch && this._character) {
         await this.storageService.updateLastPlayed(this._character.id);
-        // Emit appropriate event based on context
- 
+      }
+      
+      this._character = character;
+      
+      // Update settings with new active character
+      const settingsService = getSettingsService();
+      const settings = await settingsService.getSettings();
+      const newSettings = { ...settings, activeCharacterId: characterId };
+      await settingsService.saveSettings(newSettings);
+      
+      this.notifyCharacterChanged();
+      
+      // Emit appropriate event based on context
+      if (isSwitch) {
         this.emitEvent({
           type: 'switched',
           characterId,
           character
         });
       }
-      
-      this._character = character;
-   
-      this.notifyCharacterChanged();
-      
-      
     }
     return character;
   }
