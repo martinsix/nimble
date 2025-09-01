@@ -1,5 +1,5 @@
 import { Character, AttributeName, HitDice, Wounds, CharacterConfiguration, Proficiencies, HitDieSize } from '../types/character';
-import { Inventory, ArmorItem, WeaponItem } from '../types/inventory';
+import { Inventory, ArmorItem, WeaponItem, ConsumableItem } from '../types/inventory';
 import { Abilities } from '../types/abilities';
 import { ClassDefinition } from '../types/class';
 import { ResourceInstance, ResourceDefinition, createResourceInstance } from '../types/resources';
@@ -42,9 +42,18 @@ export const createDefaultInventory = (strength: number = 0): Inventory => {
     properties: ['Versatile'],
   };
 
+  const healingPotion: ConsumableItem = {
+    id: 'healing-potion',
+    name: 'Healing Potion',
+    size: 1,
+    type: 'consumable',
+    count: 3,
+    description: 'Restore 1d8+2 hit points',
+  };
+
   return {
     maxSize: 10 + strength,
-    items: [leatherArmor, sword],
+    items: [leatherArmor, sword, healingPotion],
   };
 };
 
@@ -123,9 +132,9 @@ export const createDefaultAbilities = (): Abilities => {
   return {
     abilities: [
       {
-        id: 'sample-healing-potion',
-        name: 'Healing Potion',
-        description: 'Restore 1d8+2 hit points',
+        id: 'example-ability',
+        name: 'Example Ability',
+        description: 'An example ability with usage tracking',
         type: 'action',
         frequency: 'per_encounter',
         maxUses: 1,

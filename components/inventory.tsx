@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Inventory as InventoryType, Item, ItemType, CreateItemData, WeaponItem, ArmorItem, ConsumableItem, AmmunitionItem } from "@/lib/types/inventory";
 import { canEquipWeapon, canEquipArmor, getEquipmentValidationMessage, equipMainArmorWithReplacement } from "@/lib/utils/equipment";
-import { Plus, Trash2, Package, Sword, Shield, Shirt, Crown, Edit2, Beaker, Target, Minus } from "lucide-react";
+import { Plus, Trash2, Package, Sword, Shield, Shirt, Crown, Edit2, Beaker, Target, Minus, Zap } from "lucide-react";
 
 interface InventoryProps {
   inventory: InventoryType;
@@ -233,6 +233,59 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
       }
       return inventoryItem;
     });
+
+    onUpdateInventory({
+      ...inventory,
+      items: updatedItems,
+    });
+  };
+
+  const consumeItem = async (itemId: string) => {
+    const item = inventory.items.find(item => item.id === itemId);
+    if (!item || (item.type !== 'consumable' && item.type !== 'ammunition')) {
+      return;
+    }
+
+    const countedItem = item as ConsumableItem | AmmunitionItem;
+    const newCount = countedItem.count - 1;
+    const itemWillBeRemoved = newCount <= 0;
+
+    // Create activity log entry
+    const logEntry = {
+      id: crypto.randomUUID(),
+      timestamp: new Date(),
+      description: `Consumed ${item.name}${itemWillBeRemoved ? ' (last one)' : ` (${newCount} remaining)`}`,
+      type: 'item_consumption' as const,
+      itemName: item.name,
+      itemType: item.type,
+      countBefore: countedItem.count,
+      countAfter: newCount,
+      itemRemoved: itemWillBeRemoved,
+    };
+
+    // Add to activity log
+    try {
+      const { ActivityLogService } = await import('@/lib/services/activity-log-service');
+      const activityLogService = new ActivityLogService();
+      await activityLogService.addLogEntry(logEntry);
+    } catch (error) {
+      console.error('Failed to log item consumption:', error);
+    }
+
+    // Update inventory
+    let updatedItems: Item[];
+    if (itemWillBeRemoved) {
+      // Remove item completely
+      updatedItems = inventory.items.filter(inventoryItem => inventoryItem.id !== itemId);
+    } else {
+      // Reduce count
+      updatedItems = inventory.items.map(inventoryItem => {
+        if (inventoryItem.id === itemId) {
+          return { ...inventoryItem, count: newCount };
+        }
+        return inventoryItem;
+      });
+    }
 
     onUpdateInventory({
       ...inventory,
@@ -800,6 +853,17 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
                         >
                           <Plus className="w-3 h-3" />
                         </Button>
+                        {item.type === 'consumable' && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => consumeItem(item.id)}
+                            className="h-8 px-2"
+                          >
+                            <Zap className="w-3 h-3 mr-1" />
+                            Use
+                          </Button>
+                        )}
                       </div>
                     )}
                     <Button

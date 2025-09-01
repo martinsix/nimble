@@ -113,5 +113,15 @@ export interface SpellCastEntry extends BaseLogEntry {
   actionCost: number; // Action cost (0 = bonus action, 1 = action, etc.)
 }
 
+// Item consumption entry
+export interface ItemConsumptionEntry extends BaseLogEntry {
+  type: 'item_consumption';
+  itemName: string; // Name of the item consumed
+  itemType: 'consumable' | 'ammunition'; // Type of item consumed
+  countBefore: number; // Count before consumption
+  countAfter: number; // Count after consumption
+  itemRemoved: boolean; // True if item was completely removed from inventory
+}
+
 // Union type for all log entries
-export type LogEntry = DiceRollEntry | DamageEntry | HealingEntry | TempHPEntry | InitiativeEntry | AbilityUsageEntry | SafeRestEntry | CatchBreathEntry | MakeCampEntry | ResourceUsageEntry | SpellCastEntry;
+export type LogEntry = DiceRollEntry | DamageEntry | HealingEntry | TempHPEntry | InitiativeEntry | AbilityUsageEntry | SafeRestEntry | CatchBreathEntry | MakeCampEntry | ResourceUsageEntry | SpellCastEntry | ItemConsumptionEntry;

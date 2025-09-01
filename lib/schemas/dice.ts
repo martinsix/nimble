@@ -112,6 +112,16 @@ export const spellCastEntrySchema = z.object({
   actionCost: z.number().min(0),
 }).merge(baseLogEntrySchema);
 
+// Item consumption log entry schema
+export const itemConsumptionEntrySchema = z.object({
+  type: z.literal('item_consumption'),
+  itemName: z.string().min(1),
+  itemType: z.enum(['consumable', 'ammunition']),
+  countBefore: z.number().positive(),
+  countAfter: z.number().min(0),
+  itemRemoved: z.boolean(),
+}).merge(baseLogEntrySchema);
+
 // Union schema for all log entries
 export const logEntrySchema = z.discriminatedUnion('type', [
   diceRollEntrySchema,
@@ -125,6 +135,7 @@ export const logEntrySchema = z.discriminatedUnion('type', [
   makeCampEntrySchema,
   resourceUsageEntrySchema,
   spellCastEntrySchema,
+  itemConsumptionEntrySchema,
 ]);
 
 export type ValidatedLogEntry = z.infer<typeof logEntrySchema>;
