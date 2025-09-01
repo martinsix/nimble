@@ -19,6 +19,7 @@ export const rogue: ClassDefinition = {
   },
   features: [
     {
+      id: 'rogue-expertise',
       level: 1,
       type: 'proficiency',
       name: 'Expertise',
@@ -29,6 +30,7 @@ export const rogue: ClassDefinition = {
       ]
     },
     {
+      id: 'rogue-sneak-attack',
       level: 1,
       type: 'ability',
       name: 'Sneak Attack',
@@ -47,6 +49,7 @@ export const rogue: ClassDefinition = {
       }
     },
     {
+      id: 'rogue-cunning-action',
       level: 2,
       type: 'ability',
       name: 'Cunning Action',
@@ -60,6 +63,7 @@ export const rogue: ClassDefinition = {
       }
     },
     {
+      id: 'rogue-focus-pool',
       level: 3,
       type: 'resource',
       name: 'Focus Pool',
@@ -77,6 +81,7 @@ export const rogue: ClassDefinition = {
       }
     },
     {
+      id: 'rogue-roguish-archetype',
       level: 3,
       type: 'subclass_choice',
       name: 'Roguish Archetype',
@@ -84,6 +89,7 @@ export const rogue: ClassDefinition = {
       availableSubclasses: ['rogue-assassin']
     },
     {
+      id: 'rogue-asi-4',
       level: 4,
       type: 'stat_boost',
       name: 'Ability Score Improvement',

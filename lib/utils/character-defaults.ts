@@ -166,6 +166,7 @@ export const createDefaultCharacterTemplate = (): Omit<Character, 'id'> => {
     classId: 'fighter', // Default to fighter as the most basic class
     subclassId: undefined,
     grantedFeatures: [],
+    selectedPoolFeatures: [],
     spellTierAccess: 0,
     proficiencies: createDefaultProficiencies(),
     attributes: defaultAttributes,

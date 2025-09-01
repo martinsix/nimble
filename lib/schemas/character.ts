@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { gameConfig } from '../config/game-config';
 import { AncestryTraitSchema } from './ancestry';
 import { BackgroundTraitSchema } from './background';
+import { ClassFeatureSchema } from './class';
 
 const attributeNameSchema = z.enum(['strength', 'dexterity', 'intelligence', 'will']);
 
@@ -239,6 +240,14 @@ export const proficienciesSchema = z.object({
   weapons: z.array(weaponProficiencySchema),
 });
 
+const selectedPoolFeatureSchema = z.object({
+  poolId: z.string().min(1),
+  featureId: z.string().min(1),
+  feature: ClassFeatureSchema,
+  selectedAt: z.coerce.date(),
+  grantedByFeatureId: z.string().min(1)
+});
+
 export const createCharacterSchema = z.object({
   name: z.string().min(1).max(50),
   ancestry: AncestryTraitSchema,
@@ -247,6 +256,7 @@ export const createCharacterSchema = z.object({
   classId: z.string().min(1),
   subclassId: z.string().optional(),
   grantedFeatures: z.array(z.string()),
+  selectedPoolFeatures: z.array(selectedPoolFeatureSchema),
   spellTierAccess: z.int().min(0).max(9),
   proficiencies: proficienciesSchema,
   attributes: attributeSchema,
@@ -273,6 +283,7 @@ export const characterSchema = z.object({
   classId: z.string().min(1),
   subclassId: z.string().optional(),
   grantedFeatures: z.array(z.string()),
+  selectedPoolFeatures: z.array(selectedPoolFeatureSchema),
   spellTierAccess: z.int().min(0).max(9),
   proficiencies: proficienciesSchema,
   attributes: attributeSchema,

@@ -1,7 +1,7 @@
 import { Character, ActionTracker, CharacterConfiguration, Attributes } from '../types/character';
 import { Abilities, ActionAbility, SpellAbility, AbilityRoll } from '../types/abilities';
 import { LogEntry, SingleDie } from '../types/log-entries';
-import { ClassFeatureGrant, ClassFeature } from '../types/class';
+import { ClassFeatureGrant, ClassFeature, PickFeatureFromPoolFeature, FeaturePool } from '../types/class';
 import { ResourceInstance } from '../types/resources';
 import { AncestryDefinition, AncestryFeature, AncestryTrait } from '../types/ancestry';
 import { BackgroundDefinition, BackgroundFeature, BackgroundTrait } from '../types/background';
@@ -102,6 +102,12 @@ export interface IClassService {
   levelUpCharacter(targetLevel: number): Promise<ClassFeatureGrant[]>;
   selectSubclass(characterId: string, subclassId: string): Promise<Character>;
   canChooseSubclass(character: Character): boolean;
+  getFeaturePool(classId: string, poolId: string): FeaturePool | undefined;
+  getAvailablePoolFeatures(character: Character, poolId: string): ClassFeature[];
+  getAvailablePoolSelections(character: Character): PickFeatureFromPoolFeature[];
+  selectPoolFeature(character: Character, poolId: string, selectedFeature: ClassFeature, grantedByFeatureId: string): Promise<Character>;
+  getRemainingPoolSelections(character: Character, pickFeatureFromPoolFeature: PickFeatureFromPoolFeature): number;
+  generateFeatureId(classId: string, level: number, featureName: string, subclassId?: string): string;
 }
 
 /**

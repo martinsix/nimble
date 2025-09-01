@@ -2,13 +2,13 @@ import { z } from 'zod';
 
 // Basic building blocks with metadata
 const DiceExpressionSchema = z.object({
-  count: z.number().int().min(1).max(20).meta({ title: 'Dice Count', description: 'Number of dice to roll (integer)' }),
+  count: z.int().int().min(1).max(20).meta({ title: 'Dice Count', description: 'Number of dice to roll (integer)' }),
   sides: z.union([z.literal(4), z.literal(6), z.literal(8), z.literal(10), z.literal(12), z.literal(20), z.literal(100)]).meta({ title: 'Dice Type', description: 'Type of dice (d4, d6, d8, d10, d12, d20, d100)' })
 }).meta({ title: 'Dice Expression', description: 'Dice expression for rolling' });
 
 const AbilityRollSchema = z.object({
   dice: DiceExpressionSchema.meta({ title: 'Dice', description: 'Dice to roll for this ability' }),
-  modifier: z.number().int().optional().meta({ title: 'Modifier', description: 'Fixed modifier to add to the roll (integer)' }),
+  modifier: z.int().int().optional().meta({ title: 'Modifier', description: 'Fixed modifier to add to the roll (integer)' }),
   attribute: z.enum(['strength', 'dexterity', 'intelligence', 'will']).optional().meta({ title: 'Attribute', description: 'Attribute to add to the roll' })
 }).meta({ title: 'Ability Roll', description: 'Roll configuration for abilities' });
 
@@ -16,13 +16,13 @@ const ResourceCostSchema = z.union([
   z.object({
     type: z.literal('fixed').meta({ title: 'Fixed Cost', description: 'Fixed resource cost' }),
     resourceId: z.string().meta({ title: 'Resource ID', description: 'ID of the resource to consume' }),
-    amount: z.number().int().min(0).meta({ title: 'Amount', description: 'Amount of resource to consume (integer)' })
+    amount: z.int().int().min(0).meta({ title: 'Amount', description: 'Amount of resource to consume (integer)' })
   }),
   z.object({
     type: z.literal('variable').meta({ title: 'Variable Cost', description: 'Variable resource cost' }),
     resourceId: z.string().meta({ title: 'Resource ID', description: 'ID of the resource to consume' }),
-    minAmount: z.number().int().min(0).meta({ title: 'Minimum Amount', description: 'Minimum amount of resource to consume (integer)' }),
-    maxAmount: z.number().int().min(0).meta({ title: 'Maximum Amount', description: 'Maximum amount of resource to consume (integer)' })
+    minAmount: z.int().int().min(0).meta({ title: 'Minimum Amount', description: 'Minimum amount of resource to consume (integer)' }),
+    maxAmount: z.int().int().min(0).meta({ title: 'Maximum Amount', description: 'Maximum amount of resource to consume (integer)' })
   })
 ]).meta({ title: 'Resource Cost', description: 'Resource cost for using this ability' });
 
@@ -79,6 +79,7 @@ const AbilitySchema = z.union([ActionAbilitySchema, SpellAbilitySchema]);
 
 // Class Feature Schemas
 const BaseClassFeatureSchema = z.object({
+  id: z.string().min(1),
   level: z.number().int().min(1).max(20),
   name: z.string().min(1),
   description: z.string().min(1)
@@ -152,7 +153,13 @@ const SubclassChoiceFeatureSchema = BaseClassFeatureSchema.extend({
   availableSubclasses: z.array(z.string())
 });
 
-export const ClassFeatureSchema = z.union([
+const PickFeatureFromPoolFeatureSchema = BaseClassFeatureSchema.extend({
+  type: z.literal('pick_feature_from_pool'),
+  poolId: z.string().min(1),
+  choicesAllowed: z.number().int().min(1)
+});
+
+export const ClassFeatureSchema = z.discriminatedUnion('type', [
   AbilityFeatureSchema,
   PassiveFeatureSchema,
   StatBoostFeatureSchema,
@@ -160,8 +167,16 @@ export const ClassFeatureSchema = z.union([
   ResourceFeatureSchema,
   SpellSchoolFeatureSchema,
   SpellTierAccessFeatureSchema,
-  SubclassChoiceFeatureSchema
+  SubclassChoiceFeatureSchema,
+  PickFeatureFromPoolFeatureSchema
 ]);
+
+const FeaturePoolSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  description: z.string().min(1),
+  features: z.array(ClassFeatureSchema)
+});
 
 // Main schemas
 export const ClassDefinitionSchema = z.object({
@@ -180,6 +195,7 @@ export const ClassDefinitionSchema = z.object({
     will: z.enum(['advantage', 'disadvantage', 'normal']).optional().meta({ title: 'Will Saves', description: 'Saving throw modifier for will' })
   }).meta({ title: 'Save Advantages', description: 'Saving throw advantages/disadvantages' }),
   features: z.array(ClassFeatureSchema).meta({ title: 'Features', description: 'Array of class features by level' }),
+  featurePools: z.array(FeaturePoolSchema).optional().meta({ title: 'Feature Pools', description: 'Pools of features for player selection' }),
   subclasses: z.array(z.object({
     id: z.string().min(1).meta({ title: 'ID', description: 'Unique identifier for the subclass' }),
     name: z.string().min(1).meta({ title: 'Name', description: 'Display name of the subclass' }),

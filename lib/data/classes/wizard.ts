@@ -19,6 +19,7 @@ export const wizard: ClassDefinition = {
   },
   features: [
     {
+      id: 'wizard-fire-magic',
       level: 1,
       type: 'spell_school',
       name: 'Fire Magic',
@@ -26,6 +27,7 @@ export const wizard: ClassDefinition = {
       spellSchool: getSpellSchoolDefinition('fire')!
     },
     {
+      id: 'wizard-ritual-casting',
       level: 1,
       type: 'ability',
       name: 'Ritual Casting',
@@ -39,6 +41,7 @@ export const wizard: ClassDefinition = {
       }
     },
     {
+      id: 'wizard-arcane-tradition',
       level: 2,
       type: 'subclass_choice',
       name: 'Arcane Tradition',
@@ -46,6 +49,7 @@ export const wizard: ClassDefinition = {
       availableSubclasses: ['wizard-evocation']
     },
     {
+      id: 'wizard-spellcasting',
       level: 1,
       type: 'spell_tier_access',
       name: 'Spellcasting',
@@ -53,6 +57,7 @@ export const wizard: ClassDefinition = {
       maxTier: 1
     },
     {
+      id: 'wizard-mana-pool',
       level: 2,
       type: 'resource',
       name: 'Mana Pool',
@@ -70,6 +75,7 @@ export const wizard: ClassDefinition = {
       }
     },
     {
+      id: 'wizard-advanced-spellcasting',
       level: 3,
       type: 'spell_tier_access',
       name: 'Advanced Spellcasting',
@@ -77,6 +83,7 @@ export const wizard: ClassDefinition = {
       maxTier: 2
     },
     {
+      id: 'wizard-asi-4',
       level: 4,
       type: 'stat_boost',
       name: 'Ability Score Improvement',

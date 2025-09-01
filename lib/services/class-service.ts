@@ -1,5 +1,5 @@
-import { Character } from '../types/character';
-import { ClassDefinition, ClassFeature, ClassFeatureGrant, AbilityFeature, StatBoostFeature, ProficiencyFeature, SpellSchoolFeature, SpellTierAccessFeature, ResourceFeature, SubclassChoiceFeature, SubclassDefinition } from '../types/class';
+import { Character, SelectedPoolFeature } from '../types/character';
+import { ClassDefinition, ClassFeature, ClassFeatureGrant, AbilityFeature, StatBoostFeature, ProficiencyFeature, SpellSchoolFeature, SpellTierAccessFeature, ResourceFeature, SubclassChoiceFeature, SubclassDefinition, PickFeatureFromPoolFeature, FeaturePool } from '../types/class';
 import { ResourceInstance, createResourceInstance } from '../types/resources';
 import { getSubclassDefinition, getSubclassFeaturesForLevel, getAllSubclassFeaturesUpToLevel } from '../data/subclasses/index';
 import { SpellAbility } from '../types/abilities';
@@ -168,33 +168,8 @@ export class ClassService implements IClassService {
       grantedFeatures: updatedGrantedFeatures
     };
 
-    // Handle different feature types
-    switch (feature.type) {
-      case 'ability':
-        updatedCharacter = await this.grantAbilityFeature(updatedCharacter, feature);
-        break;
-      case 'stat_boost':
-        updatedCharacter = await this.grantStatBoostFeature(updatedCharacter, feature);
-        break;
-      case 'proficiency':
-        updatedCharacter = await this.grantProficiencyFeature(updatedCharacter, feature);
-        break;
-      case 'spell_school':
-        updatedCharacter = await this.grantSpellSchoolFeature(updatedCharacter, feature);
-        break;
-      case 'spell_tier_access':
-        updatedCharacter = await this.grantSpellTierAccessFeature(updatedCharacter, feature);
-        break;
-      case 'resource':
-        updatedCharacter = await this.grantResourceFeature(updatedCharacter, feature);
-        break;
-      case 'subclass_choice':
-        updatedCharacter = await this.grantSubclassChoiceFeature(updatedCharacter, feature);
-        break;
-      case 'passive_feature':
-        // Passive features don't need special handling beyond being recorded
-        break;
-    }
+    // Apply feature effects
+    updatedCharacter = await this.applyFeatureEffects(updatedCharacter, feature);
 
     await this.characterService.updateCharacter(updatedCharacter);
     return featureGrant;
@@ -442,5 +417,135 @@ export class ClassService implements IClassService {
     }
 
     return grantedFeatures;
+  }
+
+  /**
+   * Apply the effects of a feature to a character
+   */
+  private async applyFeatureEffects(character: Character, feature: ClassFeature): Promise<Character> {
+    switch (feature.type) {
+      case 'ability':
+        return await this.grantAbilityFeature(character, feature);
+      case 'stat_boost':
+        return await this.grantStatBoostFeature(character, feature);
+      case 'proficiency':
+        return await this.grantProficiencyFeature(character, feature);
+      case 'spell_school':
+        return await this.grantSpellSchoolFeature(character, feature);
+      case 'spell_tier_access':
+        return await this.grantSpellTierAccessFeature(character, feature);
+      case 'resource':
+        return await this.grantResourceFeature(character, feature);
+      case 'subclass_choice':
+        return await this.grantSubclassChoiceFeature(character, feature);
+      case 'pick_feature_from_pool':
+        return await this.grantPickFeatureFromPoolFeature(character, feature);
+      case 'passive_feature':
+        // Passive features don't need special handling beyond being recorded
+        return character;
+      default:
+        return character;
+    }
+  }
+
+  /**
+   * Grant a pick feature from pool feature - this just records that the choice is available
+   */
+  private async grantPickFeatureFromPoolFeature(character: Character, feature: PickFeatureFromPoolFeature): Promise<Character> {
+    // For pick feature from pool features, we don't automatically grant anything
+    // The feature simply unlocks the ability to make choices from the specified pool
+    // The actual selection happens through UI interaction
+    return character;
+  }
+
+  /**
+   * Get feature pool by ID
+   */
+  getFeaturePool(classId: string, poolId: string): FeaturePool | undefined {
+    const classDefinition = this.contentRepository.getClassDefinition(classId);
+    return classDefinition?.featurePools?.find((pool: FeaturePool) => pool.id === poolId);
+  }
+
+  /**
+   * Get available pool features that can be selected by a character
+   */
+  getAvailablePoolFeatures(character: Character, poolId: string): ClassFeature[] {
+    const pool = this.getFeaturePool(character.classId, poolId);
+    if (!pool) {
+      return [];
+    }
+
+    // Filter out features that have already been selected
+    const selectedFeatureIds = new Set(
+      character.selectedPoolFeatures
+        .filter(selected => selected.poolId === poolId)
+        .map(selected => selected.featureId)
+    );
+
+    return pool.features.filter(feature => {
+      return !selectedFeatureIds.has(feature.id);
+    });
+  }
+
+  /**
+   * Get pick feature from pool features that are available for a character
+   */
+  getAvailablePoolSelections(character: Character): PickFeatureFromPoolFeature[] {
+    const expectedFeatures = this.getExpectedFeaturesForCharacter(character);
+    return expectedFeatures.filter(feature => feature.type === 'pick_feature_from_pool') as PickFeatureFromPoolFeature[];
+  }
+
+  /**
+   * Select a feature from a pool
+   */
+  async selectPoolFeature(character: Character, poolId: string, selectedFeature: ClassFeature, grantedByFeatureId: string): Promise<Character> {
+    // Check if the feature is available for selection
+    const availableFeatures = this.getAvailablePoolFeatures(character, poolId);
+    
+    if (!availableFeatures.some(f => f.id === selectedFeature.id)) {
+      throw new Error(`Feature "${selectedFeature.name}" is not available for selection from pool "${poolId}"`);
+    }
+
+    // Create the selected pool feature record
+    const selectedPoolFeature: SelectedPoolFeature = {
+      poolId,
+      featureId: selectedFeature.id,
+      feature: selectedFeature,
+      selectedAt: new Date(),
+      grantedByFeatureId
+    };
+
+    // Add to character's selected pool features
+    const updatedCharacter = {
+      ...character,
+      selectedPoolFeatures: [...character.selectedPoolFeatures, selectedPoolFeature]
+    };
+
+    // Apply the feature effects
+    let finalCharacter = await this.applyFeatureEffects(updatedCharacter, selectedFeature);
+
+    await this.characterService.updateCharacter(finalCharacter);
+    return finalCharacter;
+  }
+
+
+  /**
+   * Check if character has pending pool selections to make
+   */
+  hasPendingPoolSelections(character: Character): boolean {
+    const availableSelections = this.getAvailablePoolSelections(character);
+    return availableSelections.length > 0;
+  }
+
+  /**
+   * Get count of remaining selections for a specific pool selection feature
+   */
+  getRemainingPoolSelections(character: Character, pickFeatureFromPoolFeature: PickFeatureFromPoolFeature): number {
+    const grantedByFeatureId = this.generateFeatureId(character.classId, pickFeatureFromPoolFeature.level, pickFeatureFromPoolFeature.name);
+    const currentSelections = character.selectedPoolFeatures.filter(
+      selected => selected.grantedByFeatureId === grantedByFeatureId
+    ).length;
+    
+    return Math.max(0, pickFeatureFromPoolFeature.choicesAllowed - currentSelections);
   }
 }

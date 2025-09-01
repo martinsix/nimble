@@ -7,6 +7,7 @@ export const fighterBattleMaster: SubclassDefinition = {
   parentClassId: 'fighter',
   features: [
     {
+      id: 'fighter-battlemaster-superiority-dice',
       level: 3,
       type: 'resource',
       name: 'Superiority Dice',
@@ -24,6 +25,7 @@ export const fighterBattleMaster: SubclassDefinition = {
       }
     },
     {
+      id: 'fighter-battlemaster-combat-maneuvers',
       level: 3,
       type: 'ability',
       name: 'Combat Maneuvers',
@@ -43,6 +45,7 @@ export const fighterBattleMaster: SubclassDefinition = {
       }
     },
     {
+      id: 'fighter-battlemaster-know-your-enemy',
       level: 7,
       type: 'passive_feature',
       name: 'Know Your Enemy',
@@ -50,6 +53,7 @@ export const fighterBattleMaster: SubclassDefinition = {
       category: 'utility'
     },
     {
+      id: 'fighter-battlemaster-improved-superiority-dice',
       level: 10,
       type: 'resource',
       name: 'Improved Superiority Dice',
@@ -67,6 +71,7 @@ export const fighterBattleMaster: SubclassDefinition = {
       }
     },
     {
+      id: 'fighter-battlemaster-relentless',
       level: 15,
       type: 'passive_feature',
       name: 'Relentless',
@@ -74,6 +79,7 @@ export const fighterBattleMaster: SubclassDefinition = {
       category: 'combat'
     },
     {
+      id: 'fighter-battlemaster-master-tactician',
       level: 18,
       type: 'resource',
       name: 'Master Tactician',

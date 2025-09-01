@@ -7,6 +7,7 @@ export const fighterChampion: SubclassDefinition = {
   parentClassId: 'fighter',
   features: [
     {
+      id: 'fighter-champion-improved-critical',
       level: 3,
       type: 'passive_feature',
       name: 'Improved Critical',
@@ -14,6 +15,7 @@ export const fighterChampion: SubclassDefinition = {
       category: 'combat'
     },
     {
+      id: 'fighter-champion-remarkable-athlete',
       level: 7,
       type: 'ability',
       name: 'Remarkable Athlete',
@@ -27,6 +29,7 @@ export const fighterChampion: SubclassDefinition = {
       }
     },
     {
+      id: 'fighter-champion-additional-fighting-style',
       level: 10,
       type: 'passive_feature',
       name: 'Additional Fighting Style',
@@ -34,6 +37,7 @@ export const fighterChampion: SubclassDefinition = {
       category: 'combat'
     },
     {
+      id: 'fighter-champion-superior-critical',
       level: 15,
       type: 'passive_feature',
       name: 'Superior Critical',
@@ -41,6 +45,7 @@ export const fighterChampion: SubclassDefinition = {
       category: 'combat'
     },
     {
+      id: 'fighter-champion-survivor',
       level: 18,
       type: 'passive_feature',
       name: 'Survivor',

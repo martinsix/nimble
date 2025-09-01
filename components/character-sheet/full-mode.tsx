@@ -5,6 +5,7 @@ import { ArmorSection } from "../sections/armor-section";
 import { ActionsSection } from "../sections/actions-section";
 import { AbilitySection } from "../sections/ability-section";
 import { InventorySection } from "../sections/inventory-section";
+import { PoolSelectionsSection } from "../sections/pool-selections-section";
 
 /**
  * FullMode component renders the complete character sheet with all features.
@@ -18,10 +19,14 @@ import { InventorySection } from "../sections/inventory-section";
  * All components are self-contained and get their data from context.
  */
 export function FullMode() {
+
   return (
     <>
       {/* All Basic Mode Features */}
       <BasicMode />
+
+      {/* Pool Selections - Important actions that need player attention */}
+      <PoolSelectionsSection />
 
       {/* Full Mode Only Features */}
       {/* Armor Section - Equipment and armor calculations */}

@@ -19,10 +19,19 @@ export interface Skill {
 
 import { Inventory } from './inventory';
 import { Abilities } from './abilities';
-import { ArmorProficiency, WeaponProficiency } from './class';
+import { ArmorProficiency, WeaponProficiency, ClassFeature } from './class';
 import { ResourceInstance } from './resources';
 import { AncestryTrait } from './ancestry';
 import { BackgroundTrait } from './background';
+
+// Tracks features selected from pools by the character
+export interface SelectedPoolFeature {
+  poolId: string; // ID of the pool the feature was selected from
+  featureId: string; // Unique ID of the selected feature within the pool
+  feature: ClassFeature; // The actual feature that was selected
+  selectedAt: Date; // When this feature was selected
+  grantedByFeatureId: string; // ID of the PickFeatureFromPoolFeature that granted this selection
+}
 
 export interface ActionTracker {
   current: number; // Currently available actions
@@ -62,6 +71,7 @@ export interface Character {
   classId: string; // Character's class (e.g., 'fighter', 'wizard')
   subclassId?: string; // Character's subclass (e.g., 'fighter-champion', 'wizard-evocation')
   grantedFeatures: string[]; // IDs of class features already granted to this character
+  selectedPoolFeatures: SelectedPoolFeature[]; // Features selected from pools
   spellTierAccess: number; // Highest tier of spells character can access (1-9, 0 for no spell access)
   proficiencies: Proficiencies; // Armor and weapon proficiencies
   attributes: Attributes;
@@ -104,6 +114,7 @@ export interface CreateCharacterData {
   classId: string;
   subclassId?: string;
   grantedFeatures: string[];
+  selectedPoolFeatures: SelectedPoolFeature[]; // Features selected from pools
   spellTierAccess: number; // Highest tier of spells character can access (1-9, 0 for no spell access)
   proficiencies: Proficiencies;
   attributes: {

@@ -2,7 +2,7 @@ import { HitDieSize, AttributeName, SaveAdvantageMap } from './character';
 import { Ability } from './abilities';
 import { ResourceDefinition } from './resources';
 
-export type ClassFeatureType = 'ability' | 'passive_feature' | 'stat_boost' | 'proficiency' | 'spell_school' | 'spell_tier_access' | 'resource' | 'subclass_choice';
+export type ClassFeatureType = 'ability' | 'passive_feature' | 'stat_boost' | 'proficiency' | 'spell_school' | 'spell_tier_access' | 'resource' | 'subclass_choice' | 'pick_feature_from_pool';
 
 export interface StatBoost {
   attribute: AttributeName;
@@ -22,9 +22,18 @@ export interface SpellSchool {
   // Spells are accessed via ContentRepositoryService.getSpellsBySchool(schoolId)
 }
 
+// Feature pool - a collection of features that players can choose from
+export interface FeaturePool {
+  id: string; // Unique identifier for the pool (e.g., 'warlock-invocations', 'fighter-maneuvers')
+  name: string; // Display name (e.g., 'Eldritch Invocations', 'Battle Maneuvers')
+  description: string; // Description of the pool and what features it contains
+  features: ClassFeature[]; // Array of features available for selection
+}
+
 
 // Base interface for all class features
 interface BaseClassFeature {
+  id: string; // Unique identifier for the feature
   level: number;
   name: string;
   description: string;
@@ -79,6 +88,13 @@ export interface SubclassChoiceFeature extends BaseClassFeature {
   availableSubclasses: string[]; // Array of subclass IDs that can be chosen
 }
 
+// Pick Feature From Pool - allows player to choose a feature from a specific pool
+export interface PickFeatureFromPoolFeature extends BaseClassFeature {
+  type: 'pick_feature_from_pool';
+  poolId: string; // ID of the feature pool to choose from
+  choicesAllowed: number; // Number of features that can be chosen (default: 1)
+}
+
 export type ClassFeature = 
   | AbilityFeature 
   | PassiveFeature 
@@ -87,7 +103,8 @@ export type ClassFeature =
   | SpellSchoolFeature 
   | SpellTierAccessFeature
   | ResourceFeature
-  | SubclassChoiceFeature;
+  | SubclassChoiceFeature
+  | PickFeatureFromPoolFeature;
 
 export type ArmorProficiency = 
   | { type: 'cloth' }
@@ -121,6 +138,7 @@ export interface ClassDefinition {
   weaponProficiencies: WeaponProficiency[]; // Weapon categories the class is proficient with
   saveAdvantages: SaveAdvantageMap; // Default save advantages/disadvantages for this class
   features: ClassFeature[]; // All features available to this class
+  featurePools?: FeaturePool[]; // Feature pools available for selection
   subclasses?: SubclassDefinition[]; // Available subclasses for this class
 }
 

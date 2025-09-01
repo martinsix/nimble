@@ -7,6 +7,7 @@ export const clericLife: SubclassDefinition = {
   parentClassId: 'cleric',
   features: [
     {
+      id: 'cleric-life-bonus-proficiencies',
       level: 1,
       type: 'proficiency',
       name: 'Bonus Proficiencies',
@@ -16,6 +17,7 @@ export const clericLife: SubclassDefinition = {
       ]
     },
     {
+      id: 'cleric-life-disciple-of-life',
       level: 1,
       type: 'ability',
       name: 'Disciple of Life',
@@ -29,6 +31,7 @@ export const clericLife: SubclassDefinition = {
       }
     },
     {
+      id: 'cleric-life-preserve-life',
       level: 2,
       type: 'ability',
       name: 'Channel Divinity: Preserve Life',
@@ -48,6 +51,7 @@ export const clericLife: SubclassDefinition = {
       }
     },
     {
+      id: 'cleric-life-blessed-healer',
       level: 6,
       type: 'ability',
       name: 'Blessed Healer',
@@ -61,6 +65,7 @@ export const clericLife: SubclassDefinition = {
       }
     },
     {
+      id: 'cleric-life-divine-strike',
       level: 8,
       type: 'ability',
       name: 'Divine Strike',

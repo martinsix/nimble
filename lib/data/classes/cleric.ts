@@ -22,6 +22,7 @@ export const cleric: ClassDefinition = {
   },
   features: [
     {
+      id: 'cleric-radiant-magic',
       level: 1,
       type: 'spell_school',
       name: 'Radiant Magic',
@@ -29,6 +30,7 @@ export const cleric: ClassDefinition = {
       spellSchool: getSpellSchoolDefinition('radiant')!
     },
     {
+      id: 'cleric-divine-spellcasting',
       level: 1,
       type: 'spell_tier_access',
       name: 'Divine Spellcasting',
@@ -36,6 +38,7 @@ export const cleric: ClassDefinition = {
       maxTier: 1
     },
     {
+      id: 'cleric-divine-mana',
       level: 1,
       type: 'resource',
       name: 'Divine Mana',
@@ -53,6 +56,7 @@ export const cleric: ClassDefinition = {
       }
     },
     {
+      id: 'cleric-advanced-divine-spellcasting',
       level: 3,
       type: 'spell_tier_access',
       name: 'Advanced Divine Spellcasting',
@@ -60,6 +64,7 @@ export const cleric: ClassDefinition = {
       maxTier: 2
     },
     {
+      id: 'cleric-divine-domain',
       level: 1,
       type: 'passive_feature',
       name: 'Divine Domain',
@@ -67,6 +72,7 @@ export const cleric: ClassDefinition = {
       category: 'utility'
     },
     {
+      id: 'cleric-channel-divinity',
       level: 2,
       type: 'resource',
       name: 'Channel Divinity',
@@ -84,6 +90,7 @@ export const cleric: ClassDefinition = {
       }
     },
     {
+      id: 'cleric-divine-blessing',
       level: 3,
       type: 'resource',
       name: 'Divine Blessing',
@@ -101,6 +108,7 @@ export const cleric: ClassDefinition = {
       }
     },
     {
+      id: 'cleric-asi-4',
       level: 4,
       type: 'stat_boost',
       name: 'Ability Score Improvement',
@@ -110,6 +118,7 @@ export const cleric: ClassDefinition = {
       ]
     },
     {
+      id: 'cleric-destroy-undead',
       level: 5,
       type: 'passive_feature',
       name: 'Destroy Undead',

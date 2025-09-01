@@ -4,6 +4,7 @@ import { CharacterStats } from "./character-stats";
 import { HealthManagement } from "./health-management";
 import { CombatSection } from "./combat-section";
 import { ResourceSection } from "../sections/resource-section";
+import { PoolSelectionsSection } from "../sections/pool-selections-section";
 
 /**
  * BasicMode component renders the essential character sheet features.
@@ -16,8 +17,12 @@ import { ResourceSection } from "../sections/resource-section";
  * All components are self-contained and get their data from context.
  */
 export function BasicMode() {
+
   return (
     <>
+      {/* Pool Selections - Important actions that need player attention */}
+      <PoolSelectionsSection />
+
       {/* Health Management - HP, Hit Dice, Wounds */}
       <HealthManagement />
 

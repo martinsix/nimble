@@ -7,6 +7,7 @@ export const wizardEvocation: SubclassDefinition = {
   parentClassId: 'wizard',
   features: [
     {
+      id: 'wizard-evocation-savant',
       level: 2,
       type: 'passive_feature',
       name: 'Evocation Savant',
@@ -14,6 +15,7 @@ export const wizardEvocation: SubclassDefinition = {
       category: 'utility'
     },
     {
+      id: 'wizard-sculpt-spells',
       level: 2,
       type: 'ability',
       name: 'Sculpt Spells',
@@ -27,6 +29,7 @@ export const wizardEvocation: SubclassDefinition = {
       }
     },
     {
+      id: 'wizard-potent-cantrip',
       level: 6,
       type: 'ability',
       name: 'Potent Cantrip',
@@ -40,6 +43,7 @@ export const wizardEvocation: SubclassDefinition = {
       }
     },
     {
+      id: 'wizard-empowered-evocation',
       level: 10,
       type: 'passive_feature',
       name: 'Empowered Evocation',
@@ -47,6 +51,7 @@ export const wizardEvocation: SubclassDefinition = {
       category: 'combat'
     },
     {
+      id: 'wizard-overchannel',
       level: 14,
       type: 'ability',
       name: 'Overchannel',

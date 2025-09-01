@@ -7,6 +7,7 @@ export const rogueAssassin: SubclassDefinition = {
   parentClassId: 'rogue',
   features: [
     {
+      id: 'rogue-assassin-bonus-proficiencies',
       level: 3,
       type: 'proficiency',
       name: 'Bonus Proficiencies',
@@ -17,6 +18,7 @@ export const rogueAssassin: SubclassDefinition = {
       ]
     },
     {
+      id: 'rogue-assassin-assassinate',
       level: 3,
       type: 'ability',
       name: 'Assassinate',
@@ -34,6 +36,7 @@ export const rogueAssassin: SubclassDefinition = {
       }
     },
     {
+      id: 'rogue-assassin-infiltration-expertise',
       level: 9,
       type: 'ability',
       name: 'Infiltration Expertise',
@@ -49,6 +52,7 @@ export const rogueAssassin: SubclassDefinition = {
       }
     },
     {
+      id: 'rogue-assassin-impostor',
       level: 13,
       type: 'ability',
       name: 'Impostor',
@@ -62,6 +66,7 @@ export const rogueAssassin: SubclassDefinition = {
       }
     },
     {
+      id: 'rogue-assassin-death-strike',
       level: 17,
       type: 'ability',
       name: 'Death Strike',

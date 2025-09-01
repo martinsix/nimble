@@ -22,6 +22,7 @@ export const fighter: ClassDefinition = {
   },
   features: [
     {
+      id: 'fighter-second-wind',
       level: 1,
       type: 'ability',
       name: 'Second Wind',
@@ -41,6 +42,7 @@ export const fighter: ClassDefinition = {
       }
     },
     {
+      id: 'fighter-fighting-style',
       level: 1,
       type: 'passive_feature',
       name: 'Fighting Style',
@@ -48,6 +50,7 @@ export const fighter: ClassDefinition = {
       category: 'combat'
     },
     {
+      id: 'fighter-action-surge',
       level: 2,
       type: 'ability',
       name: 'Action Surge',
@@ -63,6 +66,7 @@ export const fighter: ClassDefinition = {
       }
     },
     {
+      id: 'fighter-battlefield-fury',
       level: 2,
       type: 'resource',
       name: 'Battlefield Fury',
@@ -80,6 +84,7 @@ export const fighter: ClassDefinition = {
       }
     },
     {
+      id: 'fighter-asi-4',
       level: 4,
       type: 'stat_boost',
       name: 'Ability Score Improvement',
@@ -90,6 +95,7 @@ export const fighter: ClassDefinition = {
       ]
     },
     {
+      id: 'fighter-martial-archetype',
       level: 3,
       type: 'subclass_choice',
       name: 'Martial Archetype',
@@ -97,6 +103,7 @@ export const fighter: ClassDefinition = {
       availableSubclasses: ['fighter-champion', 'fighter-battlemaster']
     },
     {
+      id: 'fighter-martial-training',
       level: 3,
       type: 'proficiency',
       name: 'Martial Training',
@@ -107,6 +114,7 @@ export const fighter: ClassDefinition = {
       ]
     },
     {
+      id: 'fighter-extra-attack',
       level: 5,
       type: 'passive_feature',
       name: 'Extra Attack',
