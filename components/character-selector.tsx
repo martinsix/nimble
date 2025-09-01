@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from "./ui/alert";
 import { Character } from "@/lib/types/character";
 import { Plus, Trash2, User, Clock, AlertTriangle } from "lucide-react";
 import { CharacterCreateForm } from "./character-create-form";
-import { useCharacterEvents } from "@/lib/hooks/use-character-events";
+import { useCharacterService } from "@/lib/hooks/use-character-service";
 
 interface CharacterSelectorProps {
   isOpen?: boolean;
@@ -28,7 +28,7 @@ export function CharacterSelector({
   fullScreen = false
 }: CharacterSelectorProps) {
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const { createCharacter, switchCharacter, deleteCharacter } = useCharacterEvents();
+  const { createCharacter, switchCharacter, deleteCharacter } = useCharacterService();
 
   const handleCreateCharacter = (name: string, classId: string) => {
     setShowCreateForm(false);

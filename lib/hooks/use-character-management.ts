@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Character } from '@/lib/types/character';
 import { AppSettings } from '@/lib/services/settings-service';
 import { 
@@ -8,21 +8,18 @@ import {
   getSettingsService 
 } from '@/lib/services/service-factory';
 import { useToastService } from './use-toast-service';
-import { useCharacterEvents } from './use-character-events';
+import { useCharacterService } from './use-character-service';
 
 export interface UseCharacterManagementReturn {
-  character: Character | null;
   characters: Character[];
   settings: AppSettings;
   isLoaded: boolean;
   loadError: string | null;
   showCharacterSelection: boolean;
-  handleCharacterUpdate: (character: Character) => Promise<void>;
   handleSettingsChange: (settings: AppSettings) => Promise<void>;
 }
 
 export function useCharacterManagement(): UseCharacterManagementReturn {
-  const [character, setCharacter] = useState<Character | null>(null);
   const [characters, setCharacters] = useState<Character[]>([]);
   const [settings, setSettings] = useState<AppSettings>({ mode: 'full', activeCharacterId: 'default-character' });
   const [isLoaded, setIsLoaded] = useState(false);
@@ -34,9 +31,9 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
   const characterCreation = getCharacterCreation();
   const settingsService = getSettingsService();
   
-  // Get toast notifications and character events
-  const { showError, showSuccess } = useToastService();
-  const { subscribeToEvent } = useCharacterEvents();
+  // Get toast notifications and character service
+  const { showError } = useToastService();
+  const { subscribeToEvent } = useCharacterService();
 
   // Initial data loading
   useEffect(() => {
@@ -50,15 +47,15 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
         const characterList = await characterStorage.getAllCharacters();
         setCharacters(characterList);
 
-        // Load active character through CharacterService
-        let activeCharacter = await characterCreation.initializeCharacter(loadedSettings.activeCharacterId);
-        if (!activeCharacter) {
-          // If no characters exist, show character selection
-          if (characterList.length === 0) {
-            setShowCharacterSelection(true);
-            setLoadError("No characters found. Please create your first character.");
-          } else {
-            // Use the first available character instead of creating a default
+        // Check if we need to show character selection
+        if (characterList.length === 0) {
+          setShowCharacterSelection(true);
+          setLoadError("No characters found. Please create your first character.");
+        } else {
+          // Load active character through CharacterService
+          let activeCharacter = await characterCreation.initializeCharacter(loadedSettings.activeCharacterId);
+          if (!activeCharacter) {
+            // Use the first available character instead
             try {
               const firstCharacter = characterList[0];
               activeCharacter = await characterCreation.initializeCharacter(firstCharacter.id);
@@ -92,18 +89,7 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Services are singletons, safe to omit from dependencies
 
-  // Subscribe to character updates from the service
-  useEffect(() => {
-    // Get service instance inside effect to avoid dependency issues
-    const service = getCharacterService();
-    const unsubscribe = service.subscribeToCharacter((updatedCharacter) => {
-      setCharacter(updatedCharacter);
-    });
-
-    return unsubscribe;
-  }, []); // Empty dependencies - service is singleton
-
-  // Subscribe to character events to update local state
+  // Subscribe to character events to update app state
   useEffect(() => {
     const unsubscribeCreated = subscribeToEvent('created', async (event) => {
       // Refresh character list and update settings
@@ -141,7 +127,6 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
       
       // Show character selection if no characters left
       if (updatedCharacters.length === 0) {
-        setCharacter(null);
         setShowCharacterSelection(true);
         setLoadError("No characters remaining. Please create a new character.");
       }
@@ -155,19 +140,6 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
   }, [subscribeToEvent, characterStorage, settingsService]);
 
 
-  const handleCharacterUpdate = async (updatedCharacter: Character) => {
-    // Update through the service, which will trigger the subscription
-    const characterService = getCharacterService();
-    await characterService.updateCharacter(updatedCharacter);
-    
-    try {
-      // Refresh the character list to reflect name changes
-      const updatedCharacterList = await characterStorage.getAllCharacters();
-      setCharacters(updatedCharacterList);
-    } catch (error) {
-      console.error("Failed to refresh character list:", error);
-    }
-  };
 
 
   const handleSettingsChange = async (newSettings: AppSettings) => {
@@ -176,13 +148,11 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
   };
 
   return {
-    character,
     characters,
     settings,
     isLoaded,
     loadError,
     showCharacterSelection,
-    handleCharacterUpdate,
     handleSettingsChange,
   };
 }

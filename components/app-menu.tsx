@@ -17,7 +17,7 @@ import { CharacterCreateForm } from "./character-create-form";
 import { ContentManagementPanel } from "./content-management-panel";
 import { AppSettings } from "@/lib/services/settings-service";
 import { Character } from "@/lib/types/character";
-import { useCharacterEvents } from "@/lib/hooks/use-character-events";
+import { useCharacterService } from "@/lib/hooks/use-character-service";
 
 interface AppMenuProps {
   settings: AppSettings;
@@ -35,7 +35,7 @@ export function AppMenu({
   const [showCreateCharacter, setShowCreateCharacter] = useState(false);
   const [showContentManagement, setShowContentManagement] = useState(false);
   
-  const { createCharacter } = useCharacterEvents();
+  const { createCharacter } = useCharacterService();
 
   return (
     <>

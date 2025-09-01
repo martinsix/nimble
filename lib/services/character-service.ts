@@ -5,6 +5,15 @@ import { ICharacterService, ICharacterStorage, IActivityLog, IAbilityService } f
 import { resourceService } from './resource-service';
 import { getDiceService } from './service-factory';
 
+// Character event types
+export type CharacterEventType = 'created' | 'switched' | 'deleted' | 'updated';
+
+export interface CharacterEvent {
+  type: CharacterEventType;
+  characterId: string;
+  character?: Character;
+}
+
 // Import for backward compatibility singleton
 import { characterStorageService } from './character-storage-service';
 import { activityLogService } from './activity-log-service';
@@ -16,7 +25,7 @@ import { abilityService } from './ability-service';
  */
 export class CharacterService implements ICharacterService {
   private _character: Character | null = null;
-  private characterListeners: ((character: Character) => void)[] = [];
+  private eventListeners: Map<CharacterEventType, ((event: CharacterEvent) => void)[]> = new Map();
 
   constructor(
     private storageService: ICharacterStorage,
@@ -29,17 +38,31 @@ export class CharacterService implements ICharacterService {
     return this._character;
   }
 
-  // State Management
-  subscribeToCharacter(listener: (character: Character) => void): () => void {
-    this.characterListeners.push(listener);
-    if (this._character) {
-      listener(this._character);
+
+  // Event Management
+  subscribeToEvent(eventType: CharacterEventType, listener: (event: CharacterEvent) => void): () => void {
+    if (!this.eventListeners.has(eventType)) {
+      this.eventListeners.set(eventType, []);
     }
-    
+    this.eventListeners.get(eventType)!.push(listener);
+
     // Return unsubscribe function
     return () => {
-      this.characterListeners = this.characterListeners.filter(l => l !== listener);
+      const listeners = this.eventListeners.get(eventType);
+      if (listeners) {
+        const index = listeners.indexOf(listener);
+        if (index > -1) {
+          listeners.splice(index, 1);
+        }
+      }
     };
+  }
+
+  private emitEvent(event: CharacterEvent): void {
+    const listeners = this.eventListeners.get(event.type);
+    if (listeners) {
+      listeners.forEach(listener => listener(event));
+    }
   }
 
   getCurrentCharacter(): Character | null {
@@ -48,25 +71,36 @@ export class CharacterService implements ICharacterService {
 
   async loadCharacter(characterId: string): Promise<Character | null> {
     const character = await this.storageService.getCharacter(characterId);
-    if (character) {      
-      this._character = character;
-      
-      // Migrate resources from old color field to colorScheme field
-      const migrationNeeded = resourceService.migrateResourceColorSchemes(character);
-      
-      // Save migrated character only if migration occurred
-      if (migrationNeeded) {
-        await this.saveCharacter();
+    if (character) {
+      // Determine if this is a switch (there was already a character loaded)
+      if(this._character !== null) {
+        await this.storageService.updateLastPlayed(this._character.id);
+        // Emit appropriate event based on context
+ 
+        this.emitEvent({
+          type: 'switched',
+          characterId,
+          character
+        });
       }
       
+      this._character = character;
+   
       this.notifyCharacterChanged();
+      
+      
     }
     return character;
   }
 
   private notifyCharacterChanged(): void {
     if (this.character) {
-      this.characterListeners.forEach(listener => listener(this.character!));
+      // Emit update event
+      this.emitEvent({
+        type: 'updated',
+        characterId: this.character.id,
+        character: this.character
+      });
     }
   }
 
@@ -764,6 +798,33 @@ export class CharacterService implements ICharacterService {
     this._character = character;
     await this.saveCharacter();
     this.notifyCharacterChanged();
+    // Update event is already emitted in notifyCharacterChanged
+  }
+
+  // Character Lifecycle Operations
+
+  async deleteCharacterById(characterId: string): Promise<void> {
+    await this.storageService.deleteCharacter(characterId);
+    
+    // If we deleted the current character, clear it
+    if (this._character?.id === characterId) {
+      this._character = null;
+    }
+    
+    // Emit delete event
+    this.emitEvent({
+      type: 'deleted',
+      characterId
+    });
+  }
+
+  notifyCharacterCreated(character: Character): void {
+    // Emit create event (character creation happens in creation service)
+    this.emitEvent({
+      type: 'created',
+      characterId: character.id,
+      character
+    });
   }
 }
 

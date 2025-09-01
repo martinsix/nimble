@@ -6,23 +6,25 @@ import { CharacterSelector } from "@/components/character-selector";
 import { CharacterConfigDialog } from "@/components/character-config-dialog";
 import { TopBar } from "@/components/top-bar";
 import { useCharacterManagement } from "@/lib/hooks/use-character-management";
+import { useCharacterService } from "@/lib/hooks/use-character-service";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { LoadingScreen } from "@/components/loading-screen";
 import { ToastContainer } from "@/components/toast-container";
 import { useCallback, useEffect, useState } from "react";
 
 function HomeContent() {
-  // Character and settings management
+  // App state management
   const {
-    character,
     characters,
     settings,
     isLoaded,
     loadError,
     showCharacterSelection,
-    handleCharacterUpdate,
     handleSettingsChange,
   } = useCharacterManagement();
+
+  // Character operations
+  const { character, updateCharacter } = useCharacterService();
 
   // Character config dialog state
   const [showConfigDialog, setShowConfigDialog] = useState(false);
@@ -31,9 +33,9 @@ function HomeContent() {
   const onNameChange = useCallback(async (name: string) => {
     if (character) {
       const updatedCharacter = { ...character, name };
-      await handleCharacterUpdate(updatedCharacter);
+      await updateCharacter(updatedCharacter);
     }
-  }, [character, handleCharacterUpdate]);
+  }, [character, updateCharacter]);
 
   // Character config handlers
   const onOpenConfig = useCallback(() => {

@@ -48,9 +48,11 @@ export function AttributeSelection({
       setAttributes(character.attributes);
     }
 
-    // Subscribe to character changes
-    const unsubscribe = characterService.subscribeToCharacter((updatedCharacter) => {
-      setAttributes(updatedCharacter.attributes);
+    // Subscribe to character update events
+    const unsubscribe = characterService.subscribeToEvent('updated', (event) => {
+      if (event.character) {
+        setAttributes(event.character.attributes);
+      }
     });
 
     return unsubscribe;

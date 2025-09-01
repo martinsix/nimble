@@ -5,6 +5,7 @@ import { ClassFeatureGrant, ClassFeature } from '../types/class';
 import { ResourceInstance } from '../types/resources';
 import { AncestryDefinition, AncestryFeature, AncestryTrait } from '../types/ancestry';
 import { BackgroundDefinition, BackgroundFeature, BackgroundTrait } from '../types/background';
+import { CharacterEventType, CharacterEvent } from './character-service';
 
 /**
  * Character Storage Interface
@@ -65,7 +66,7 @@ export interface IAbilityService {
  */
 export interface ICharacterService {
   character: Character | null;
-  subscribeToCharacter(listener: (character: Character) => void): () => void;
+  subscribeToEvent(eventType: CharacterEventType, listener: (event: CharacterEvent) => void): () => void;
   getCurrentCharacter(): Character | null;
   loadCharacter(characterId: string): Promise<Character | null>;
   updateCharacter(character: Character): Promise<void>;
@@ -86,6 +87,8 @@ export interface ICharacterService {
   performUseAbility(abilityId: string, variableResourceAmount?: number): Promise<void>;
   updateCharacterFields(updates: Partial<Character>): Promise<void>;
   updateCharacterConfiguration(config: CharacterConfiguration): Promise<void>;
+  deleteCharacterById(characterId: string): Promise<void>;
+  notifyCharacterCreated(character: Character): void;
 }
 
 /**

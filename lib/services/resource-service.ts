@@ -171,44 +171,6 @@ export class ResourceService {
   }
 
   /**
-   * Migrate resources from old color field to colorScheme field
-   * Returns true if any migration was performed
-   */
-  migrateResourceColorSchemes(character: Character): boolean {
-    let hasChanges = false;
-    
-    character.resources.forEach(resourceInstance => {
-      // Check if resource has old 'color' field but no 'colorScheme'
-      const resourceAny = resourceInstance.definition as any;
-      if (resourceAny.color && !resourceInstance.definition.colorScheme) {
-        // Map old colors to new color schemes
-        const colorMapping: Record<string, string> = {
-          'blue': 'blue-magic',
-          'red': 'red-fury',
-          'green': 'green-nature',
-          'purple': 'purple-arcane',
-          'orange': 'orange-ki',
-          'yellow': 'yellow-divine',
-          'teal': 'teal-focus',
-          'gray': 'gray-stamina'
-        };
-        
-        resourceInstance.definition.colorScheme = colorMapping[resourceAny.color] || 'blue-magic';
-        delete resourceAny.color; // Remove old field
-        hasChanges = true;
-      }
-      
-      // Ensure colorScheme exists
-      if (!resourceInstance.definition.colorScheme) {
-        resourceInstance.definition.colorScheme = 'blue-magic';
-        hasChanges = true;
-      }
-    });
-    
-    return hasChanges;
-  }
-
-  /**
    * Create a log entry for resource usage
    */
   createResourceLogEntry(entry: { resourceId: string; amount: number; type: 'spend' | 'restore'; resource: ResourceInstance }): ResourceUsageEntry {
