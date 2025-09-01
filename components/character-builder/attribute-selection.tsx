@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { Attributes, AttributeName } from "@/lib/types/character";
-import { getCharacterService } from "@/lib/services/service-factory";
+import { useCharacterService } from "@/lib/hooks/use-character-service";
+import { gameConfig } from '../../lib/config/game-config';
 
 interface AttributeSelectionProps {
   characterId: string;
@@ -15,9 +17,9 @@ interface AttributeSelectionProps {
 }
 
 const STANDARD_ARRAYS = {
-  standard: [2, 2, 0, -1],
-  balanced: [2, 1, 1, 0],
-  minMax: [3, 1, -1, -1]
+  standard: { name: "Standard", values: [2, 2, 0, -1] },
+  balanced: { name: "Balanced", values: [2, 1, 1, 0] },
+  minMax: { name: "Min-Max", values: [3, 1, -1, -1] }
 } as const;
 
 const ATTRIBUTE_NAMES: AttributeName[] = ['strength', 'dexterity', 'intelligence', 'will'];
@@ -29,38 +31,24 @@ const ATTRIBUTE_LABELS = {
 } as const;
 
 export function AttributeSelection({
-  characterId,
   onBack,
   onNext
 }: AttributeSelectionProps) {
-  const [attributes, setAttributes] = useState<Attributes>({
+  const [selectedArray, setSelectedArray] = useState<keyof typeof STANDARD_ARRAYS>('standard');
+  const { character, updateCharacter } = useCharacterService();
+
+  // Get attributes from the hook's character state, with fallback
+  const attributes = character?.attributes || {
     strength: 0,
     dexterity: 0, 
     intelligence: 0,
     will: 0
-  });
-  const characterService = getCharacterService();
+  };
 
-  useEffect(() => {
-    // Get the current character from the service (already loaded)
-    const character = characterService.getCurrentCharacter();
-    if (character) {
-      setAttributes(character.attributes);
-    }
-
-    // Subscribe to character update events
-    const unsubscribe = characterService.subscribeToEvent('updated', (event) => {
-      if (event.character) {
-        setAttributes(event.character.attributes);
-      }
-    });
-
-    return unsubscribe;
-  }, [characterService]);
+  const assignedValues = [attributes.strength, attributes.dexterity, attributes.intelligence, attributes.will];
 
   const onAttributeChange = async (attribute: AttributeName, value: number) => {
     try {
-      const character = characterService.getCurrentCharacter();
       if (character) {
         const updatedCharacter = {
           ...character,
@@ -70,31 +58,59 @@ export function AttributeSelection({
           }
         };
         
-        await characterService.updateCharacter(updatedCharacter);
+        await updateCharacter(updatedCharacter);
       }
     } catch (error) {
       console.error('Failed to update character attributes:', error);
     }
   };
-  const handleArrayAssignment = (arrayName: keyof typeof STANDARD_ARRAYS, attributeName: AttributeName) => {
-    const arrayValues = STANDARD_ARRAYS[arrayName];
-    const attributeIndex = ATTRIBUTE_NAMES.indexOf(attributeName);
-    if (attributeIndex !== -1) {
-      onAttributeChange(attributeName, arrayValues[attributeIndex]);
-    }
-  };
 
-  const handleReset = () => {
-    ATTRIBUTE_NAMES.forEach(attr => {
-      onAttributeChange(attr, 0);
-    });
+  const handleReset = async () => {
+    if (character) {
+      const attributes = {
+        strength: 0,
+        dexterity: 0, 
+        intelligence: 0,
+        will: 0
+      };
+      const updatedCharacter = {
+        ...character,
+        attributes: {
+          ...attributes
+        }
+      };
+      await updateCharacter(updatedCharacter);
+    }
   };
 
   const handleManualChange = (attribute: AttributeName, value: string) => {
     const numValue = parseInt(value) || 0;
-    // Clamp between -5 and 10 (reasonable attribute range)
-    const clampedValue = Math.max(-5, Math.min(10, numValue));
+    // Clamp attributes to game config range
+    const clampedValue = Math.max(gameConfig.character.attributeRange.min, Math.min(gameConfig.character.attributeRange.max, numValue));
+    
     onAttributeChange(attribute, clampedValue);
+  };
+
+  const getAvailableValues = (forAttribute: AttributeName) => {
+    const arrayValues = [...STANDARD_ARRAYS[selectedArray].values] as number[];
+    const currentAttributeValue = attributes[forAttribute];
+    
+    // Get remaining values by removing assigned ones
+    const remainingValues = [...arrayValues];
+    assignedValues.forEach(usedValue => {
+      const index = remainingValues.indexOf(usedValue);
+      if (index > -1) {
+        remainingValues.splice(index, 1);
+      }
+    });
+    
+    // If current attribute has a value from this array, add it back as available
+    if (arrayValues.includes(currentAttributeValue)) {
+      remainingValues.push(currentAttributeValue);
+    }
+    
+    // Return unique values only
+    return Array.from(new Set(remainingValues)).sort((a, b) => b - a);;
   };
 
   return (
@@ -104,75 +120,32 @@ export function AttributeSelection({
         <p className="text-muted-foreground">Choose how to distribute your character&apos;s attributes</p>
       </div>
 
-      {/* Standard Arrays */}
+      {/* Array Selection */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Standard Arrays</CardTitle>
+          <CardTitle className="text-lg">Standard Array</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="text-sm text-muted-foreground mb-3">
-            Click the buttons next to each attribute to assign values from these arrays:
+          <div className="flex items-center gap-4">
+            <label htmlFor="array-select" className="text-sm font-medium whitespace-nowrap">
+              Select Array:
+            </label>
+            <Select value={selectedArray} onValueChange={(value: keyof typeof STANDARD_ARRAYS) => setSelectedArray(value)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(STANDARD_ARRAYS).map(([key, config]) => (
+                  <SelectItem key={key} value={key}>
+                    {config.name} ({config.values.join(', ')})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div className="text-center">
-              <div className="font-medium mb-1">Standard</div>
-              <div className="text-sm text-muted-foreground">{STANDARD_ARRAYS.standard.join(', ')}</div>
-            </div>
-            <div className="text-center">
-              <div className="font-medium mb-1">Balanced</div>
-              <div className="text-sm text-muted-foreground">{STANDARD_ARRAYS.balanced.join(', ')}</div>
-            </div>
-            <div className="text-center">
-              <div className="font-medium mb-1">Min-Max</div>
-              <div className="text-sm text-muted-foreground">{STANDARD_ARRAYS.minMax.join(', ')}</div>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {ATTRIBUTE_NAMES.map((attributeName) => (
-              <div key={attributeName} className="flex items-center gap-3">
-                <div className="w-24 text-sm font-medium">
-                  {ATTRIBUTE_LABELS[attributeName]}:
-                </div>
-                <div className="w-16">
-                  <Input
-                    type="number"
-                    value={attributes[attributeName]}
-                    onChange={(e) => handleManualChange(attributeName, e.target.value)}
-                    className="text-center"
-                    min="-5"
-                    max="10"
-                  />
-                </div>
-                <div className="flex gap-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleArrayAssignment('standard', attributeName)}
-                    className="px-2 py-1 text-xs"
-                  >
-                    {STANDARD_ARRAYS.standard[ATTRIBUTE_NAMES.indexOf(attributeName)]}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleArrayAssignment('balanced', attributeName)}
-                    className="px-2 py-1 text-xs"
-                  >
-                    {STANDARD_ARRAYS.balanced[ATTRIBUTE_NAMES.indexOf(attributeName)]}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleArrayAssignment('minMax', attributeName)}
-                    className="px-2 py-1 text-xs"
-                  >
-                    {STANDARD_ARRAYS.minMax[ATTRIBUTE_NAMES.indexOf(attributeName)]}
-                  </Button>
-                </div>
-              </div>
-            ))}
+          <div className="text-sm text-muted-foreground">
+            Click the value buttons below each attribute to assign values from the selected array.
           </div>
 
           <div className="flex justify-center pt-2">
@@ -183,6 +156,47 @@ export function AttributeSelection({
           </div>
         </CardContent>
       </Card>
+
+      {/* Individual Attribute Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {ATTRIBUTE_NAMES.map((attributeName) => {
+          const availableValues = getAvailableValues(attributeName);
+          
+          return (
+            <Card key={attributeName}>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">{ATTRIBUTE_LABELS[attributeName]}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-center">
+                  <Input
+                    type="number"
+                    value={attributes[attributeName]}
+                    onChange={(e) => handleManualChange(attributeName, e.target.value)}
+                    className="w-20 text-center text-lg font-medium"
+                    min="-5"
+                    max="10"
+                  />
+                </div>
+                
+                <div className="flex flex-wrap justify-center gap-2">
+                  {availableValues.map((value) => (
+                    <Button
+                      key={value}
+                      variant={attributes[attributeName] === value ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => onAttributeChange(attributeName, value)}
+                      className="px-3 py-1"
+                    >
+                      {value >= 0 ? `+${value}` : value}
+                    </Button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
 
       {/* Navigation */}
       <div className="flex justify-between pt-4">
