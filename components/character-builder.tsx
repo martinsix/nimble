@@ -9,6 +9,8 @@ import { getCharacterCreation } from "@/lib/services/service-factory";
 import { StepIndicator } from "./character-builder/step-indicator";
 import { ClassSelection } from "./character-builder/class-selection";
 import { HeritageSelection } from "./character-builder/heritage-selection";
+import { NameGenerator } from "@/lib/utils/name-generator";
+import { nameConfigs } from "@/lib/data/name-configs";
 
 // Character builder state for first 2 steps
 interface CharacterBuilderState {
@@ -28,13 +30,6 @@ interface CharacterBuilderProps {
   editingCharacterId?: string; // For future editing support
 }
 
-// Name suggestions by ancestry
-const ANCESTRY_NAMES = {
-  human: ['Aiden', 'Lyra', 'Marcus', 'Elena', 'Garrett', 'Sera', 'Tobias', 'Aria'],
-  elf: ['Aelindra', 'Thalion', 'Silviana', 'Valdris', 'Caelynn', 'Erevan', 'Lyralei', 'Fenris'],
-  dwarf: ['Thorin', 'Dara', 'Balin', 'Vera', 'Durin', 'Nala', 'Gimli', 'Brina'],
-  halfling: ['Pippin', 'Rosie', 'Milo', 'Daisy', 'Frodo', 'Pearl', 'Samwise', 'Ruby']
-};
 
 export function CharacterBuilder({ 
   isOpen, 
@@ -72,10 +67,15 @@ export function CharacterBuilder({
   };
 
   const suggestName = () => {
-    if (builderState.ancestryId && ANCESTRY_NAMES[builderState.ancestryId as keyof typeof ANCESTRY_NAMES]) {
-      const names = ANCESTRY_NAMES[builderState.ancestryId as keyof typeof ANCESTRY_NAMES];
-      const randomName = names[Math.floor(Math.random() * names.length)];
-      handleNameChange(randomName);
+    if (builderState.ancestryId && nameConfigs[builderState.ancestryId as keyof typeof nameConfigs]) {
+      const config = nameConfigs[builderState.ancestryId as keyof typeof nameConfigs];
+      try {
+        const randomGender = Math.random() > 0.5 ? 'male' : 'female';
+        const randomName = NameGenerator.generateFirstName(config, randomGender);
+        handleNameChange(randomName);
+      } catch (error) {
+        console.error('Failed to generate name:', error);
+      }
     }
   };
 
