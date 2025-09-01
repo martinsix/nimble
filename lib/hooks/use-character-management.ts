@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Character } from '@/lib/types/character';
 import { AppSettings } from '@/lib/services/settings-service';
 import { 
@@ -8,6 +8,7 @@ import {
   getSettingsService 
 } from '@/lib/services/service-factory';
 import { useToastService } from './use-toast-service';
+import { useCharacterEvents } from './use-character-events';
 
 export interface UseCharacterManagementReturn {
   character: Character | null;
@@ -17,10 +18,6 @@ export interface UseCharacterManagementReturn {
   loadError: string | null;
   showCharacterSelection: boolean;
   handleCharacterUpdate: (character: Character) => Promise<void>;
-  handleCharacterSwitch: (characterId: string) => Promise<void>;
-  handleCharacterDelete: (characterId: string) => Promise<void>;
-  handleCharacterSelectionCreate: (name: string, classId: string) => Promise<void>;
-  handleCharacterSelectionSwitch: (characterId: string) => Promise<void>;
   handleSettingsChange: (settings: AppSettings) => Promise<void>;
 }
 
@@ -37,8 +34,9 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
   const characterCreation = getCharacterCreation();
   const settingsService = getSettingsService();
   
-  // Get toast notifications
+  // Get toast notifications and character events
   const { showError, showSuccess } = useToastService();
+  const { subscribeToEvent } = useCharacterEvents();
 
   // Initial data loading
   useEffect(() => {
@@ -105,6 +103,57 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
     return unsubscribe;
   }, []); // Empty dependencies - service is singleton
 
+  // Subscribe to character events to update local state
+  useEffect(() => {
+    const unsubscribeCreated = subscribeToEvent('created', async (event) => {
+      // Refresh character list and update settings
+      const updatedCharacters = await characterStorage.getAllCharacters();
+      setCharacters(updatedCharacters);
+      
+      const newSettings = await settingsService.getSettings();
+      setSettings(newSettings);
+      
+      // Hide character selection if it was showing
+      setShowCharacterSelection(false);
+      setLoadError(null);
+    });
+
+    const unsubscribeSwitched = subscribeToEvent('switched', async (event) => {
+      // Refresh character list (for last played timestamps) and update settings
+      const updatedCharacters = await characterStorage.getAllCharacters();
+      setCharacters(updatedCharacters);
+      
+      const newSettings = await settingsService.getSettings();
+      setSettings(newSettings);
+      
+      // Hide character selection if it was showing
+      setShowCharacterSelection(false);
+      setLoadError(null);
+    });
+
+    const unsubscribeDeleted = subscribeToEvent('deleted', async (event) => {
+      // Refresh character list and settings
+      const updatedCharacters = await characterStorage.getAllCharacters();
+      setCharacters(updatedCharacters);
+      
+      const newSettings = await settingsService.getSettings();
+      setSettings(newSettings);
+      
+      // Show character selection if no characters left
+      if (updatedCharacters.length === 0) {
+        setCharacter(null);
+        setShowCharacterSelection(true);
+        setLoadError("No characters remaining. Please create a new character.");
+      }
+    });
+
+    return () => {
+      unsubscribeCreated();
+      unsubscribeSwitched();
+      unsubscribeDeleted();
+    };
+  }, [subscribeToEvent, characterStorage, settingsService]);
+
 
   const handleCharacterUpdate = async (updatedCharacter: Character) => {
     // Update through the service, which will trigger the subscription
@@ -120,96 +169,6 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
     }
   };
 
-  const handleCharacterSwitch = useCallback(async (characterId: string) => {
-    try {
-      const characterService = getCharacterService();
-      const newCharacter = await characterService.loadCharacter(characterId);
-      if (newCharacter) {
-        // Update settings with new active character
-        const newSettings = { ...settings, activeCharacterId: characterId };
-        setSettings(newSettings);
-        await settingsService.saveSettings(newSettings);
-        
-        // Update last played timestamp
-        await characterStorage.updateLastPlayed(characterId);
-        const updatedCharacterList = await characterStorage.getAllCharacters();
-        setCharacters(updatedCharacterList);
-      }
-    } catch (error) {
-      console.error("Failed to switch character:", error);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings]); // Services are singletons, only include actual dependencies
-
-  const handleCharacterDelete = async (characterId: string) => {
-    try {
-      await characterStorage.deleteCharacter(characterId);
-      
-      const updatedCharacterList = await characterStorage.getAllCharacters();
-      setCharacters(updatedCharacterList);
-      
-      // If we deleted the active character, switch to another one
-      if (characterId === settings.activeCharacterId && updatedCharacterList.length > 0) {
-        const newActiveCharacter = updatedCharacterList[0];
-        await handleCharacterSwitch(newActiveCharacter.id);
-      } else if (updatedCharacterList.length === 0) {
-        // If no characters left, show character selection
-        setCharacter(null);
-        setShowCharacterSelection(true);
-        setLoadError("No characters remaining. Please create a new character.");
-      }
-    } catch (error) {
-      console.error("Failed to delete character:", error);
-    }
-  };
-
-  const handleCharacterSelectionCreate = async (name: string, classId: string) => {
-    try {
-      const newCharacter = await characterCreation.createSampleCharacter(name, classId);
-      
-      // Update character list
-      const updatedCharacters = await characterStorage.getAllCharacters();
-      setCharacters(updatedCharacters);
-      
-      // Switch to the new character (it's already initialized)
-      setCharacter(newCharacter);
-      
-      // Update settings
-      const newSettings = { ...settings, activeCharacterId: newCharacter.id };
-      await settingsService.saveSettings(newSettings);
-      setSettings(newSettings);
-      
-      // Hide character selection
-      setShowCharacterSelection(false);
-      setLoadError(null);
-    } catch (error) {
-      console.error("Failed to create character:", error);
-      showError("Failed to create character", "Unable to create the character. Please try again.");
-      setLoadError("Failed to create character. Please try again.");
-    }
-  };
-
-  const handleCharacterSelectionSwitch = async (characterId: string) => {
-    try {
-      // Use the character creation service to properly initialize the character
-      const initializedCharacter = await characterCreation.initializeCharacter(characterId);
-      if (!initializedCharacter) {
-        throw new Error("Failed to initialize character");
-      }
-      
-      // Update state and settings
-      setCharacter(initializedCharacter);
-      const newSettings = { ...settings, activeCharacterId: characterId };
-      await settingsService.saveSettings(newSettings);
-      setSettings(newSettings);
-      
-      setShowCharacterSelection(false);
-      setLoadError(null);
-    } catch (error) {
-      console.error("Failed to switch character:", error);
-      setLoadError("Failed to load selected character. Please try another.");
-    }
-  };
 
   const handleSettingsChange = async (newSettings: AppSettings) => {
     setSettings(newSettings);
@@ -224,10 +183,6 @@ export function useCharacterManagement(): UseCharacterManagementReturn {
     loadError,
     showCharacterSelection,
     handleCharacterUpdate,
-    handleCharacterSwitch,
-    handleCharacterDelete,
-    handleCharacterSelectionCreate,
-    handleCharacterSelectionSwitch,
     handleSettingsChange,
   };
 }

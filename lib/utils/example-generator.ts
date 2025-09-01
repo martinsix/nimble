@@ -1,4 +1,4 @@
-import jsf from 'json-schema-faker';
+import { JSONSchemaFaker } from 'json-schema-faker';
 import { z } from 'zod';
 import { CustomContentType } from '../types/custom-content';
 import { SCHEMA_REGISTRY } from './schema-documentation';
@@ -22,7 +22,7 @@ export class ExampleGenerator {
       const jsonSchema = z.toJSONSchema(zodSchema);
       
       // Generate fake data using json-schema-faker
-      return jsf.generate(jsonSchema);
+      return JSONSchemaFaker.generate(jsonSchema);
     } catch (error) {
       console.warn(`Failed to generate example for ${contentType}:`, error);
       return null;

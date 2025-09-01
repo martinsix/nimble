@@ -1,4 +1,4 @@
-import { Character } from '../types/character';
+import { Character, Attributes } from '../types/character';
 import { ICharacterCreation, ICharacterStorage, ICharacterService, IClassService, IAncestryService, IBackgroundService } from './interfaces';
 import { ContentRepositoryService } from './content-repository-service';
 import { 
@@ -21,12 +21,7 @@ export interface CreateCharacterOptions {
   backgroundId?: string;
   classId: string;
   level?: number;
-  attributes?: {
-    strength: number;
-    dexterity: number;
-    intelligence: number;
-    will: number;
-  };
+  attributes?: Attributes;
 }
 
 /**

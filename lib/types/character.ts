@@ -1,5 +1,12 @@
 export type AttributeName = 'strength' | 'dexterity' | 'intelligence' | 'will';
 
+export interface Attributes {
+  strength: number;
+  dexterity: number;
+  intelligence: number;
+  will: number;
+}
+
 export type SaveAdvantageType = 'advantage' | 'disadvantage' | 'normal';
 
 export type SaveAdvantageMap = Partial<Record<AttributeName, SaveAdvantageType>>;
@@ -57,12 +64,7 @@ export interface Character {
   grantedFeatures: string[]; // IDs of class features already granted to this character
   spellTierAccess: number; // Highest tier of spells character can access (1-9, 0 for no spell access)
   proficiencies: Proficiencies; // Armor and weapon proficiencies
-  attributes: {
-    strength: number;
-    dexterity: number;
-    intelligence: number;
-    will: number;
-  };
+  attributes: Attributes;
   saveAdvantages: SaveAdvantageMap; // Permanent advantage/disadvantage on saves
   hitPoints: {
     current: number;

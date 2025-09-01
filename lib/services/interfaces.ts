@@ -1,4 +1,4 @@
-import { Character, ActionTracker, CharacterConfiguration } from '../types/character';
+import { Character, ActionTracker, CharacterConfiguration, Attributes } from '../types/character';
 import { Abilities, ActionAbility, SpellAbility, AbilityRoll } from '../types/abilities';
 import { LogEntry, SingleDie } from '../types/log-entries';
 import { ClassFeatureGrant, ClassFeature } from '../types/class';
@@ -149,5 +149,5 @@ export interface CreateCharacterOptions {
   backgroundId?: string;
   classId: string;
   level?: number;
-  attributes?: Record<string, number>;
+  attributes?: Attributes;
 }

@@ -8,13 +8,14 @@ interface StepIndicatorProps {
   currentStep: BuilderStep;
   classSelected: boolean;
   heritageComplete: boolean;
+  attributesComplete: boolean;
 }
 
-export function StepIndicator({ currentStep, classSelected, heritageComplete }: StepIndicatorProps) {
+export function StepIndicator({ currentStep, classSelected, heritageComplete, attributesComplete }: StepIndicatorProps) {
   const steps: Array<{ id: BuilderStep; name: string; completed: boolean }> = [
     { id: 'class', name: 'Class', completed: classSelected },
     { id: 'ancestry-background', name: 'Heritage', completed: heritageComplete },
-    { id: 'attributes', name: 'Attributes', completed: false },
+    { id: 'attributes', name: 'Attributes', completed: attributesComplete },
     { id: 'final', name: 'Review', completed: false }
   ];
 

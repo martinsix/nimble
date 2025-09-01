@@ -5,17 +5,20 @@ import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import { X } from "lucide-react";
 import { ContentRepositoryService } from "@/lib/services/content-repository-service";
-import { getCharacterCreation } from "@/lib/services/service-factory";
+import { getCharacterCreation, getCharacterService } from "@/lib/services/service-factory";
 import { StepIndicator } from "./character-builder/step-indicator";
 import { ClassSelection } from "./character-builder/class-selection";
 import { HeritageSelection } from "./character-builder/heritage-selection";
+import { AttributeSelection } from "./character-builder/attribute-selection";
+import { Attributes, AttributeName } from "@/lib/types/character";
 
-// Character builder state for first 2 steps
+// Character builder state
 interface CharacterBuilderState {
   classId?: string;
   ancestryId?: string;
   backgroundId?: string;
   name: string;
+  characterId?: string; // Set after character creation in step 2
 }
 
 // Builder steps
@@ -42,6 +45,7 @@ export function CharacterBuilder({
 
   const contentRepository = ContentRepositoryService.getInstance();
   const characterCreationService = getCharacterCreation();
+  const characterService = getCharacterService();
 
   const availableClasses = contentRepository.getAllClasses();
   const availableAncestries = contentRepository.getAllAncestries();
@@ -72,10 +76,11 @@ export function CharacterBuilder({
               builderState.name.trim());
   };
 
-  const handleCreateCharacter = async () => {
+  const proceedToAttributes = async () => {
     if (!canProceedFromStep2()) return;
 
     try {
+      // Create character with basic info
       const character = await characterCreationService.createCharacterWithClass({
         name: builderState.name.trim(),
         classId: builderState.classId!,
@@ -83,10 +88,21 @@ export function CharacterBuilder({
         backgroundId: builderState.backgroundId!
       });
 
-      onCharacterCreated(character.id);
-      onClose();
+      setBuilderState(prev => ({ ...prev, characterId: character.id }));
+      
+      // Load the character into the character service
+      await characterService.loadCharacter(character.id);
+      
+      setCurrentStep('attributes');
     } catch (error) {
       console.error('Failed to create character:', error);
+    }
+  };
+
+  const handleCreateCharacter = () => {
+    if (builderState.characterId) {
+      onCharacterCreated(builderState.characterId);
+      onClose();
     }
   };
 
@@ -112,19 +128,18 @@ export function CharacterBuilder({
             onBackgroundSelect={handleBackgroundSelect}
             onNameChange={handleNameChange}
             onBack={() => setCurrentStep('class')}
-            onNext={handleCreateCharacter}
+            onNext={proceedToAttributes}
             canProceed={canProceedFromStep2()}
           />
         );
       case 'attributes':
+        if (!builderState.characterId) return null;
         return (
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold mb-4">Attribute Selection</h2>
-            <p className="text-muted-foreground mb-6">Coming soon! For now, characters start with default attributes.</p>
-            <Button onClick={() => setCurrentStep('ancestry-background')}>
-              Back
-            </Button>
-          </div>
+          <AttributeSelection
+            characterId={builderState.characterId}
+            onBack={() => setCurrentStep('ancestry-background')}
+            onNext={handleCreateCharacter}
+          />
         );
       default:
         return null;
@@ -143,6 +158,7 @@ export function CharacterBuilder({
             currentStep={currentStep}
             classSelected={!!builderState.classId}
             heritageComplete={canProceedFromStep2()}
+            attributesComplete={!!builderState.characterId}
           />
           {renderStepContent()}
         </div>

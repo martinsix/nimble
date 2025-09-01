@@ -8,15 +8,13 @@ import { Alert, AlertDescription } from "./ui/alert";
 import { Character } from "@/lib/types/character";
 import { Plus, Trash2, User, Clock, AlertTriangle } from "lucide-react";
 import { CharacterCreateForm } from "./character-create-form";
+import { useCharacterEvents } from "@/lib/hooks/use-character-events";
 
 interface CharacterSelectorProps {
   isOpen?: boolean;
   onClose?: () => void;
   characters: Character[];
   activeCharacterId?: string;
-  onCharacterSwitch: (characterId: string) => void;
-  onCharacterDelete: (characterId: string) => void;
-  onCharacterCreate?: (name: string, classId: string) => void;
   errorMessage?: string;
   fullScreen?: boolean; // New prop to render as full screen instead of dialog
 }
@@ -26,19 +24,15 @@ export function CharacterSelector({
   onClose, 
   characters,
   activeCharacterId,
-  onCharacterSwitch,
-  onCharacterDelete,
-  onCharacterCreate,
   errorMessage,
   fullScreen = false
 }: CharacterSelectorProps) {
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const { createCharacter, switchCharacter, deleteCharacter } = useCharacterEvents();
 
   const handleCreateCharacter = (name: string, classId: string) => {
     setShowCreateForm(false);
-    if (onCharacterCreate) {
-      onCharacterCreate(name, classId);
-    }
+    createCharacter(name, classId);
   };
 
   const handleCancelCreate = () => {
@@ -53,7 +47,7 @@ export function CharacterSelector({
     
     const character = characters.find(c => c.id === characterId);
     if (character && confirm(`Are you sure you want to delete "${character.name}"?`)) {
-      onCharacterDelete(characterId);
+      deleteCharacter(characterId);
     }
   };
 
@@ -103,7 +97,7 @@ export function CharacterSelector({
               autoFocus={true}
               onCharacterCreated={(characterId) => {
                 setShowCreateForm(false);
-                onCharacterSwitch(characterId);
+                switchCharacter(characterId);
                 onClose?.();
               }}
             />
@@ -126,7 +120,7 @@ export function CharacterSelector({
                   }`}
                   onClick={() => {
                     if (character.id !== activeCharacterId) {
-                      onCharacterSwitch(character.id);
+                      switchCharacter(character.id);
                       onClose?.();
                     }
                   }}

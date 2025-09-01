@@ -12,9 +12,6 @@ interface TopBarProps {
   settings: AppSettings;
   characters: Character[];
   onSettingsChange: (settings: AppSettings) => void;
-  onCharacterSwitch: (characterId: string) => void;
-  onCharacterDelete: (characterId: string) => void;
-  onCharacterCreate: (name: string, classId: string) => void;
 }
 
 function CompactAdvantageToggle() {
@@ -94,10 +91,7 @@ function CompactAdvantageToggle() {
 export function TopBar({ 
   settings, 
   characters,
-  onSettingsChange, 
-  onCharacterSwitch,
-  onCharacterDelete,
-  onCharacterCreate
+  onSettingsChange
 }: TopBarProps) {
   return (
     <div className="sticky top-0 z-50 bg-background border-b">
@@ -108,9 +102,6 @@ export function TopBar({
             settings={settings}
             characters={characters}
             onSettingsChange={onSettingsChange}
-            onCharacterSwitch={onCharacterSwitch}
-            onCharacterDelete={onCharacterDelete}
-            onCharacterCreate={onCharacterCreate}
           />
         </div>
 

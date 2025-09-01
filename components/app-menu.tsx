@@ -17,28 +17,25 @@ import { CharacterCreateForm } from "./character-create-form";
 import { ContentManagementPanel } from "./content-management-panel";
 import { AppSettings } from "@/lib/services/settings-service";
 import { Character } from "@/lib/types/character";
+import { useCharacterEvents } from "@/lib/hooks/use-character-events";
 
 interface AppMenuProps {
   settings: AppSettings;
   characters: Character[];
   onSettingsChange: (settings: AppSettings) => void;
-  onCharacterSwitch: (characterId: string) => void;
-  onCharacterDelete: (characterId: string) => void;
-  onCharacterCreate: (name: string, classId: string) => void;
 }
 
 export function AppMenu({ 
   settings, 
   characters,
-  onSettingsChange, 
-  onCharacterSwitch,
-  onCharacterDelete,
-  onCharacterCreate
+  onSettingsChange
 }: AppMenuProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [showCharacterSelector, setShowCharacterSelector] = useState(false);
   const [showCreateCharacter, setShowCreateCharacter] = useState(false);
   const [showContentManagement, setShowContentManagement] = useState(false);
+  
+  const { createCharacter } = useCharacterEvents();
 
   return (
     <>
@@ -83,9 +80,6 @@ export function AppMenu({
         onClose={() => setShowCharacterSelector(false)}
         characters={characters}
         activeCharacterId={settings.activeCharacterId}
-        onCharacterSwitch={onCharacterSwitch}
-        onCharacterDelete={onCharacterDelete}
-        onCharacterCreate={onCharacterCreate}
       />
 
       <ContentManagementPanel 
@@ -100,7 +94,7 @@ export function AppMenu({
           </DialogHeader>
           <CharacterCreateForm
             onCharacterCreate={(name, classId) => {
-              onCharacterCreate(name, classId);
+              createCharacter(name, classId);
               setShowCreateCharacter(false);
             }}
             onCancel={() => setShowCreateCharacter(false)}

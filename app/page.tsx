@@ -21,10 +21,6 @@ function HomeContent() {
     loadError,
     showCharacterSelection,
     handleCharacterUpdate,
-    handleCharacterSwitch,
-    handleCharacterDelete,
-    handleCharacterSelectionCreate,
-    handleCharacterSelectionSwitch,
     handleSettingsChange,
   } = useCharacterManagement();
 
@@ -68,9 +64,6 @@ function HomeContent() {
         fullScreen={true}
         characters={characters}
         activeCharacterId={character?.id}
-        onCharacterSwitch={handleCharacterSelectionSwitch}
-        onCharacterDelete={handleCharacterDelete}
-        onCharacterCreate={handleCharacterSelectionCreate}
         errorMessage={loadError || undefined}
       />
     );
@@ -82,9 +75,6 @@ function HomeContent() {
         settings={settings}
         characters={characters}
         onSettingsChange={handleSettingsChange}
-        onCharacterSwitch={handleCharacterSwitch}
-        onCharacterDelete={handleCharacterDelete}
-        onCharacterCreate={handleCharacterSelectionCreate}
       />
       <div className="container mx-auto py-6 px-4 space-y-6">
         <CharacterHeader 
