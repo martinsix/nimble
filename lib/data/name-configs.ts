@@ -1,5 +1,48 @@
 import { AncestryNameConfig } from '../utils/name-generator'
 
+// Generic fallback name config for ancestries without specific configs
+export const genericNames: AncestryNameConfig = {
+  male: {
+    syllables: {
+      prefixes: ['al', 'ar', 'bran', 'cor', 'dar', 'ed', 'gar', 'har', 'jon', 'mar', 'ric', 'rob', 'tha', 'wil', 'ae', 'cel', 'el', 'bor', 'dain', 'dur'],
+      middle: ['an', 'en', 'in', 'on', 'ar', 'er', 'or', 'ic', 'rick', 'bert', 'win', 'fred', 'a', 'e', 'i', 'o'],
+      suffixes: ['ard', 'bert', 'mund', 'win', 'fred', 'ric', 'ton', 'son', 'den', 'ley', 'dir', 'las', 'lon', 'mir']
+    },
+    patterns: ['PM', 'PS', 'PMS'],
+    constraints: {
+      minLength: 3,
+      maxLength: 12,
+      syllableCount: { min: 2, max: 3 }
+    }
+  },
+  female: {
+    syllables: {
+      prefixes: ['al', 'an', 'bel', 'cat', 'el', 'ev', 'gwen', 'isa', 'mar', 'ros', 'sar', 'syl', 'vic', 'ar', 'cel', 'gil'],
+      middle: ['a', 'e', 'i', 'an', 'en', 'in', 'ara', 'ela', 'ina', 'lyn', 'eth', 'o', 'ae', 'ai'],
+      suffixes: ['a', 'e', 'ine', 'ara', 'ella', 'lyn', 'beth', 'wen', 'dra', 'lia', 'iel', 'wen', 'wyn', 'riel']
+    },
+    patterns: ['PM', 'PS', 'PMS'],
+    constraints: {
+      minLength: 3,
+      maxLength: 12,
+      syllableCount: { min: 2, max: 3 }
+    }
+  },
+  surnames: {
+    syllables: {
+      prefixes: ['ash', 'black', 'bright', 'gold', 'green', 'grey', 'iron', 'red', 'stone', 'white', 'wolf', 'silver', 'moon', 'star'],
+      middle: ['brook', 'field', 'ford', 'hill', 'wood', 'water', 'smith', 'wright', 'leaf', 'song', 'whisper'],
+      suffixes: ['born', 'ford', 'ton', 'wood', 'field', 'stone', 'brook', 'hill', 'ridge', 'vale', 'song', 'leaf', 'wind', 'star']
+    },
+    patterns: ['P', 'PS', 'PM'],
+    constraints: {
+      minLength: 4,
+      maxLength: 15,
+      syllableCount: { min: 1, max: 2 }
+    }
+  }
+}
+
 export const humanNames: AncestryNameConfig = {
   male: {
     syllables: {
@@ -75,7 +118,7 @@ export const elfNames: AncestryNameConfig = {
       middle: ['leaf', 'song', 'whisper', 'dance', 'flame', 'stream', 'light'],
       suffixes: ['song', 'leaf', 'wind', 'star', 'moon', 'light', 'bow', 'blade', 'heart', 'wing']
     },
-    patterns: ['P', 'PS', 'PM'],
+    patterns: ['PS', 'PM'],
     constraints: {
       minLength: 4,
       maxLength: 16,
@@ -159,7 +202,7 @@ export const halflingNames: AncestryNameConfig = {
       middle: ['hill', 'buck', 'foot', 'bottom', 'top', 'burrow'],
       suffixes: ['gins', 'buck', 'foot', 'bottom', 'hill', 'burrow', 'field', 'garden', 'meadow']
     },
-    patterns: ['P', 'PS', 'PM'],
+    patterns: ['PS', 'PM'],
     constraints: {
       minLength: 3,
       maxLength: 16,

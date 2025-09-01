@@ -1,4 +1,5 @@
 import { AncestryDefinition } from '../../types/ancestry';
+import { halflingNames } from '../name-configs';
 
 export const halfling: AncestryDefinition = {
   id: 'halfling',
@@ -45,5 +46,6 @@ export const halfling: AncestryDefinition = {
         { type: 'skill', name: 'stealth', bonus: 2 }
       ]
     }
-  ]
+  ],
+  nameConfig: halflingNames
 };

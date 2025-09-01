@@ -1,4 +1,5 @@
 import { AncestryDefinition } from '../../types/ancestry';
+import { elfNames } from '../name-configs';
 
 export const elf: AncestryDefinition = {
   id: 'elf',
@@ -48,5 +49,6 @@ export const elf: AncestryDefinition = {
       description: 'Elves do not sleep but instead enter a trance for 4 hours, gaining the benefits of a full rest.',
       category: 'biological'
     }
-  ]
+  ],
+  nameConfig: elfNames
 };

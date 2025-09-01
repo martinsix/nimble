@@ -1,4 +1,5 @@
 import { AncestryDefinition } from '../../types/ancestry';
+import { dwarfNames } from '../name-configs';
 
 export const dwarf: AncestryDefinition = {
   id: 'dwarf',
@@ -60,5 +61,6 @@ export const dwarf: AncestryDefinition = {
       description: 'Dwarves have advantage on Will saving throws.',
       category: 'biological'
     }
-  ]
+  ],
+  nameConfig: dwarfNames
 };

@@ -17,7 +17,7 @@ import {
   shadowSchoolSpells,
   arcaneSchoolSpells,
   getSpellsBySchool
-} from '../data/example-abilities';
+} from '../data/spell-schools/index';
 import { PREDEFINED_SPELL_SCHOOLS, getSpellSchoolDefinition } from '../data/spell-schools';
 
 // Storage keys for custom content

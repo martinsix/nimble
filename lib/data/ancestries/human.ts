@@ -1,4 +1,5 @@
 import { AncestryDefinition } from '../../types/ancestry';
+import { humanNames } from '../name-configs';
 
 export const human: AncestryDefinition = {
   id: 'human',
@@ -34,5 +35,6 @@ export const human: AncestryDefinition = {
       description: 'Humans can push through adversity with sheer determination. Once per day, they can reroll a failed skill check or saving throw.',
       category: 'cultural'
     }
-  ]
+  ],
+  nameConfig: humanNames
 };

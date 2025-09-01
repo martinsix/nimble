@@ -2,6 +2,7 @@ import { AttributeName, SaveAdvantageMap } from './character';
 import { Ability } from './abilities';
 import { ResourceDefinition } from './resources';
 import { ArmorProficiency, WeaponProficiency, StatBoost, ProficiencyGrant, SpellSchool } from './class';
+import { AncestryNameConfig } from '../utils/name-generator';
 
 export type AncestryFeatureType = 'ability' | 'passive_feature' | 'stat_boost' | 'proficiency' | 'darkvision' | 'resistance';
 
@@ -78,6 +79,7 @@ export interface AncestryDefinition {
   culture?: string; // Cultural background description
   physicalTraits?: string; // Physical appearance description
   features: AncestryFeature[]; // All features provided by this ancestry
+  nameConfig?: AncestryNameConfig; // Optional name generation configuration
 }
 
 // Helper types for working with ancestry data

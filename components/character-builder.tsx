@@ -10,7 +10,7 @@ import { StepIndicator } from "./character-builder/step-indicator";
 import { ClassSelection } from "./character-builder/class-selection";
 import { HeritageSelection } from "./character-builder/heritage-selection";
 import { NameGenerator } from "@/lib/utils/name-generator";
-import { nameConfigs } from "@/lib/data/name-configs";
+import { genericNames } from "@/lib/data/name-configs";
 
 // Character builder state for first 2 steps
 interface CharacterBuilderState {
@@ -67,11 +67,13 @@ export function CharacterBuilder({
   };
 
   const suggestName = () => {
-    if (builderState.ancestryId && nameConfigs[builderState.ancestryId as keyof typeof nameConfigs]) {
-      const config = nameConfigs[builderState.ancestryId as keyof typeof nameConfigs];
+    if (builderState.ancestryId) {
+      const ancestry = availableAncestries.find(a => a.id === builderState.ancestryId);
+      const config = ancestry?.nameConfig || genericNames;
+      
       try {
         const randomGender = Math.random() > 0.5 ? 'male' : 'female';
-        const randomName = NameGenerator.generateFirstName(config, randomGender);
+        const randomName = NameGenerator.generateFullName(config, randomGender);
         handleNameChange(randomName);
       } catch (error) {
         console.error('Failed to generate name:', error);
