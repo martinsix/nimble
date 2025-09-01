@@ -17,7 +17,8 @@ interface ClassSelectionProps {
 export function ClassSelection({ availableClasses, selectedClassId, onClassSelect }: ClassSelectionProps) {
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
 
-  const toggleCardExpansion = (id: string) => {
+  const toggleCardExpansion = (id: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent card selection when expanding
     const newExpanded = new Set(expandedCards);
     if (newExpanded.has(id)) {
       newExpanded.delete(id);
@@ -25,6 +26,10 @@ export function ClassSelection({ availableClasses, selectedClassId, onClassSelec
       newExpanded.add(id);
     }
     setExpandedCards(newExpanded);
+  };
+
+  const handleCardClick = (classId: string) => {
+    onClassSelect(classId);
   };
 
   return (
@@ -39,12 +44,13 @@ export function ClassSelection({ availableClasses, selectedClassId, onClassSelec
           <Card 
             key={cls.id}
             className={`cursor-pointer transition-all ${
-              selectedClassId === cls.id ? 'ring-2 ring-primary' : 'hover:shadow-md'
+              selectedClassId === cls.id ? 'ring-2 ring-primary bg-primary/5' : 'hover:shadow-md hover:bg-muted/50'
             }`}
+            onClick={() => handleCardClick(cls.id)}
           >
             <Collapsible 
               open={expandedCards.has(cls.id)}
-              onOpenChange={(open) => toggleCardExpansion(cls.id)}
+              onOpenChange={(open) => toggleCardExpansion(cls.id, {} as React.MouseEvent)}
             >
               <CardHeader className="pb-2 pt-3">
                 <div className="flex items-start justify-between gap-2">
@@ -60,19 +66,12 @@ export function ClassSelection({ availableClasses, selectedClassId, onClassSelec
                     </p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <Button
-                      variant={selectedClassId === cls.id ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => onClassSelect(cls.id)}
-                      className="text-xs px-2"
-                    >
-                      {selectedClassId === cls.id ? 'Selected' : 'Select'}
-                    </Button>
                     <CollapsibleTrigger asChild>
                       <Button 
                         variant="ghost" 
                         size="sm"
                         className="w-8 h-8 p-0"
+                        onClick={(e) => toggleCardExpansion(cls.id, e)}
                       >
                         {expandedCards.has(cls.id) ? 
                           <ChevronDown className="w-3 h-3" /> : 

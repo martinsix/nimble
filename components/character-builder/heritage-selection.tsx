@@ -4,7 +4,7 @@ import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Input } from "../ui/input";
-import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { AncestryDefinition } from "@/lib/types/ancestry";
 import { BackgroundDefinition } from "@/lib/types/background";
 import { NameGenerator } from "@/lib/utils/name-generator";
@@ -19,9 +19,6 @@ interface HeritageSelectionProps {
   onAncestrySelect: (ancestryId: string) => void;
   onBackgroundSelect: (backgroundId: string) => void;
   onNameChange: (name: string) => void;
-  onBack: () => void;
-  onNext: () => void;
-  canProceed: boolean;
 }
 
 export function HeritageSelection({
@@ -33,9 +30,6 @@ export function HeritageSelection({
   onAncestrySelect,
   onBackgroundSelect,
   onNameChange,
-  onBack,
-  onNext,
-  canProceed
 }: HeritageSelectionProps) {
   const handleSuggestName = () => {
     if (selectedAncestryId) {
@@ -59,38 +53,40 @@ export function HeritageSelection({
         <p className="text-sm text-muted-foreground">Choose your ancestry, background, and name</p>
       </div>
 
-      {/* Character Name */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Character Name</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <Input
-                value={characterName}
-                onChange={(e) => onNameChange(e.target.value)}
-                placeholder="Enter character name"
-                className="text-sm"
-              />
+      {/* Character Name - Sticky */}
+      <div className="sticky top-0 bg-background z-10 pb-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Character Name</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Input
+                  value={characterName}
+                  onChange={(e) => onNameChange(e.target.value)}
+                  placeholder="Enter character name"
+                  className="text-sm"
+                />
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={handleSuggestName}
+                disabled={!selectedAncestryId}
+                size="sm"
+              >
+                <Sparkles className="w-3 h-3 mr-1" />
+                Suggest
+              </Button>
             </div>
-            <Button 
-              variant="outline" 
-              onClick={handleSuggestName}
-              disabled={!selectedAncestryId}
-              size="sm"
-            >
-              <Sparkles className="w-3 h-3 mr-1" />
-              Suggest
-            </Button>
-          </div>
-          {selectedAncestryId && (
-            <p className="text-xs text-muted-foreground mt-2">
-              Click &quot;Suggest&quot; for {availableAncestries.find(a => a.id === selectedAncestryId)?.name} names
-            </p>
-          )}
-        </CardContent>
-      </Card>
+            {selectedAncestryId && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Click &quot;Suggest&quot; for {availableAncestries.find(a => a.id === selectedAncestryId)?.name} names
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Ancestry Selection */}
       <div>
@@ -160,25 +156,6 @@ export function HeritageSelection({
         </div>
       </div>
 
-      {/* Navigation */}
-      <div className="flex justify-between pt-2">
-        <Button 
-          variant="outline" 
-          onClick={onBack}
-          size="sm"
-        >
-          <ChevronLeft className="w-4 h-4 mr-2" />
-          Back to Class
-        </Button>
-        <Button 
-          onClick={onNext}
-          disabled={!canProceed}
-          size="sm"
-        >
-          Create Character
-          <ChevronRight className="w-4 h-4 ml-2" />
-        </Button>
-      </div>
     </div>
   );
 }

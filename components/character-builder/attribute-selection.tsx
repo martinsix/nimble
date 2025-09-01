@@ -1,20 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
-import { Attributes, AttributeName } from "@/lib/types/character";
+import { RotateCcw } from "lucide-react";
+import { AttributeName } from "@/lib/types/character";
 import { useCharacterService } from "@/lib/hooks/use-character-service";
 import { gameConfig } from '../../lib/config/game-config';
 
-interface AttributeSelectionProps {
-  characterId: string;
-  onBack: () => void;
-  onNext: () => void;
-}
 
 const STANDARD_ARRAYS = {
   standard: { name: "Standard", values: [2, 2, 0, -1] },
@@ -30,10 +25,7 @@ const ATTRIBUTE_LABELS = {
   will: 'Will'
 } as const;
 
-export function AttributeSelection({
-  onBack,
-  onNext
-}: AttributeSelectionProps) {
+export function AttributeSelection() {
   const [selectedArray, setSelectedArray] = useState<keyof typeof STANDARD_ARRAYS>('standard');
   const { character, updateCharacter } = useCharacterService();
 
@@ -198,17 +190,6 @@ export function AttributeSelection({
         })}
       </div>
 
-      {/* Navigation */}
-      <div className="flex justify-between pt-2">
-        <Button variant="outline" onClick={onBack} size="sm">
-          <ChevronLeft className="w-4 h-4 mr-2" />
-          Back to Heritage
-        </Button>
-        <Button onClick={onNext} size="sm">
-          Create Character
-          <ChevronRight className="w-4 h-4 ml-2" />
-        </Button>
-      </div>
     </div>
   );
 }
