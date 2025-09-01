@@ -1,9 +1,11 @@
-import { ClassDefinition, SubclassDefinition } from "../types/class";
-import { AncestryDefinition } from "../types/ancestry";
-import { BackgroundDefinition } from "../types/background";
-import { ActionAbility, SpellAbility } from "../types/abilities";
-import { ContentValidationService } from "./content-validation-service";
-import { CustomContentType } from "../types/custom-content";
+import { ClassDefinition, SubclassDefinition } from '../types/class';
+import { AncestryDefinition } from '../types/ancestry';
+import { BackgroundDefinition } from '../types/background';
+import { ActionAbility, SpellAbility } from '../types/abilities';
+import { ContentValidationService } from './content-validation-service';
+import { CustomContentType } from '../types/custom-content';
+import { RepositoryItem, CustomItemContent } from '../types/item-repository';
+import { ITEM_REPOSITORY } from '../data/items';
 
 // Built-in content imports
 import { classDefinitions as builtInClasses } from "../data/classes/index";
@@ -25,13 +27,14 @@ import {
 
 // Storage keys for custom content
 const STORAGE_KEYS = {
-  customClasses: "nimble-navigator-custom-classes",
-  customSubclasses: "nimble-navigator-custom-subclasses",
-  customAncestries: "nimble-navigator-custom-ancestries",
-  customBackgrounds: "nimble-navigator-custom-backgrounds",
-  customSpellSchools: "nimble-navigator-custom-spell-schools",
-  customAbilities: "nimble-navigator-custom-abilities",
-  customSpells: "nimble-navigator-custom-spells",
+  customClasses: 'nimble-navigator-custom-classes',
+  customSubclasses: 'nimble-navigator-custom-subclasses',
+  customAncestries: 'nimble-navigator-custom-ancestries',
+  customBackgrounds: 'nimble-navigator-custom-backgrounds',
+  customSpellSchools: 'nimble-navigator-custom-spell-schools',
+  customAbilities: 'nimble-navigator-custom-abilities',
+  customSpells: 'nimble-navigator-custom-spells',
+  customItems: 'nimble-navigator-custom-items'
 } as const;
 
 // Content validation schemas
@@ -1086,6 +1089,111 @@ export class ContentRepositoryService {
     }
   }
 
+  // Item Repository Management
+  public getAllItems(): RepositoryItem[] {
+    return [
+      ...ITEM_REPOSITORY.weapons,
+      ...ITEM_REPOSITORY.armor,
+      ...ITEM_REPOSITORY.freeform,
+      ...ITEM_REPOSITORY.consumables,
+      ...ITEM_REPOSITORY.ammunition,
+      ...this.getCustomItems()
+    ];
+  }
+
+  public uploadItems(itemsJson: string): ContentUploadResult {
+    try {
+      const data = JSON.parse(itemsJson);
+      const content = data as CustomItemContent;
+      
+      if (!content.items || !Array.isArray(content.items)) {
+        return { 
+          success: false, 
+          message: 'Invalid format: expected an object with "items" array property'
+        };
+      }
+
+      const validItems: RepositoryItem[] = [];
+      const errors: string[] = [];
+
+      content.items.forEach((item, index) => {
+        // Basic validation for repository items
+        if (item && typeof item === 'object' && 
+            item.item && item.item.id && item.item.name && item.item.type && 
+            item.category && ['mundane', 'magical'].includes(item.category)) {
+          validItems.push(item);
+        } else {
+          errors.push(`Item ${index + 1}: Invalid repository item format`);
+        }
+      });
+
+      if (validItems.length === 0) {
+        return { 
+          success: false, 
+          message: `No valid item definitions found. Errors: ${errors.join('; ')}`
+        };
+      }
+
+      const existingItems = this.getCustomItems();
+      const updatedItems = [...existingItems];
+
+      validItems.forEach(newItem => {
+        const existingIndex = updatedItems.findIndex(item => item.item.id === newItem.item.id);
+        if (existingIndex >= 0) {
+          updatedItems[existingIndex] = newItem;
+        } else {
+          updatedItems.push(newItem);
+        }
+      });
+
+      localStorage.setItem(STORAGE_KEYS.customItems, JSON.stringify(updatedItems));
+
+      const message = errors.length > 0 
+        ? `Successfully added/updated ${validItems.length} item(s). ${errors.length} invalid entries skipped.`
+        : `Successfully added/updated ${validItems.length} item(s)`;
+
+      return { 
+        success: true, 
+        message,
+        itemsAdded: validItems.length
+      };
+    } catch (error) {
+      return { success: false, message: 'Invalid JSON format' };
+    }
+  }
+
+  private getCustomItems(): RepositoryItem[] {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.customItems);
+      if (!stored) return [];
+      
+      const parsed = JSON.parse(stored);
+      if (!Array.isArray(parsed)) return [];
+      
+      // Basic validation for custom items
+      const validItems: RepositoryItem[] = [];
+      parsed.forEach((item, index) => {
+        if (item && typeof item === 'object' && 
+            item.item && item.item.id && item.item.name && item.item.type && 
+            item.category && ['mundane', 'magical'].includes(item.category)) {
+          validItems.push(item);
+        } else {
+          console.warn(`Invalid custom item found in storage at index ${index}:`, item);
+        }
+      });
+      
+      // If we filtered out invalid items, update localStorage
+      if (validItems.length !== parsed.length) {
+        localStorage.setItem(STORAGE_KEYS.customItems, JSON.stringify(validItems));
+      }
+      
+      return validItems;
+    } catch (error) {
+      console.warn('Error reading custom items from storage:', error);
+      return [];
+    }
+  }
+
   // Utility Methods
   public clearAllCustomContent(): void {
     Object.values(STORAGE_KEYS).forEach((key) => {
@@ -1114,6 +1222,7 @@ export class ContentRepositoryService {
         this.getCustomBackgrounds().length,
       [CustomContentType.ACTION_ABILITY]: this.getCustomAbilities().length,
       [CustomContentType.SPELL_ABILITY]: customSpells.length,
+      [CustomContentType.ITEM_REPOSITORY]: this.getAllItems().length
     };
   }
 }

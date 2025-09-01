@@ -1,6 +1,7 @@
 import { Character, ActionTracker, CharacterConfiguration, Attributes } from '../types/character';
 import { Abilities, ActionAbility, SpellAbility, AbilityRoll } from '../types/abilities';
 import { LogEntry, SingleDie } from '../types/log-entries';
+import { Item } from '../types/inventory';
 import { ClassFeatureGrant, ClassFeature, PickFeatureFromPoolFeature, FeaturePool } from '../types/class';
 import { ResourceInstance } from '../types/resources';
 import { AncestryDefinition, AncestryFeature, AncestryTrait } from '../types/ancestry';
@@ -89,6 +90,7 @@ export interface ICharacterService {
   updateCharacterConfiguration(config: CharacterConfiguration): Promise<void>;
   deleteCharacterById(characterId: string): Promise<void>;
   notifyCharacterCreated(character: Character): void;
+  addItemToInventory(item: Item): Promise<void>;
 }
 
 /**

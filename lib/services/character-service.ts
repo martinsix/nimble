@@ -1,6 +1,7 @@
 import { Character, ActionTracker, CharacterConfiguration } from '../types/character';
 import { Abilities, ActionAbility, SpellAbility } from '../types/abilities';
 import { DiceType } from '../types/dice';
+import { Item } from '../types/inventory';
 import { ICharacterService, ICharacterStorage, IActivityLog, IAbilityService, IClassService, IAncestryService, IBackgroundService } from './interfaces';
 import { resourceService } from './resource-service';
 import { getDiceService, getSettingsService, getClassService, getAncestryService, getBackgroundService } from './service-factory';
@@ -829,6 +830,27 @@ export class CharacterService implements ICharacterService {
     await this.saveCharacter();
     this.notifyCharacterChanged();
     // Update event is already emitted in notifyCharacterChanged
+  }
+
+  /**
+   * Add an item to the character's inventory
+   */
+  async addItemToInventory(item: Item): Promise<void> {
+    if (!this._character) return;
+
+    const updatedInventory = {
+      ...this._character.inventory,
+      items: [...this._character.inventory.items, item],
+    };
+
+    const updatedCharacter = {
+      ...this._character,
+      inventory: updatedInventory,
+    };
+
+    this._character = updatedCharacter;
+    await this.saveCharacter();
+    this.notifyCharacterChanged();
   }
 
   // Character Lifecycle Operations

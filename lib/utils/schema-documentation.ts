@@ -10,6 +10,25 @@ import { AncestryDefinitionSchema } from '../schemas/ancestry';
 import { BackgroundDefinitionSchema } from '../schemas/background';
 import { CustomContentType } from '../types/custom-content';
 
+// Item Repository Schema
+const ItemRepositorySchema = z.object({
+  items: z.array(z.object({
+    item: z.object({
+      id: z.string(),
+      name: z.string(),
+      type: z.enum(['weapon', 'armor', 'freeform', 'consumable', 'ammunition']),
+      size: z.number(),
+      description: z.string().optional(),
+      damage: z.string().optional(),
+      armor: z.number().optional(),
+      count: z.number().optional(),
+      properties: z.array(z.string()).optional()
+    }),
+    category: z.enum(['mundane', 'magical']),
+    rarity: z.enum(['common', 'uncommon', 'rare', 'very-rare', 'legendary']).optional()
+  }))
+});
+
 // Registry of supported schemas for custom import
 export const SCHEMA_REGISTRY: Record<CustomContentType, z.ZodSchema> = {
   [CustomContentType.CLASS_DEFINITION]: ClassDefinitionSchema,
@@ -18,7 +37,8 @@ export const SCHEMA_REGISTRY: Record<CustomContentType, z.ZodSchema> = {
   [CustomContentType.ANCESTRY_DEFINITION]: AncestryDefinitionSchema,
   [CustomContentType.BACKGROUND_DEFINITION]: BackgroundDefinitionSchema,
   [CustomContentType.ACTION_ABILITY]: ActionAbilitySchema,
-  [CustomContentType.SPELL_ABILITY]: SpellAbilitySchema
+  [CustomContentType.SPELL_ABILITY]: SpellAbilitySchema,
+  [CustomContentType.ITEM_REPOSITORY]: ItemRepositorySchema
 };
 
 // Generate JSON schema documentation with metadata from Zod schemas
