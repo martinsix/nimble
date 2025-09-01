@@ -9,7 +9,7 @@ import { PoolSelectionsSection } from "@/components/sections/pool-selections-sec
 
 export default function InfoPage() {
   return (
-    <div className="flex flex-col space-y-4 mb-28">
+    <div className="flex flex-col space-y-4">
       <PoolSelectionsSection />
       <AttributesSection />
       <HitDiceSection />

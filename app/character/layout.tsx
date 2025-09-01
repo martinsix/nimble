@@ -35,12 +35,12 @@ export default function CharacterLayout({
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-6 px-4 space-y-6">
+      <div className="container mx-auto py-6 px-4 space-y-6 ">
         <CharacterHeader
           onNameChange={onNameChange}
           onOpenConfig={onOpenConfig}
         />
-        {children}
+        <div className="mb-28">{children}</div>
       </div>
 
       {/* Character Config Dialog */}
