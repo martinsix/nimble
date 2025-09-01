@@ -22,6 +22,7 @@ import { abilityService } from './ability-service';
 import { diceService } from './dice-service';
 import { settingsService } from './settings-service';
 import { ContentRepositoryService } from './content-repository-service';
+import { ItemService } from './item-service';
 
 // Import types for external services
 import type { DiceService } from './dice-service';
@@ -151,3 +152,4 @@ export const getCharacterCreation = (): ICharacterCreation => ServiceFactory.get
 export const getDiceService = (): DiceService => ServiceFactory.getService(SERVICE_KEYS.DICE_SERVICE);
 export const getSettingsService = (): SettingsService => ServiceFactory.getService(SERVICE_KEYS.SETTINGS_SERVICE);
 export const getContentRepository = (): ContentRepositoryService => ContentRepositoryService.getInstance();
+export const getItemService = (): ItemService => ItemService.getInstance();

@@ -229,10 +229,10 @@ app/page.tsx (main orchestrator)
     - Activity log with comprehensive action tracking
 
 13. **Inventory Management**
-    - Three item types: weapons, armor, freeform
+    - Five item types: weapons, armor, freeform, consumables, ammunition
     - Size-based capacity system with visual indicators (10 + Strength attribute)
     - Automatic inventory size adjustment when Strength changes
-    - Type-specific properties (damage, armor value, description)
+    - Type-specific properties (damage, armor value, description, count for consumables/ammunition)
     - Equipment state tracking and validation
 
 14. **App Modes & Character Management**

@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Inventory as InventoryType, Item, ItemType, CreateItemData, WeaponItem, ArmorItem, ConsumableItem, AmmunitionItem } from "@/lib/types/inventory";
 import { canEquipWeapon, canEquipArmor, getEquipmentValidationMessage, equipMainArmorWithReplacement } from "@/lib/utils/equipment";
-import { Plus, Trash2, Package, Sword, Shield, Shirt, Crown, Edit2, Beaker, Target, Minus, Zap } from "lucide-react";
+import { Plus, Trash2, Package, Sword, Shield, Shirt, Crown, Edit2, Beaker, Target, Minus, Zap, Search } from "lucide-react";
+import { ItemBrowser } from "./item-browser";
 
 interface InventoryProps {
   inventory: InventoryType;
@@ -20,6 +21,7 @@ interface InventoryProps {
 export function Inventory({ inventory, characterDexterity, onUpdateInventory }: InventoryProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isItemBrowserOpen, setIsItemBrowserOpen] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [newItem, setNewItem] = useState<CreateItemData>({
     name: "",
@@ -432,13 +434,14 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
           </div>
         </div>
         
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Item
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Item
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add New Item</DialogTitle>
@@ -600,6 +603,12 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
             </div>
           </DialogContent>
         </Dialog>
+
+        <Button size="sm" variant="outline" onClick={() => setIsItemBrowserOpen(true)}>
+          <Search className="w-4 h-4 mr-2" />
+          Browse Items
+        </Button>
+      </div>
 
         {/* Edit Item Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -889,6 +898,12 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
           ))
         )}
       </div>
+      
+      {/* Item Browser */}
+      <ItemBrowser 
+        isOpen={isItemBrowserOpen} 
+        onClose={() => setIsItemBrowserOpen(false)} 
+      />
     </div>
   );
 }

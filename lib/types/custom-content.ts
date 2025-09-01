@@ -10,7 +10,8 @@ export enum CustomContentType {
   ANCESTRY_DEFINITION = 'ancestry-definition',
   BACKGROUND_DEFINITION = 'background-definition',
   ACTION_ABILITY = 'action-ability',
-  SPELL_ABILITY = 'spell-ability'
+  SPELL_ABILITY = 'spell-ability',
+  ITEM_REPOSITORY = 'item-repository'
 }
 
 // Display metadata for each content type
@@ -56,6 +57,11 @@ export const CONTENT_TYPE_METADATA: Record<CustomContentType, ContentTypeMetadat
     title: 'Spells',
     description: 'Magical spells with tiers and schools',
     icon: 'Wand2',
+  },
+  [CustomContentType.ITEM_REPOSITORY]: {
+    title: 'Items',
+    description: 'Weapons, armor, consumables, and equipment',
+    icon: 'Package',
   }
 };
 

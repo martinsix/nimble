@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
-import { Database, Upload, ChevronDown, ChevronRight, FileText, Wand2, Shield, Zap, Sparkles, BookOpen, Users } from "lucide-react";
+import { Database, Upload, ChevronDown, ChevronRight, FileText, Wand2, Shield, Zap, Sparkles, BookOpen, Users, Package } from "lucide-react";
 import { ContentRepositoryService, ContentUploadResult } from "@/lib/services/content-repository-service";
 import { getSchemaDocumentation, getAllSchemaDocumentation } from "@/lib/utils/schema-documentation";
 import { ExampleGenerator } from "@/lib/utils/example-generator";
@@ -21,10 +21,11 @@ import { ClassDefinition, SubclassDefinition } from "@/lib/types/class";
 import { SpellSchoolDefinitionSchema } from "@/lib/schemas/class";
 import { AncestryDefinition } from "@/lib/types/ancestry";
 import { BackgroundDefinition } from "@/lib/types/background";
+import { RepositoryItem } from "@/lib/types/item-repository";
 import { z } from 'zod';
 
 type SpellSchoolDefinition = z.infer<typeof SpellSchoolDefinitionSchema>;
-type ContentItem = ClassDefinition | SubclassDefinition | SpellSchoolDefinition | AncestryDefinition | BackgroundDefinition | ActionAbility | SpellAbility;
+type ContentItem = ClassDefinition | SubclassDefinition | SpellSchoolDefinition | AncestryDefinition | BackgroundDefinition | ActionAbility | SpellAbility | RepositoryItem;
 
 interface ContentManagementPanelProps {
   isOpen: boolean;
@@ -74,6 +75,9 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
             break;
           case CustomContentType.SPELL_ABILITY:
             result = contentRepository.uploadSpells(content);
+            break;
+          case CustomContentType.ITEM_REPOSITORY:
+            result = contentRepository.uploadItems(content);
             break;
           default:
             result = { success: false, message: 'Unknown content type' };
@@ -135,6 +139,8 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
         return contentRepository.getAllActionAbilities();
       case CustomContentType.SPELL_ABILITY:
         return getAllSpells();
+      case CustomContentType.ITEM_REPOSITORY:
+        return contentRepository.getAllItems();
       default:
         return [];
     }
@@ -150,6 +156,7 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
       case 'FileText': return <FileText {...iconProps} />;
       case 'Wand2': return <Wand2 {...iconProps} />;
       case 'BookOpen': return <BookOpen {...iconProps} />;
+      case 'Package': return <Package {...iconProps} />;
       default: return <FileText {...iconProps} />;
     }
   };
@@ -198,6 +205,7 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
                       contentType === CustomContentType.BACKGROUND_DEFINITION ? 'bg-indigo-600' :
                       contentType === CustomContentType.ACTION_ABILITY ? 'bg-orange-600' :
                       contentType === CustomContentType.SPELL_ABILITY ? 'bg-red-600' :
+                      contentType === CustomContentType.ITEM_REPOSITORY ? 'bg-yellow-600' :
                       'bg-gray-600'
                     }`}
                   >
@@ -281,7 +289,37 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Current {metadata.title}</Label>
                   <div className="space-y-1 max-h-48 overflow-y-auto">
-                    {contentType === CustomContentType.SPELL_ABILITY ? (
+                    {contentType === CustomContentType.ITEM_REPOSITORY ? (
+                      // Group items by category and type
+                      Object.entries(
+                        (items as any[]).reduce((groups: Record<string, any[]>, item) => {
+                          const key = `${item.category}-${item.item.type}`;
+                          const label = `${item.category} ${item.item.type}s`;
+                          if (!groups[label]) groups[label] = [];
+                          groups[label].push(item);
+                          return groups;
+                        }, {})
+                      ).map(([groupLabel, items]) => (
+                        <div key={groupLabel} className="border rounded p-2">
+                          <div className="font-medium text-sm text-yellow-600 mb-1">
+                            {groupLabel} ({items.length} items)
+                          </div>
+                          <div className="space-y-1 ml-2">
+                            {items.map((repoItem: any) => (
+                              <div key={repoItem.item.id} className="flex items-center justify-between text-xs">
+                                <div>
+                                  <span className="font-medium">{repoItem.item.name}</span>
+                                  {repoItem.rarity && <span className="text-muted-foreground ml-1">({repoItem.rarity})</span>}
+                                  {repoItem.item.damage && <span className="text-muted-foreground ml-1">{repoItem.item.damage}</span>}
+                                  {repoItem.item.armor && <span className="text-muted-foreground ml-1">AC {repoItem.item.armor}</span>}
+                                </div>
+                                <div className="text-muted-foreground">{repoItem.item.id}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))
+                    ) : contentType === CustomContentType.SPELL_ABILITY ? (
                       // Group spells by school
                       Object.entries(
                         (items as SpellAbility[]).reduce((groups: Record<string, SpellAbility[]>, spell) => {
@@ -310,36 +348,64 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
                       ))
                     ) : (
                       // Regular item display for non-spells
-                      items.map((item, index) => (
-                        <div key={item.id || index} className="flex items-center justify-between p-2 border rounded">
-                          <div>
-                            <div className="font-medium text-sm">{item.name}</div>
-                            {item.description && (
-                              <div className="text-xs text-muted-foreground truncate max-w-md">
-                                {item.description}
+                      items.map((item, index) => {
+                        // Handle repository items differently
+                        if ('item' in item) {
+                          const repositoryItem = item as RepositoryItem;
+                          return (
+                            <div key={repositoryItem.item.id || index} className="flex items-center justify-between p-2 border rounded">
+                              <div>
+                                <div className="font-medium text-sm">{repositoryItem.item.name}</div>
+                                {repositoryItem.item.description && (
+                                  <div className="text-xs text-muted-foreground truncate max-w-md">
+                                    {repositoryItem.item.description}
+                                  </div>
+                                )}
+                                <div className="text-xs text-muted-foreground">
+                                  {repositoryItem.category} {repositoryItem.item.type}
+                                  {repositoryItem.rarity && ` • ${repositoryItem.rarity}`}
+                                </div>
                               </div>
-                            )}
-                            {'spells' in item && item.spells && (
                               <div className="text-xs text-muted-foreground">
-                                {item.spells.length} spells
+                                {repositoryItem.item.id}
                               </div>
-                            )}
-                            {'size' in item && (item as AncestryDefinition).size && (
-                              <div className="text-xs text-muted-foreground">
-                                Size: {(item as AncestryDefinition).size}
-                              </div>
-                            )}
-                            {'features' in item && (item as AncestryDefinition | BackgroundDefinition).features && (
-                              <div className="text-xs text-muted-foreground">
-                                {(item as AncestryDefinition | BackgroundDefinition).features.length} features
-                              </div>
-                            )}
+                            </div>
+                          );
+                        }
+                        
+                        // Handle other content types
+                        const regularItem = item as Exclude<ContentItem, RepositoryItem>;
+                        return (
+                          <div key={regularItem.id || index} className="flex items-center justify-between p-2 border rounded">
+                            <div>
+                              <div className="font-medium text-sm">{regularItem.name}</div>
+                              {regularItem.description && (
+                                <div className="text-xs text-muted-foreground truncate max-w-md">
+                                  {regularItem.description}
+                                </div>
+                              )}
+                              {'spells' in regularItem && regularItem.spells && (
+                                <div className="text-xs text-muted-foreground">
+                                  {regularItem.spells.length} spells
+                                </div>
+                              )}
+                              {'size' in regularItem && (regularItem as AncestryDefinition).size && (
+                                <div className="text-xs text-muted-foreground">
+                                  Size: {(regularItem as AncestryDefinition).size}
+                                </div>
+                              )}
+                              {'features' in regularItem && (regularItem as AncestryDefinition | BackgroundDefinition).features && (
+                                <div className="text-xs text-muted-foreground">
+                                  {(regularItem as AncestryDefinition | BackgroundDefinition).features.length} features
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {regularItem.id}
+                            </div>
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            {item.id}
-                          </div>
-                        </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
                 </div>
