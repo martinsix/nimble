@@ -14,36 +14,58 @@ const saveAdvantageMapSchema = z.object({
   will: saveAdvantageTypeSchema.optional(),
 }).default({});
 
-export const itemSchema = z.object({
+const baseItemSchema = z.object({
   id: z.string(),
   name: z.string().min(1),
-  size: z.number().min(0),
-  type: z.enum(['weapon', 'armor', 'freeform']),
-  equipped: z.boolean().optional(),
-  attribute: attributeNameSchema.optional(),
-  damage: z.string().optional(),
-  armor: z.number().optional(),
-  maxDexBonus: z.number().optional(),
-  properties: z.array(z.string()).optional(),
+  size: z.int().min(0),
   description: z.string().optional(),
 });
 
+export const itemSchema = z.discriminatedUnion('type', [
+  baseItemSchema.extend({
+    type: z.literal('weapon'),
+    equipped: z.boolean().optional(),
+    attribute: attributeNameSchema.optional(),
+    damage: z.string().optional(),
+    properties: z.array(z.string()).optional(),
+  }),
+  baseItemSchema.extend({
+    type: z.literal('armor'),
+    equipped: z.boolean().optional(),
+    armor: z.int().optional(),
+    maxDexBonus: z.int().optional(),
+    isMainArmor: z.boolean().optional(),
+    properties: z.array(z.string()).optional(),
+  }),
+  baseItemSchema.extend({
+    type: z.literal('freeform'),
+  }),
+  baseItemSchema.extend({
+    type: z.literal('consumable'),
+    count: z.int().min(1),
+  }),
+  baseItemSchema.extend({
+    type: z.literal('ammunition'),
+    count: z.int().min(1),
+  }),
+]);
+
 export const inventorySchema = z.object({
-  maxSize: z.number().min(0),
+  maxSize: z.int().min(0),
   items: z.array(itemSchema),
 });
 
 export const attributeSchema = z.object({
-  strength: z.number().min(gameConfig.character.attributeRange.min).max(gameConfig.character.attributeRange.max),
-  dexterity: z.number().min(gameConfig.character.attributeRange.min).max(gameConfig.character.attributeRange.max),
-  intelligence: z.number().min(gameConfig.character.attributeRange.min).max(gameConfig.character.attributeRange.max),
-  will: z.number().min(gameConfig.character.attributeRange.min).max(gameConfig.character.attributeRange.max),
+  strength: z.int().min(gameConfig.character.attributeRange.min).max(gameConfig.character.attributeRange.max),
+  dexterity: z.int().min(gameConfig.character.attributeRange.min).max(gameConfig.character.attributeRange.max),
+  intelligence: z.int().min(gameConfig.character.attributeRange.min).max(gameConfig.character.attributeRange.max),
+  will: z.int().min(gameConfig.character.attributeRange.min).max(gameConfig.character.attributeRange.max),
 });
 
 export const skillSchema = z.object({
   name: z.string(),
   associatedAttribute: attributeNameSchema,
-  modifier: z.number().min(gameConfig.character.skillModifierRange.min).max(gameConfig.character.skillModifierRange.max),
+  modifier: z.int().min(gameConfig.character.skillModifierRange.min).max(gameConfig.character.skillModifierRange.max),
 });
 
 export const skillsSchema = z.object({
@@ -60,26 +82,26 @@ export const skillsSchema = z.object({
 });
 
 export const hitPointsSchema = z.object({
-  current: z.number().min(0),
-  max: z.number().min(1),
-  temporary: z.number().min(0),
+  current: z.int().min(0),
+  max: z.int().min(1),
+  temporary: z.int().min(0),
 });
 
 export const actionTrackerSchema = z.object({
-  current: z.number().min(0),
-  base: z.number().min(1),
-  bonus: z.number().min(0),
+  current: z.int().min(0),
+  base: z.int().min(1),
+  bonus: z.int().min(0),
 });
 
 export const hitDiceSchema = z.object({
   size: z.union([z.literal(4), z.literal(6), z.literal(8), z.literal(10), z.literal(12)]),
-  current: z.number().min(0),
-  max: z.number().min(1),
+  current: z.int().min(0),
+  max: z.int().min(1),
 });
 
 export const woundsSchema = z.object({
-  current: z.number().min(0),
-  max: z.number().min(1),
+  current: z.int().min(0),
+  max: z.int().min(1),
 });
 
 export const resourceDefinitionSchema = z.object({
@@ -104,44 +126,44 @@ export const resourceDefinitionSchema = z.object({
   ]).optional(),
   resetCondition: z.enum(['safe_rest', 'encounter_end', 'turn_end', 'never', 'manual']),
   resetType: z.enum(['to_max', 'to_zero', 'to_default']),
-  resetValue: z.number().optional(),
-  minValue: z.number().min(0),
-  maxValue: z.number().min(1),
+  resetValue: z.int().optional(),
+  minValue: z.int().min(0),
+  maxValue: z.int().min(1),
 });
 
 export const resourceInstanceSchema = z.object({
   definition: resourceDefinitionSchema,
-  current: z.number().min(0),
-  sortOrder: z.number().min(0),
+  current: z.int().min(0),
+  sortOrder: z.int().min(0),
 });
 
 export const characterConfigurationSchema = z.object({
-  maxWounds: z.number().min(1),
-  maxInventorySize: z.number().min(1),
+  maxWounds: z.int().min(1),
+  maxInventorySize: z.int().min(1),
 });
 
 const diceExpressionSchema = z.object({
-  count: z.number().min(1),
+  count: z.int().min(1),
   sides: z.union([z.literal(4), z.literal(6), z.literal(8), z.literal(10), z.literal(12), z.literal(20), z.literal(100)]),
 });
 
 const abilityRollSchema = z.object({
   dice: diceExpressionSchema,
-  modifier: z.number().optional(),
+  modifier: z.int().optional(),
   attribute: attributeNameSchema.optional(),
 });
 
 const fixedResourceCostSchema = z.object({
   type: z.literal('fixed'),
   resourceId: z.string().min(1),
-  amount: z.number().min(1),
+  amount: z.int().min(1),
 });
 
 const variableResourceCostSchema = z.object({
   type: z.literal('variable'),
   resourceId: z.string().min(1),
-  minAmount: z.number().min(1),
-  maxAmount: z.number().min(1),
+  minAmount: z.int().min(1),
+  maxAmount: z.int().min(1),
 }).refine((data) => data.maxAmount >= data.minAmount, {
   message: "maxAmount must be greater than or equal to minAmount",
   path: ['maxAmount'],
@@ -165,10 +187,10 @@ export const abilitySchema = z.discriminatedUnion('type', [
     description: z.string(),
     type: z.literal('action'),
     frequency: z.enum(['per_turn', 'per_encounter', 'per_safe_rest', 'at_will']),
-    maxUses: z.number().min(1).optional(),
-    currentUses: z.number().min(0).optional(),
+    maxUses: z.int().min(1).optional(),
+    currentUses: z.int().min(0).optional(),
     roll: abilityRollSchema.optional(),
-    actionCost: z.number().min(0).optional(),
+    actionCost: z.int().min(0).optional(),
     resourceCost: resourceCostSchema.optional(),
   }).refine((data) => {
     // Non-at_will abilities must have maxUses defined
@@ -186,9 +208,9 @@ export const abilitySchema = z.discriminatedUnion('type', [
     description: z.string(),
     type: z.literal('spell'),
     school: z.string().min(1),
-    tier: z.number().min(1).max(9),
+    tier: z.int().min(1).max(9),
     roll: abilityRollSchema.optional(),
-    actionCost: z.number().min(0).optional(),
+    actionCost: z.int().min(0).optional(),
     resourceCost: resourceCostSchema.optional(),
   }),
 ]);
@@ -221,11 +243,11 @@ export const createCharacterSchema = z.object({
   name: z.string().min(1).max(50),
   ancestry: AncestryTraitSchema,
   background: BackgroundTraitSchema,
-  level: z.number().min(1).max(20),
+  level: z.int().min(1).max(20),
   classId: z.string().min(1),
   subclassId: z.string().optional(),
   grantedFeatures: z.array(z.string()),
-  spellTierAccess: z.number().min(0).max(9),
+  spellTierAccess: z.int().min(0).max(9),
   proficiencies: proficienciesSchema,
   attributes: attributeSchema,
   saveAdvantages: saveAdvantageMapSchema,
@@ -247,11 +269,11 @@ export const characterSchema = z.object({
   name: z.string().min(1).max(50),
   ancestry: AncestryTraitSchema,
   background: BackgroundTraitSchema,
-  level: z.number().min(1).max(20),
+  level: z.int().min(1).max(20),
   classId: z.string().min(1),
   subclassId: z.string().optional(),
   grantedFeatures: z.array(z.string()),
-  spellTierAccess: z.number().min(0).max(9),
+  spellTierAccess: z.int().min(0).max(9),
   proficiencies: proficienciesSchema,
   attributes: attributeSchema,
   saveAdvantages: saveAdvantageMapSchema,

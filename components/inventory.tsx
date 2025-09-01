@@ -7,9 +7,9 @@ import { Label } from "./ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { Inventory as InventoryType, Item, ItemType, CreateItemData, WeaponItem, ArmorItem } from "@/lib/types/inventory";
+import { Inventory as InventoryType, Item, ItemType, CreateItemData, WeaponItem, ArmorItem, ConsumableItem, AmmunitionItem } from "@/lib/types/inventory";
 import { canEquipWeapon, canEquipArmor, getEquipmentValidationMessage, equipMainArmorWithReplacement } from "@/lib/utils/equipment";
-import { Plus, Trash2, Package, Sword, Shield, Shirt, Crown, Edit2 } from "lucide-react";
+import { Plus, Trash2, Package, Sword, Shield, Shirt, Crown, Edit2, Beaker, Target, Minus } from "lucide-react";
 
 interface InventoryProps {
   inventory: InventoryType;
@@ -51,15 +51,56 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
   const addItem = () => {
     if (!newItem.name.trim()) return;
 
-    const item: Item = {
-      id: crypto.randomUUID(),
-      name: newItem.name,
-      size: newItem.size,
-      type: newItem.type,
-      ...(newItem.type === 'weapon' && { attribute: newItem.attribute, damage: newItem.damage, properties: newItem.properties }),
-      ...(newItem.type === 'armor' && { armor: newItem.armor, maxDexBonus: newItem.maxDexBonus, isMainArmor: newItem.isMainArmor, properties: newItem.properties }),
-      ...(newItem.type === 'freeform' && { description: newItem.description }),
-    };
+    let item: Item;
+
+    if (newItem.type === 'weapon') {
+      item = {
+        id: crypto.randomUUID(),
+        name: newItem.name,
+        size: newItem.size,
+        type: 'weapon',
+        attribute: newItem.attribute,
+        damage: newItem.damage,
+        properties: newItem.properties,
+      } as WeaponItem;
+    } else if (newItem.type === 'armor') {
+      item = {
+        id: crypto.randomUUID(),
+        name: newItem.name,
+        size: newItem.size,
+        type: 'armor',
+        armor: newItem.armor,
+        maxDexBonus: newItem.maxDexBonus,
+        isMainArmor: newItem.isMainArmor,
+        properties: newItem.properties,
+      } as ArmorItem;
+    } else if (newItem.type === 'consumable') {
+      item = {
+        id: crypto.randomUUID(),
+        name: newItem.name,
+        size: newItem.size,
+        type: 'consumable',
+        count: newItem.count || 1,
+        description: newItem.description,
+      } as ConsumableItem;
+    } else if (newItem.type === 'ammunition') {
+      item = {
+        id: crypto.randomUUID(),
+        name: newItem.name,
+        size: newItem.size,
+        type: 'ammunition',
+        count: newItem.count || 1,
+        description: newItem.description,
+      } as AmmunitionItem;
+    } else {
+      item = {
+        id: crypto.randomUUID(),
+        name: newItem.name,
+        size: newItem.size,
+        type: 'freeform',
+        description: newItem.description,
+      };
+    }
 
     onUpdateInventory({
       ...inventory,
@@ -99,6 +140,10 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
       editData.properties = armor.properties;
     } else if (item.type === 'freeform') {
       editData.description = item.description;
+    } else if (item.type === 'consumable' || item.type === 'ammunition') {
+      const countedItem = item as ConsumableItem | AmmunitionItem;
+      editData.count = countedItem.count;
+      editData.description = countedItem.description;
     }
 
     setEditItem(editData);
@@ -108,26 +153,58 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
   const saveEditItem = () => {
     if (!editItem.name.trim() || !editingItemId) return;
 
-    const updatedItem: Item = {
-      id: editingItemId,
-      name: editItem.name,
-      size: editItem.size,
-      type: editItem.type,
-      ...(editItem.type === 'weapon' && { 
-        attribute: editItem.attribute, 
-        damage: editItem.damage, 
+    let updatedItem: Item;
+
+    if (editItem.type === 'weapon') {
+      updatedItem = {
+        id: editingItemId,
+        name: editItem.name,
+        size: editItem.size,
+        type: 'weapon',
+        attribute: editItem.attribute,
+        damage: editItem.damage,
         properties: editItem.properties,
         equipped: (inventory.items.find(i => i.id === editingItemId) as WeaponItem)?.equipped || false
-      }),
-      ...(editItem.type === 'armor' && { 
-        armor: editItem.armor, 
-        maxDexBonus: editItem.maxDexBonus, 
-        isMainArmor: editItem.isMainArmor, 
+      } as WeaponItem;
+    } else if (editItem.type === 'armor') {
+      updatedItem = {
+        id: editingItemId,
+        name: editItem.name,
+        size: editItem.size,
+        type: 'armor',
+        armor: editItem.armor,
+        maxDexBonus: editItem.maxDexBonus,
+        isMainArmor: editItem.isMainArmor,
         properties: editItem.properties,
         equipped: (inventory.items.find(i => i.id === editingItemId) as ArmorItem)?.equipped || false
-      }),
-      ...(editItem.type === 'freeform' && { description: editItem.description }),
-    };
+      } as ArmorItem;
+    } else if (editItem.type === 'consumable') {
+      updatedItem = {
+        id: editingItemId,
+        name: editItem.name,
+        size: editItem.size,
+        type: 'consumable',
+        count: editItem.count || 1,
+        description: editItem.description,
+      } as ConsumableItem;
+    } else if (editItem.type === 'ammunition') {
+      updatedItem = {
+        id: editingItemId,
+        name: editItem.name,
+        size: editItem.size,
+        type: 'ammunition',
+        count: editItem.count || 1,
+        description: editItem.description,
+      } as AmmunitionItem;
+    } else {
+      updatedItem = {
+        id: editingItemId,
+        name: editItem.name,
+        size: editItem.size,
+        type: 'freeform',
+        description: editItem.description,
+      };
+    }
 
     onUpdateInventory({
       ...inventory,
@@ -139,6 +216,28 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
     setEditItem({ name: "", size: 1, type: "freeform" });
     setEditingItemId(null);
     setIsEditDialogOpen(false);
+  };
+
+  const changeItemCount = (itemId: string, delta: number) => {
+    const item = inventory.items.find(item => item.id === itemId);
+    if (!item || (item.type !== 'consumable' && item.type !== 'ammunition')) {
+      return;
+    }
+
+    const countedItem = item as ConsumableItem | AmmunitionItem;
+    const newCount = Math.max(1, countedItem.count + delta);
+
+    const updatedItems = inventory.items.map(inventoryItem => {
+      if (inventoryItem.id === itemId) {
+        return { ...inventoryItem, count: newCount };
+      }
+      return inventoryItem;
+    });
+
+    onUpdateInventory({
+      ...inventory,
+      items: updatedItems,
+    });
   };
 
   const toggleEquipped = (itemId: string) => {
@@ -192,6 +291,8 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
       case 'armor': 
         const armor = item as ArmorItem;
         return armor.isMainArmor ? <Shirt className="w-4 h-4" /> : <Shield className="w-4 h-4" />;
+      case 'consumable': return <Beaker className="w-4 h-4" />;
+      case 'ammunition': return <Target className="w-4 h-4" />;
       default: return <Package className="w-4 h-4" />;
     }
   };
@@ -243,6 +344,15 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
         return item.description ? (
           <div className="text-xs text-muted-foreground mt-1">{item.description}</div>
         ) : null;
+      case 'consumable':
+      case 'ammunition':
+        const countedItem = item as ConsumableItem | AmmunitionItem;
+        return (
+          <div className="text-xs text-muted-foreground mt-1">
+            <div className="font-medium text-primary">Count: {countedItem.count}</div>
+            {countedItem.description && <div>{countedItem.description}</div>}
+          </div>
+        );
     }
   };
 
@@ -312,6 +422,8 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
                       <SelectItem value="freeform">Freeform</SelectItem>
                       <SelectItem value="weapon">Weapon</SelectItem>
                       <SelectItem value="armor">Armor</SelectItem>
+                      <SelectItem value="consumable">Consumable</SelectItem>
+                      <SelectItem value="ammunition">Ammunition</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -399,6 +511,31 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
                 </div>
               )}
 
+              {(newItem.type === 'consumable' || newItem.type === 'ammunition') && (
+                <>
+                  <div>
+                    <Label htmlFor="item-count">Count</Label>
+                    <Input
+                      id="item-count"
+                      type="number"
+                      min="1"
+                      value={newItem.count || 1}
+                      onChange={(e) => setNewItem({ ...newItem, count: parseInt(e.target.value) || 1 })}
+                      placeholder="1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="item-description">Description</Label>
+                    <Input
+                      id="item-description"
+                      value={newItem.description || ""}
+                      onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                      placeholder="Item description"
+                    />
+                  </div>
+                </>
+              )}
+
               <div className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                   Cancel
@@ -449,6 +586,8 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
                       <SelectItem value="freeform">Freeform</SelectItem>
                       <SelectItem value="weapon">Weapon</SelectItem>
                       <SelectItem value="armor">Armor</SelectItem>
+                      <SelectItem value="consumable">Consumable</SelectItem>
+                      <SelectItem value="ammunition">Ammunition</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -536,6 +675,31 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
                 </div>
               )}
 
+              {(editItem.type === 'consumable' || editItem.type === 'ammunition') && (
+                <>
+                  <div>
+                    <Label htmlFor="edit-item-count">Count</Label>
+                    <Input
+                      id="edit-item-count"
+                      type="number"
+                      min="1"
+                      value={editItem.count || 1}
+                      onChange={(e) => setEditItem({ ...editItem, count: parseInt(e.target.value) || 1 })}
+                      placeholder="1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-item-description">Description</Label>
+                    <Input
+                      id="edit-item-description"
+                      value={editItem.description || ""}
+                      onChange={(e) => setEditItem({ ...editItem, description: e.target.value })}
+                      placeholder="Item description"
+                    />
+                  </div>
+                </>
+              )}
+
               <div className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                   Cancel
@@ -613,6 +777,30 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
                       >
                         {item.equipped ? "Equipped" : "Equip"}
                       </Button>
+                    )}
+                    {(item.type === 'consumable' || item.type === 'ammunition') && (
+                      <div className="flex items-center space-x-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => changeItemCount(item.id, -1)}
+                          disabled={(item as ConsumableItem | AmmunitionItem).count <= 1}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </Button>
+                        <span className="text-sm font-medium min-w-[2rem] text-center">
+                          {(item as ConsumableItem | AmmunitionItem).count}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => changeItemCount(item.id, 1)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                      </div>
                     )}
                     <Button
                       variant="ghost"

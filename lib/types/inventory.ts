@@ -1,12 +1,13 @@
 import { AttributeName } from './character';
 
-export type ItemType = 'weapon' | 'armor' | 'freeform';
+export type ItemType = 'weapon' | 'armor' | 'freeform' | 'consumable' | 'ammunition';
 
 export interface BaseItem {
   id: string;
   name: string;
   size: number;
   type: ItemType;
+  description?: string;
 }
 
 export interface WeaponItem extends BaseItem {
@@ -28,10 +29,19 @@ export interface ArmorItem extends BaseItem {
 
 export interface FreeformItem extends BaseItem {
   type: 'freeform';
-  description?: string;
 }
 
-export type Item = WeaponItem | ArmorItem | FreeformItem;
+export interface ConsumableItem extends BaseItem {
+  type: 'consumable';
+  count: number;
+}
+
+export interface AmmunitionItem extends BaseItem {
+  type: 'ammunition';
+  count: number;
+}
+
+export type Item = WeaponItem | ArmorItem | FreeformItem | ConsumableItem | AmmunitionItem;
 
 export interface Inventory {
   maxSize: number;
@@ -50,4 +60,5 @@ export interface CreateItemData {
   isMainArmor?: boolean;
   properties?: string[];
   description?: string;
+  count?: number;
 }

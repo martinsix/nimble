@@ -1,5 +1,5 @@
 import { Character, AttributeName, HitDice, Wounds, CharacterConfiguration, Proficiencies, HitDieSize } from '../types/character';
-import { Inventory } from '../types/inventory';
+import { Inventory, ArmorItem, WeaponItem } from '../types/inventory';
 import { Abilities } from '../types/abilities';
 import { ClassDefinition } from '../types/class';
 import { ResourceInstance, ResourceDefinition, createResourceInstance } from '../types/resources';
@@ -22,28 +22,29 @@ export const createDefaultSkills = () => {
 };
 
 export const createDefaultInventory = (strength: number = 0): Inventory => {
+  const leatherArmor: ArmorItem = {
+    id: 'sample-leather-armor',
+    name: 'Leather Armor',
+    size: 2,
+    type: 'armor',
+    armor: 2,
+    maxDexBonus: 3,
+    properties: ['Light'],
+  };
+
+  const sword: WeaponItem = {
+    id: 'sample-sword',
+    name: 'Sword',
+    size: 1,
+    type: 'weapon',
+    attribute: 'strength',
+    damage: '1d8',
+    properties: ['Versatile'],
+  };
+
   return {
     maxSize: 10 + strength,
-    items: [
-      {
-        id: 'sample-leather-armor',
-        name: 'Leather Armor',
-        size: 2,
-        type: 'armor',
-        armor: 2,
-        maxDexBonus: 3,
-        properties: ['Light'],
-      },
-      {
-        id: 'sample-sword',
-        name: 'Sword',
-        size: 1,
-        type: 'weapon',
-        attribute: 'strength',
-        damage: '1d8',
-        properties: ['Versatile'],
-      },
-    ],
+    items: [leatherArmor, sword],
   };
 };
 
