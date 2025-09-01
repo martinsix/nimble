@@ -148,19 +148,21 @@ export function CharacterBuilder({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
-        <div className="sticky top-0 bg-background border-b px-6 py-4 flex items-center justify-between">
-          <DialogTitle className="text-xl font-bold">Character Builder</DialogTitle>
+      <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto p-0">
+        <div className="sticky top-0 bg-background border-b px-4 sm:px-6 py-4 flex items-center justify-between">
+          <DialogTitle className="text-lg sm:text-xl font-bold">Character Builder</DialogTitle>
         </div>
         
-        <div className="px-6 py-4">
+        <div className="px-4 sm:px-6 py-4 overflow-x-hidden">
           <StepIndicator
             currentStep={currentStep}
             classSelected={!!builderState.classId}
             heritageComplete={canProceedFromStep2()}
             attributesComplete={!!builderState.characterId}
           />
-          {renderStepContent()}
+          <div className="min-w-0">
+            {renderStepContent()}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

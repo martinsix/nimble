@@ -114,24 +114,24 @@ export function AttributeSelection({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2">Assign Attributes</h2>
-        <p className="text-muted-foreground">Choose how to distribute your character&apos;s attributes</p>
+        <h2 className="text-xl font-bold mb-1">Assign Attributes</h2>
+        <p className="text-sm text-muted-foreground">Choose how to distribute your character&apos;s attributes</p>
       </div>
 
       {/* Array Selection */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Standard Array</CardTitle>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Standard Array</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            <label htmlFor="array-select" className="text-sm font-medium whitespace-nowrap">
+        <CardContent className="space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            <label htmlFor="array-select" className="text-sm font-medium">
               Select Array:
             </label>
             <Select value={selectedArray} onValueChange={(value: keyof typeof STANDARD_ARRAYS) => setSelectedArray(value)}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full sm:flex-1">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -144,13 +144,13 @@ export function AttributeSelection({
             </Select>
           </div>
           
-          <div className="text-sm text-muted-foreground">
+          <div className="text-xs text-muted-foreground">
             Click the value buttons below each attribute to assign values from the selected array.
           </div>
 
-          <div className="flex justify-center pt-2">
+          <div className="flex justify-center">
             <Button variant="outline" onClick={handleReset} size="sm">
-              <RotateCcw className="w-4 h-4 mr-2" />
+              <RotateCcw className="w-3 h-3 mr-1" />
               Reset All
             </Button>
           </div>
@@ -158,35 +158,35 @@ export function AttributeSelection({
       </Card>
 
       {/* Individual Attribute Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {ATTRIBUTE_NAMES.map((attributeName) => {
           const availableValues = getAvailableValues(attributeName);
           
           return (
-            <Card key={attributeName}>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">{ATTRIBUTE_LABELS[attributeName]}</CardTitle>
+            <Card key={attributeName} className="h-fit">
+              <CardHeader className="pb-2 pt-3">
+                <CardTitle className="text-sm text-center">{ATTRIBUTE_LABELS[attributeName]}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-2 pt-0">
                 <div className="flex justify-center">
                   <Input
                     type="number"
                     value={attributes[attributeName]}
                     onChange={(e) => handleManualChange(attributeName, e.target.value)}
-                    className="w-20 text-center text-lg font-medium"
+                    className="w-16 h-8 text-center text-sm font-medium"
                     min="-5"
                     max="10"
                   />
                 </div>
                 
-                <div className="flex flex-wrap justify-center gap-2">
+                <div className="flex flex-wrap justify-center gap-1">
                   {availableValues.map((value) => (
                     <Button
                       key={value}
                       variant={attributes[attributeName] === value ? "default" : "outline"}
                       size="sm"
                       onClick={() => onAttributeChange(attributeName, value)}
-                      className="px-3 py-1"
+                      className="px-2 py-1 h-7 text-xs min-w-[2rem]"
                     >
                       {value >= 0 ? `+${value}` : value}
                     </Button>
@@ -199,12 +199,12 @@ export function AttributeSelection({
       </div>
 
       {/* Navigation */}
-      <div className="flex justify-between pt-4">
-        <Button variant="outline" onClick={onBack}>
+      <div className="flex justify-between pt-2">
+        <Button variant="outline" onClick={onBack} size="sm">
           <ChevronLeft className="w-4 h-4 mr-2" />
           Back to Heritage
         </Button>
-        <Button onClick={onNext}>
+        <Button onClick={onNext} size="sm">
           Create Character
           <ChevronRight className="w-4 h-4 ml-2" />
         </Button>
