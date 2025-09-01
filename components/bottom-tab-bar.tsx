@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { Button } from "./ui/button";
 import {
   Sword,
@@ -10,30 +11,32 @@ import {
   Sparkles,
   ScrollText,
 } from "lucide-react";
-import { TabType } from "@/lib/services/ui-state-service";
 import { useCharacterService } from "@/lib/hooks/use-character-service";
-import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
 
 interface TabDefinition {
-  id: TabType;
+  id: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
+  path: string;
 }
 
 const tabs: TabDefinition[] = [
-  { id: "combat", label: "Combat", icon: Sword },
-  { id: "spells", label: "Spells", icon: Sparkles },
-  { id: "skills", label: "Skills", icon: Target },
-  { id: "character", label: "Character", icon: User },
-  { id: "equipment", label: "Equipment", icon: Package },
-  { id: "log", label: "Log", icon: ScrollText },
+  { id: "combat", label: "Combat", icon: Sword, path: "/character/combat" },
+  { id: "spells", label: "Spells", icon: Sparkles, path: "/character/spells" },
+  { id: "skills", label: "Skills", icon: Target, path: "/character/skills" },
+  { id: "character", label: "Character", icon: User, path: "/character/info" },
+  {
+    id: "equipment",
+    label: "Equipment",
+    icon: Package,
+    path: "/character/equipment",
+  },
+  { id: "log", label: "Log", icon: ScrollText, path: "/character/log" },
 ];
 
 export function BottomTabBar() {
   const { character } = useCharacterService();
-
-  const { uiState, updateActiveTab } = useUIStateService();
-  const activeTab = uiState.activeTab;
+  const pathname = usePathname();
 
   // Filter tabs based on character capabilities
   const visibleTabs = tabs.filter((tab) => {
@@ -58,24 +61,26 @@ export function BottomTabBar() {
         <div className="flex justify-around items-center h-16 max-w-(--breakpoint-sm) mx-auto">
           {visibleTabs.map((tab) => {
             const IconComponent = tab.icon;
-            const isActive = activeTab === tab.id;
+            const isActive = pathname === tab.path;
 
             return (
               <Button
                 key={tab.id}
                 variant="ghost"
                 size="sm"
-                onClick={() => updateActiveTab(tab.id)}
+                asChild
                 className={`flex flex-col items-center gap-1 h-12 px-1 sm:px-2 min-w-0 flex-1 max-w-20 ${
                   isActive
                     ? "text-primary bg-primary/10"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <IconComponent className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-                <span className="text-xs font-medium leading-tight truncate">
-                  {tab.label}
-                </span>
+                <Link href={tab.path}>
+                  <IconComponent className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                  <span className="text-xs font-medium leading-tight truncate">
+                    {tab.label}
+                  </span>
+                </Link>
               </Button>
             );
           })}
