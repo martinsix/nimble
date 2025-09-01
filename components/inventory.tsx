@@ -6,11 +6,11 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Inventory as InventoryType, Item, ItemType, CreateItemData, WeaponItem, ArmorItem, ConsumableItem, AmmunitionItem } from "@/lib/types/inventory";
 import { canEquipWeapon, canEquipArmor, getEquipmentValidationMessage, equipMainArmorWithReplacement } from "@/lib/utils/equipment";
 import { Plus, Trash2, Package, Sword, Shield, Shirt, Crown, Edit2, Beaker, Target, Minus, Zap, Search } from "lucide-react";
 import { ItemBrowser } from "./item-browser";
+import { ItemFormFields } from "./item-form-fields";
 
 interface InventoryProps {
   inventory: InventoryType;
@@ -43,12 +43,6 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
   }, 0);
   const sizePercent = inventory.maxSize > 0 ? (currentSize / inventory.maxSize) * 100 : 0;
 
-  const updateMaxSize = (maxSize: number) => {
-    onUpdateInventory({
-      ...inventory,
-      maxSize,
-    });
-  };
 
   const addItem = () => {
     if (!newItem.name.trim()) return;
@@ -64,6 +58,7 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
         attribute: newItem.attribute,
         damage: newItem.damage,
         properties: newItem.properties,
+        description: newItem.description,
       } as WeaponItem;
     } else if (newItem.type === 'armor') {
       item = {
@@ -75,6 +70,7 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
         maxDexBonus: newItem.maxDexBonus,
         isMainArmor: newItem.isMainArmor,
         properties: newItem.properties,
+        description: newItem.description,
       } as ArmorItem;
     } else if (newItem.type === 'consumable') {
       item = {
@@ -134,12 +130,14 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
       editData.attribute = item.attribute;
       editData.damage = item.damage;
       editData.properties = item.properties;
+      editData.description = item.description;
     } else if (item.type === 'armor') {
       const armor = item as ArmorItem;
       editData.armor = armor.armor;
       editData.maxDexBonus = armor.maxDexBonus;
       editData.isMainArmor = armor.isMainArmor;
       editData.properties = armor.properties;
+      editData.description = armor.description;
     } else if (item.type === 'freeform') {
       editData.description = item.description;
     } else if (item.type === 'consumable' || item.type === 'ammunition') {
@@ -166,6 +164,7 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
         attribute: editItem.attribute,
         damage: editItem.damage,
         properties: editItem.properties,
+        description: editItem.description,
         equipped: (inventory.items.find(i => i.id === editingItemId) as WeaponItem)?.equipped || false
       } as WeaponItem;
     } else if (editItem.type === 'armor') {
@@ -178,6 +177,7 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
         maxDexBonus: editItem.maxDexBonus,
         isMainArmor: editItem.isMainArmor,
         properties: editItem.properties,
+        description: editItem.description,
         equipped: (inventory.items.find(i => i.id === editingItemId) as ArmorItem)?.equipped || false
       } as ArmorItem;
     } else if (editItem.type === 'consumable') {
@@ -414,26 +414,7 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
   return (
     <div className="space-y-4">
       {/* Inventory Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <Label htmlFor="max-size">Max Size:</Label>
-            <Input
-              id="max-size"
-              type="number"
-              min="0"
-              value={inventory.maxSize}
-              onChange={(e) => updateMaxSize(parseInt(e.target.value) || 0)}
-              className="w-20"
-            />
-          </div>
-          <div className="text-sm">
-            <span className={currentSize > inventory.maxSize ? "text-destructive" : "text-muted-foreground"}>
-              {currentSize} / {inventory.maxSize}
-            </span>
-          </div>
-        </div>
-        
+      <div className="flex items-center justify-between">        
         <div className="flex gap-2">
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
@@ -447,150 +428,11 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
               <DialogTitle>Add New Item</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="item-name">Name</Label>
-                <Input
-                  id="item-name"
-                  value={newItem.name}
-                  onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-                  placeholder="Item name"
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="item-size">Size</Label>
-                  <Input
-                    id="item-size"
-                    type="number"
-                    min="0"
-                    value={newItem.size}
-                    onChange={(e) => setNewItem({ ...newItem, size: parseInt(e.target.value) || 1 })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="item-type">Type</Label>
-                  <Select value={newItem.type} onValueChange={(value: ItemType) => setNewItem({ ...newItem, type: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="freeform">Freeform</SelectItem>
-                      <SelectItem value="weapon">Weapon</SelectItem>
-                      <SelectItem value="armor">Armor</SelectItem>
-                      <SelectItem value="consumable">Consumable</SelectItem>
-                      <SelectItem value="ammunition">Ammunition</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {newItem.type === 'weapon' && (
-                <>
-                  <div>
-                    <Label htmlFor="weapon-attribute">Attribute</Label>
-                    <Select 
-                      value={newItem.attribute || ""} 
-                      onValueChange={(value) => setNewItem({ ...newItem, attribute: value as any })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select attribute" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="strength">Strength</SelectItem>
-                        <SelectItem value="dexterity">Dexterity</SelectItem>
-                        <SelectItem value="intelligence">Intelligence</SelectItem>
-                        <SelectItem value="will">Will</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="weapon-damage">Damage</Label>
-                    <Input
-                      id="weapon-damage"
-                      value={newItem.damage || ""}
-                      onChange={(e) => setNewItem({ ...newItem, damage: e.target.value })}
-                      placeholder="e.g., 1d8"
-                    />
-                  </div>
-                </>
-              )}
-
-              {newItem.type === 'armor' && (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="armor-value">Armor</Label>
-                      <Input
-                        id="armor-value"
-                        type="number"
-                        value={newItem.armor || ""}
-                        onChange={(e) => setNewItem({ ...newItem, armor: parseInt(e.target.value) || undefined })}
-                        placeholder="Armor value"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="max-dex-bonus">Max Dex Bonus</Label>
-                      <Input
-                        id="max-dex-bonus"
-                        type="number"
-                        value={newItem.maxDexBonus ?? ""}
-                        onChange={(e) => setNewItem({ ...newItem, maxDexBonus: e.target.value === "" ? undefined : parseInt(e.target.value) || 0 })}
-                        placeholder="No limit"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      id="is-main-armor"
-                      type="checkbox"
-                      checked={newItem.isMainArmor || false}
-                      onChange={(e) => setNewItem({ ...newItem, isMainArmor: e.target.checked })}
-                      className="rounded border-gray-300 text-primary focus:ring-primary"
-                    />
-                    <Label htmlFor="is-main-armor" className="text-sm">
-                      Main Armor (suits of armor, not helmets or shields)
-                    </Label>
-                  </div>
-                </>
-              )}
-
-              {newItem.type === 'freeform' && (
-                <div>
-                  <Label htmlFor="item-description">Description</Label>
-                  <Input
-                    id="item-description"
-                    value={newItem.description || ""}
-                    onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                    placeholder="Item description"
-                  />
-                </div>
-              )}
-
-              {(newItem.type === 'consumable' || newItem.type === 'ammunition') && (
-                <>
-                  <div>
-                    <Label htmlFor="item-count">Count</Label>
-                    <Input
-                      id="item-count"
-                      type="number"
-                      min="1"
-                      value={newItem.count || 1}
-                      onChange={(e) => setNewItem({ ...newItem, count: parseInt(e.target.value) || 1 })}
-                      placeholder="1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="item-description">Description</Label>
-                    <Input
-                      id="item-description"
-                      value={newItem.description || ""}
-                      onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                      placeholder="Item description"
-                    />
-                  </div>
-                </>
-              )}
+              <ItemFormFields 
+                item={newItem} 
+                onItemChange={setNewItem} 
+                idPrefix="add"
+              />
 
               <div className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
@@ -617,150 +459,11 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
               <DialogTitle>Edit Item</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="edit-item-name">Name</Label>
-                <Input
-                  id="edit-item-name"
-                  value={editItem.name}
-                  onChange={(e) => setEditItem({ ...editItem, name: e.target.value })}
-                  placeholder="Item name"
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="edit-item-size">Size</Label>
-                  <Input
-                    id="edit-item-size"
-                    type="number"
-                    min="0"
-                    value={editItem.size}
-                    onChange={(e) => setEditItem({ ...editItem, size: parseInt(e.target.value) || 1 })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-item-type">Type</Label>
-                  <Select value={editItem.type} onValueChange={(value: ItemType) => setEditItem({ ...editItem, type: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="freeform">Freeform</SelectItem>
-                      <SelectItem value="weapon">Weapon</SelectItem>
-                      <SelectItem value="armor">Armor</SelectItem>
-                      <SelectItem value="consumable">Consumable</SelectItem>
-                      <SelectItem value="ammunition">Ammunition</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {editItem.type === 'weapon' && (
-                <>
-                  <div>
-                    <Label htmlFor="edit-weapon-attribute">Attribute</Label>
-                    <Select 
-                      value={editItem.attribute || ""} 
-                      onValueChange={(value) => setEditItem({ ...editItem, attribute: value as any })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select attribute" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="strength">Strength</SelectItem>
-                        <SelectItem value="dexterity">Dexterity</SelectItem>
-                        <SelectItem value="intelligence">Intelligence</SelectItem>
-                        <SelectItem value="will">Will</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="edit-weapon-damage">Damage</Label>
-                    <Input
-                      id="edit-weapon-damage"
-                      value={editItem.damage || ""}
-                      onChange={(e) => setEditItem({ ...editItem, damage: e.target.value })}
-                      placeholder="e.g., 1d8"
-                    />
-                  </div>
-                </>
-              )}
-
-              {editItem.type === 'armor' && (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="edit-armor-value">Armor</Label>
-                      <Input
-                        id="edit-armor-value"
-                        type="number"
-                        value={editItem.armor || ""}
-                        onChange={(e) => setEditItem({ ...editItem, armor: parseInt(e.target.value) || undefined })}
-                        placeholder="Armor value"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="edit-max-dex-bonus">Max Dex Bonus</Label>
-                      <Input
-                        id="edit-max-dex-bonus"
-                        type="number"
-                        value={editItem.maxDexBonus ?? ""}
-                        onChange={(e) => setEditItem({ ...editItem, maxDexBonus: e.target.value === "" ? undefined : parseInt(e.target.value) || 0 })}
-                        placeholder="No limit"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      id="edit-is-main-armor"
-                      type="checkbox"
-                      checked={editItem.isMainArmor || false}
-                      onChange={(e) => setEditItem({ ...editItem, isMainArmor: e.target.checked })}
-                      className="rounded border-gray-300 text-primary focus:ring-primary"
-                    />
-                    <Label htmlFor="edit-is-main-armor" className="text-sm">
-                      Main Armor (suits of armor, not helmets or shields)
-                    </Label>
-                  </div>
-                </>
-              )}
-
-              {editItem.type === 'freeform' && (
-                <div>
-                  <Label htmlFor="edit-item-description">Description</Label>
-                  <Input
-                    id="edit-item-description"
-                    value={editItem.description || ""}
-                    onChange={(e) => setEditItem({ ...editItem, description: e.target.value })}
-                    placeholder="Item description"
-                  />
-                </div>
-              )}
-
-              {(editItem.type === 'consumable' || editItem.type === 'ammunition') && (
-                <>
-                  <div>
-                    <Label htmlFor="edit-item-count">Count</Label>
-                    <Input
-                      id="edit-item-count"
-                      type="number"
-                      min="1"
-                      value={editItem.count || 1}
-                      onChange={(e) => setEditItem({ ...editItem, count: parseInt(e.target.value) || 1 })}
-                      placeholder="1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="edit-item-description">Description</Label>
-                    <Input
-                      id="edit-item-description"
-                      value={editItem.description || ""}
-                      onChange={(e) => setEditItem({ ...editItem, description: e.target.value })}
-                      placeholder="Item description"
-                    />
-                  </div>
-                </>
-              )}
+              <ItemFormFields 
+                item={editItem} 
+                onItemChange={setEditItem} 
+                idPrefix="edit"
+              />
 
               <div className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
@@ -778,8 +481,11 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
       {/* Size Bar */}
       {inventory.maxSize > 0 && (
         <div className="space-y-1">
-          <div className="flex justify-between text-sm">
+          <div className="relative flex items-center justify-between text-sm">
             <span>Inventory Space</span>
+            <span className={`absolute left-1/2 transform -translate-x-1/2 ${currentSize > inventory.maxSize ? "text-destructive" : "text-muted-foreground"}`}>
+              {currentSize} / {inventory.maxSize}
+            </span>
             <span className={currentSize > inventory.maxSize ? "text-destructive" : ""}>
               {Math.round(sizePercent)}%
             </span>
@@ -813,33 +519,73 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
               <CardContent className="p-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-3">
-                    <div className="shrink-0 mt-1">
+                    <div className="shrink-0 mt-1 flex flex-col items-center">
                       {getItemIcon(item)}
+                      {/* Visual size indicators - vertical squares */}
+                      <div className="flex flex-col gap-0.5 mt-1">
+                        {Array.from({ length: item.size }, (_, i) => (
+                          <div
+                            key={i}
+                            className="w-2 h-2 bg-muted border border-muted-foreground/20 rounded-sm"
+                          />
+                        ))}
+                      </div>
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
                         <span className="font-medium">{item.name}</span>
-                        <span className="text-xs bg-muted px-2 py-1 rounded">
+                      </div>
+                      <div className="mt-1">
+                        <span className="text-xs bg-muted px-2 py-1 rounded capitalize">
                           {item.type}
                         </span>
                       </div>
                       {renderItemDetails(item)}
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-muted-foreground">
-                      Size: {item.size}
-                    </span>
-                    {(item.type === 'weapon' || item.type === 'armor') && (
+                  <div className="flex flex-col items-end space-y-2">
+                    {/* Main action buttons row */}
+                    <div className="flex items-center space-x-2">
+                      {(item.type === 'weapon' || item.type === 'armor') && (
+                        <Button
+                          variant={item.equipped ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => toggleEquipped(item.id)}
+                          className={item.equipped ? "text-white" : ""}
+                        >
+                          {item.equipped ? "Equipped" : "Equip"}
+                        </Button>
+                      )}
+                      {item.type === 'consumable' && (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => consumeItem(item.id)}
+                          className="h-8 px-2"
+                        >
+                          <Zap className="w-3 h-3 mr-1" />
+                          Use
+                        </Button>
+                      )}
                       <Button
-                        variant={item.equipped ? "default" : "outline"}
+                        variant="ghost"
                         size="sm"
-                        onClick={() => toggleEquipped(item.id)}
-                        className={item.equipped ? "text-white" : ""}
+                        onClick={() => startEditItem(item)}
+                        className="text-muted-foreground hover:text-foreground"
                       >
-                        {item.equipped ? "Equipped" : "Equip"}
+                        <Edit2 className="w-4 h-4" />
                       </Button>
-                    )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeItem(item.id)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    
+                    {/* Count controls row for consumables and ammunition */}
                     {(item.type === 'consumable' || item.type === 'ammunition') && (
                       <div className="flex items-center space-x-1">
                         <Button
@@ -847,7 +593,7 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
                           size="sm"
                           onClick={() => changeItemCount(item.id, -1)}
                           disabled={(item as ConsumableItem | AmmunitionItem).count <= 1}
-                          className="h-8 w-8 p-0"
+                          className="h-7 w-7 p-0"
                         >
                           <Minus className="w-3 h-3" />
                         </Button>
@@ -858,39 +604,12 @@ export function Inventory({ inventory, characterDexterity, onUpdateInventory }: 
                           variant="outline"
                           size="sm"
                           onClick={() => changeItemCount(item.id, 1)}
-                          className="h-8 w-8 p-0"
+                          className="h-7 w-7 p-0"
                         >
                           <Plus className="w-3 h-3" />
                         </Button>
-                        {item.type === 'consumable' && (
-                          <Button
-                            variant="default"
-                            size="sm"
-                            onClick={() => consumeItem(item.id)}
-                            className="h-8 px-2"
-                          >
-                            <Zap className="w-3 h-3 mr-1" />
-                            Use
-                          </Button>
-                        )}
                       </div>
                     )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => startEditItem(item)}
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeItem(item.id)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
                   </div>
                 </div>
               </CardContent>
