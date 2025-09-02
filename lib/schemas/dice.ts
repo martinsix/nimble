@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 // Single die schema
 export const singleDieSchema = z.object({
-  type: z.union([z.literal(4), z.literal(6), z.literal(8), z.literal(10), z.literal(12), z.literal(20), z.literal(100)]),
+  type: z.union([z.literal(4), z.literal(6), z.literal(8), z.literal(10), z.literal(12), z.literal(20), z.literal(66), z.literal(100)]),
   result: z.number().positive(),
   isCritical: z.boolean().optional(),
 });

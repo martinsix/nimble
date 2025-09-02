@@ -1,8 +1,4 @@
-// Basic fantasy classes
-export { fighter } from './fighter';
-export { wizard } from './wizard';
-export { rogue } from './rogue';
-export { cleric } from './cleric';
+// Nimble classes
 export { berserkerClass as berserker } from './berserker';
 export { cheatClass as cheat } from './cheat';
 export { commanderClass as commander } from './commander';
@@ -16,10 +12,6 @@ export { stormshifterClass as stormshifter } from './stormshifter';
 export { zephyrClass as zephyr } from './zephyr';
 
 // Import all class definitions for the main classes object
-import { fighter } from './fighter';
-import { wizard } from './wizard';
-import { rogue } from './rogue';
-import { cleric } from './cleric';
 import { berserkerClass as berserker } from './berserker';
 import { cheatClass as cheat } from './cheat';
 import { commanderClass as commander } from './commander';
@@ -36,10 +28,6 @@ import { ClassDefinition } from '../../types/class';
 
 // Main class definitions object
 export const classDefinitions: Record<string, ClassDefinition> = {
-  fighter,
-  wizard,
-  rogue,
-  cleric,
   berserker,
   cheat,
   commander,

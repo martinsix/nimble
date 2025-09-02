@@ -1,10 +1,8 @@
 import { SpellAbility } from '../../types/abilities';
 import { fireSchoolSpells } from './fire';
-import { radiantSchoolSpells } from './radiant';
-import { frostSchoolSpells } from './frost';
-import { natureSchoolSpells } from './nature';
-import { shadowSchoolSpells } from './shadow';
-import { arcaneSchoolSpells } from './arcane';
+import { iceSchoolSpells } from './ice';
+import { lightningSchoolSpells } from './lightning';
+import { windSchoolSpells } from './wind';
 
 /**
  * Get spells from a specific school
@@ -13,16 +11,12 @@ export function getSpellsBySchool(schoolId: string): SpellAbility[] {
   switch (schoolId) {
     case 'fire':
       return fireSchoolSpells;
-    case 'radiant':
-      return radiantSchoolSpells;
-    case 'frost':
-      return frostSchoolSpells;
-    case 'nature':
-      return natureSchoolSpells;
-    case 'shadow':
-      return shadowSchoolSpells;
-    case 'arcane':
-      return arcaneSchoolSpells;
+    case 'ice':
+      return iceSchoolSpells;
+    case 'lightning':
+      return lightningSchoolSpells;
+    case 'wind':
+      return windSchoolSpells;
     default:
       return [];
   }
@@ -33,21 +27,17 @@ export function getSpellsBySchool(schoolId: string): SpellAbility[] {
  */
 export function getAllSpellSchools(): { id: string; name: string; spells: SpellAbility[] }[] {
   return [
-    { id: 'fire', name: 'Fire Magic', spells: fireSchoolSpells },
-    { id: 'radiant', name: 'Radiant Magic', spells: radiantSchoolSpells },
-    { id: 'frost', name: 'Frost Magic', spells: frostSchoolSpells },
-    { id: 'nature', name: 'Nature Magic', spells: natureSchoolSpells },
-    { id: 'shadow', name: 'Shadow Magic', spells: shadowSchoolSpells },
-    { id: 'arcane', name: 'Arcane Magic', spells: arcaneSchoolSpells }
+    { id: 'fire', name: 'Fire Spells', spells: fireSchoolSpells },
+    { id: 'ice', name: 'Ice Spells', spells: iceSchoolSpells },
+    { id: 'lightning', name: 'Lightning Spells', spells: lightningSchoolSpells },
+    { id: 'wind', name: 'Wind Spells', spells: windSchoolSpells }
   ];
 }
 
 // Re-export individual school spells for backward compatibility
 export {
   fireSchoolSpells,
-  radiantSchoolSpells,
-  frostSchoolSpells,
-  natureSchoolSpells,
-  shadowSchoolSpells,
-  arcaneSchoolSpells
+  iceSchoolSpells,
+  lightningSchoolSpells,
+  windSchoolSpells
 };

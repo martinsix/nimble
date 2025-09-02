@@ -13,11 +13,9 @@ import { ancestryDefinitions as builtInAncestries } from '../data/ancestries/ind
 import { backgroundDefinitions as builtInBackgrounds } from '../data/backgrounds/index';
 import { 
   fireSchoolSpells, 
-  radiantSchoolSpells,
-  frostSchoolSpells,
-  natureSchoolSpells,
-  shadowSchoolSpells,
-  arcaneSchoolSpells,
+  iceSchoolSpells,
+  lightningSchoolSpells,
+  windSchoolSpells,
   getSpellsBySchool
 } from '../data/spell-schools/index';
 import { PREDEFINED_SPELL_SCHOOLS, getSpellSchoolDefinition } from '../data/spell-schools';
@@ -784,11 +782,9 @@ export class ContentRepositoryService {
   public getAllSpells(): SpellAbility[] {
     const builtInSpells = [
       ...fireSchoolSpells, 
-      ...radiantSchoolSpells,
-      ...frostSchoolSpells,
-      ...natureSchoolSpells,
-      ...shadowSchoolSpells,
-      ...arcaneSchoolSpells
+      ...iceSchoolSpells,
+      ...lightningSchoolSpells,
+      ...windSchoolSpells
     ];
     const customSpells = this.getCustomSpells();
     return [...builtInSpells, ...customSpells];

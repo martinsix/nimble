@@ -122,13 +122,13 @@ const shepherdFeatures: ClassFeature[] = [
     level: 2,
     type: 'ability',
     name: 'Lifebinding Spirit',
-    description: '(Radiant Spell, Tier 1) Action: Summon a spirit companion that follows you and is immune to harm. It lasts until you cast this spell again, take a Safe Rest, or it heals a number of times equal to the mana spent summoning it. Action: It attacks or heals a creature within Reach 4. It attacks for 1d6+WIL radiant damage (ignoring armor), or heals for the same amount. Upcasting: Increment its die size by 1 (max d12), +1 healing use.',
+    description: '(Divine Spell, Tier 1) Action: Summon a spirit companion that follows you and is immune to harm. It lasts until you cast this spell again, take a Safe Rest, or it heals a number of times equal to the mana spent summoning it. Action: It attacks or heals a creature within Reach 4. It attacks for 1d6+WIL divine damage (ignoring armor), or heals for the same amount. Upcasting: Increment its die size by 1 (max d12), +1 healing use.',
     ability: {
       id: 'lifebinding-spirit',
       name: 'Lifebinding Spirit',
       description: 'Summon a spirit companion that can attack or heal.',
       type: 'spell',
-      school: 'radiant',
+      school: 'divine',
       tier: 1,
       actionCost: 1,
       resourceCost: {

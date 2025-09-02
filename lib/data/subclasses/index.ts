@@ -1,32 +1,73 @@
-// Fighter subclasses
-export { fighterChampion } from './fighter-champion';
-export { fighterBattleMaster } from './fighter-battlemaster';
+// Berserker subclasses
+export { berserkerRedMist } from './berserker-red-mist';
+export { berserkerMountainheart } from './berserker-mountainheart';
 
-// Wizard subclasses
-export { wizardEvocation } from './wizard-evocation';
+// Cheat subclasses
+export { cheatSilentBlade } from './cheat-silent-blade';
+export { cheatScoundrel } from './cheat-scoundrel';
 
-// Rogue subclasses
-export { rogueAssassin } from './rogue-assassin';
+// Commander subclasses
+export { commanderBulwark } from './commander-bulwark';
+export { commanderVanguard } from './commander-vanguard';
 
-// Cleric subclasses
-export { clericLife } from './cleric-life';
+// Hunter subclasses
+export { hunterWildheart } from './hunter-wildheart';
+export { hunterShadowpath } from './hunter-shadowpath';
+
+// Mage subclasses
+export { mageChaos } from './mage-chaos';
+export { mageControl } from './mage-control';
+
+// Oathsworn subclasses
+export { oathswornVengeance } from './oathsworn-vengeance';
+export { oathswornRefuge } from './oathsworn-refuge';
+
+// Stormshifter subclasses
+export { circleOfSkyAndStorm } from './stormshifter-sky-storm';
+export { circleOfFangAndClaw } from './stormshifter-fang-claw';
+
+// Zephyr subclasses
+export { wayOfPain } from './zephyr-pain';
+export { wayOfFlame } from './zephyr-flame';
 
 // Import all subclass definitions for the main subclasses object
-import { fighterChampion } from './fighter-champion';
-import { fighterBattleMaster } from './fighter-battlemaster';
-import { wizardEvocation } from './wizard-evocation';
-import { rogueAssassin } from './rogue-assassin';
-import { clericLife } from './cleric-life';
+import { berserkerRedMist } from './berserker-red-mist';
+import { berserkerMountainheart } from './berserker-mountainheart';
+import { cheatSilentBlade } from './cheat-silent-blade';
+import { cheatScoundrel } from './cheat-scoundrel';
+import { commanderBulwark } from './commander-bulwark';
+import { commanderVanguard } from './commander-vanguard';
+import { hunterWildheart } from './hunter-wildheart';
+import { hunterShadowpath } from './hunter-shadowpath';
+import { mageChaos } from './mage-chaos';
+import { mageControl } from './mage-control';
+import { oathswornVengeance } from './oathsworn-vengeance';
+import { oathswornRefuge } from './oathsworn-refuge';
+import { circleOfSkyAndStorm } from './stormshifter-sky-storm';
+import { circleOfFangAndClaw } from './stormshifter-fang-claw';
+import { wayOfPain } from './zephyr-pain';
+import { wayOfFlame } from './zephyr-flame';
 
 import { SubclassDefinition } from '../../types/class';
 
 // All subclass definitions
 export const subclassDefinitions: Record<string, SubclassDefinition> = {
-  'fighter-champion': fighterChampion,
-  'fighter-battlemaster': fighterBattleMaster,
-  'wizard-evocation': wizardEvocation,
-  'rogue-assassin': rogueAssassin,
-  'cleric-life': clericLife
+  'berserker-red-mist': berserkerRedMist,
+  'berserker-mountainheart': berserkerMountainheart,
+  'cheat-silent-blade': cheatSilentBlade,
+  'cheat-scoundrel': cheatScoundrel,
+  'commander-bulwark': commanderBulwark,
+  'commander-vanguard': commanderVanguard,
+  'hunter-wildheart': hunterWildheart,
+  'hunter-shadowpath': hunterShadowpath,
+  'mage-chaos': mageChaos,
+  'mage-control': mageControl,
+  'oathsworn-vengeance': oathswornVengeance,
+  'oathsworn-refuge': oathswornRefuge,
+  'stormshifter-sky-storm': circleOfSkyAndStorm,
+  'stormshifter-fang-claw': circleOfFangAndClaw,
+  'zephyr-pain': wayOfPain,
+  'zephyr-flame': wayOfFlame
 };
 
 // Helper function to get a subclass definition by ID

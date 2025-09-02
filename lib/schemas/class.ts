@@ -3,7 +3,7 @@ import { z } from 'zod';
 // Basic building blocks with metadata
 const DiceExpressionSchema = z.object({
   count: z.int().int().min(1).max(20).meta({ title: 'Dice Count', description: 'Number of dice to roll (integer)' }),
-  sides: z.union([z.literal(4), z.literal(6), z.literal(8), z.literal(10), z.literal(12), z.literal(20), z.literal(100)]).meta({ title: 'Dice Type', description: 'Type of dice (d4, d6, d8, d10, d12, d20, d100)' })
+  sides: z.union([z.literal(4), z.literal(6), z.literal(8), z.literal(10), z.literal(12), z.literal(20), z.literal(66), z.literal(100)]).meta({ title: 'Dice Type', description: 'Type of dice (d4, d6, d8, d10, d12, d20, d66, d100)' })
 }).meta({ title: 'Dice Expression', description: 'Dice expression for rolling' });
 
 const AbilityRollSchema = z.object({
