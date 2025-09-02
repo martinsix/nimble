@@ -150,6 +150,7 @@ export interface IBackgroundService {
  */
 export interface ICharacterCreation {
   createCharacterWithClass(options: CreateCharacterOptions): Promise<Character>;
+  createCompleteCharacter(options: any): Promise<Character>; // Using any temporarily to avoid circular dependency
   createSampleCharacter(name: string, classId: string): Promise<Character>;
   applyStartingEquipment(characterId: string, equipmentIds: string[]): Promise<void>;
   getClassStartingEquipment(classId: string): string[];

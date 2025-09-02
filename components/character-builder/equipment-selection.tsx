@@ -4,204 +4,176 @@ import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { ItemBrowser } from "../item-browser";
-import { getCharacterService, getItemService, getContentRepository } from "@/lib/services/service-factory";
+import { getItemService, getContentRepository } from "@/lib/services/service-factory";
 import { Package, Search, Plus, Trash2, Sword, Shield, Shirt, Beaker, Target } from "lucide-react";
 import { Item } from "@/lib/types/inventory";
+import { Badge } from "../ui/badge";
 
 interface EquipmentSelectionProps {
-  onEquipmentReady?: () => void;
+  classId: string;
+  selectedEquipment: string[];
+  onEquipmentReady: (equipment: string[]) => void;
 }
 
-export function EquipmentSelection({ onEquipmentReady }: EquipmentSelectionProps) {
+export function EquipmentSelection({ 
+  classId,
+  selectedEquipment,
+  onEquipmentReady 
+}: EquipmentSelectionProps) {
   const [isItemBrowserOpen, setIsItemBrowserOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [equipmentLoaded, setEquipmentLoaded] = useState(false);
+  const [equipment, setEquipment] = useState<Item[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  const characterService = getCharacterService();
   const itemService = getItemService();
   const contentRepository = getContentRepository();
 
-  const character = characterService.getCurrentCharacter();
-
   useEffect(() => {
-    const loadStartingEquipment = async () => {
-      if (!character?.id || !character.classId || equipmentLoaded) return;
-
-      try {
-        setIsLoading(true);
-        
-        // Get starting equipment for the class
-        const classDefinition = contentRepository.getClassDefinition(character.classId);
-        if (classDefinition?.startingEquipment) {
-          // Convert repository items to inventory items and add to character
-          const equipmentItems = classDefinition.startingEquipment.map(repositoryId => {
-            const inventoryItem = itemService.createInventoryItem(repositoryId);
-            return inventoryItem;
-          }).filter(item => item !== null);
-
-          // Add items directly to character's inventory
-          const updatedInventory = {
-            ...character.inventory,
-            items: equipmentItems
-          };
-
-          await characterService.updateCharacterFields({
-            inventory: updatedInventory
-          });
-        }
-        
-        setEquipmentLoaded(true);
-        onEquipmentReady?.();
-      } catch (error) {
-        console.error('Failed to load starting equipment:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadStartingEquipment();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [character?.id, character?.classId, equipmentLoaded, contentRepository, itemService, characterService, onEquipmentReady]);
-
-  const handleAddItem = (repositoryId: string) => {
-    if (!character) return;
-
-    const inventoryItem = itemService.createInventoryItem(repositoryId);
-    if (!inventoryItem) {
-      console.error("Failed to create inventory item");
-      return;
+    if (!isInitialized && classId) {
+      loadStartingEquipment();
+      setIsInitialized(true);
     }
+  }, [classId, isInitialized]);
 
-    characterService.addItemToInventory(inventoryItem);
+  const loadStartingEquipment = () => {
+    // Get starting equipment for the class
+    const classDefinition = contentRepository.getClassDefinition(classId);
+    if (classDefinition?.startingEquipment) {
+      // Convert repository items to inventory items
+      const equipmentItems = classDefinition.startingEquipment.map(repositoryId => {
+        const inventoryItem = itemService.createInventoryItem(repositoryId);
+        return inventoryItem;
+      }).filter(item => item !== null) as Item[];
+
+      setEquipment(equipmentItems);
+      
+      // Notify parent with equipment IDs
+      const equipmentIds = equipmentItems.map(item => item.id);
+      onEquipmentReady(equipmentIds);
+    } else {
+      // No starting equipment
+      onEquipmentReady([]);
+    }
+  };
+
+  const handleAddItem = (item: Item) => {
+    const newEquipment = [...equipment, item];
+    setEquipment(newEquipment);
+    onEquipmentReady(newEquipment.map(item => item.id));
   };
 
   const handleRemoveItem = (itemId: string) => {
-    if (!character) return;
-
-    const updatedInventory = {
-      ...character.inventory,
-      items: character.inventory.items.filter(item => item.id !== itemId)
-    };
-
-    characterService.updateCharacterFields({
-      inventory: updatedInventory
-    });
+    const newEquipment = equipment.filter(item => item.id !== itemId);
+    setEquipment(newEquipment);
+    onEquipmentReady(newEquipment.map(item => item.id));
   };
 
   const getItemIcon = (item: Item) => {
-    // Use same icons as inventory component
     switch (item.type) {
-      case 'weapon': 
-        return <Sword className="w-4 h-4" />;
-      case 'armor': 
-        const armor = item as any;
-        return armor.isMainArmor ? <Shirt className="w-4 h-4" /> : <Shield className="w-4 h-4" />;
-      case 'consumable': 
-        return <Beaker className="w-4 h-4" />;
-      case 'ammunition': 
-        return <Target className="w-4 h-4" />;
-      default: 
-        return <Package className="w-4 h-4" />;
+      case 'weapon': return <Sword className="w-4 h-4" />;
+      case 'armor': return item.isMainArmor ? <Shield className="w-4 h-4" /> : <Shirt className="w-4 h-4" />;
+      case 'consumable': return <Beaker className="w-4 h-4" />;
+      case 'ammunition': return <Target className="w-4 h-4" />;
+      default: return <Package className="w-4 h-4" />;
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
-        <p>Loading starting equipment...</p>
-      </div>
-    );
-  }
-
-  if (!character) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
-        <p>No character selected</p>
-      </div>
-    );
-  }
+  const getItemDescription = (item: Item) => {
+    switch (item.type) {
+      case 'weapon':
+        return item.damage ? `Damage: ${item.damage}` : '';
+      case 'armor':
+        return item.armor ? `AC: ${item.armor}` : '';
+      case 'consumable':
+      case 'ammunition':
+        return `Count: ${item.count}`;
+      default:
+        return item.description || '';
+    }
+  };
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-2xl font-bold mb-2">Starting Equipment</h2>
-        <p className="text-muted-foreground">
-          Your character starts with class equipment. Add or remove items as needed.
-        </p>
-      </div>
-
-      {/* Add Item Button */}
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Inventory</h3>
-        <Button size="sm" onClick={() => setIsItemBrowserOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Item
+        <div>
+          <h3 className="text-lg font-semibold">Select Starting Equipment</h3>
+          <p className="text-sm text-muted-foreground">
+            Choose your starting gear and equipment
+          </p>
+        </div>
+        <Button
+          onClick={() => setIsItemBrowserOpen(true)}
+          variant="outline"
+          size="sm"
+        >
+          <Search className="w-4 h-4 mr-2" />
+          Browse Items
         </Button>
       </div>
 
-      {/* Items List */}
-      <div className="space-y-2">
-        {character.inventory.items.length === 0 ? (
-          <Card>
-            <CardContent className="p-6 text-center text-muted-foreground">
-              No items in inventory. Click &ldquo;Add Item&rdquo; to get started.
-            </CardContent>
-          </Card>
-        ) : (
-          character.inventory.items.map((item) => (
-            <Card key={item.id}>
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="shrink-0">{getItemIcon(item)}</div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium">{item.name}</span>
-                        <span className="text-xs bg-muted px-2 py-1 rounded capitalize">
-                          {item.type}
-                        </span>
-                      </div>
-                      {item.description && (
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {item.description}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                        <span>Size: {item.size}</span>
-                        {item.type === 'weapon' && (item as any).damage && (
-                          <span>Damage: {(item as any).damage}</span>
-                        )}
-                        {item.type === 'armor' && (item as any).armor && (
-                          <span>AC: {(item as any).armor}</span>
-                        )}
-                        {(item.type === 'consumable' || item.type === 'ammunition') && (item as any).count && (
-                          <span>Count: {(item as any).count}</span>
-                        )}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center justify-between">
+            <span>Starting Equipment</span>
+            <Badge variant="outline">
+              {equipment.length} {equipment.length === 1 ? 'item' : 'items'}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {equipment.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p className="text-sm">No equipment selected</p>
+              <Button
+                onClick={() => setIsItemBrowserOpen(true)}
+                variant="outline"
+                size="sm"
+                className="mt-4"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Equipment
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {equipment.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    {getItemIcon(item)}
+                    <div>
+                      <div className="font-medium">{item.name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {getItemDescription(item)}
                       </div>
                     </div>
                   </div>
                   <Button
+                    onClick={() => handleRemoveItem(item.id)}
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleRemoveItem(item.id)}
-                    className="text-destructive hover:text-destructive"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-      {/* Item Browser */}
       <ItemBrowser
         isOpen={isItemBrowserOpen}
         onClose={() => setIsItemBrowserOpen(false)}
-        onItemAdd={handleAddItem}
+        onItemAdd={(repositoryId) => {
+          const item = itemService.createInventoryItem(repositoryId);
+          if (item) {
+            handleAddItem(item);
+          }
+          setIsItemBrowserOpen(false);
+        }}
       />
     </div>
   );

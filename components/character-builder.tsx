@@ -15,11 +15,7 @@ import { SelectedFeature, Character } from "@/lib/types/character";
 
 // Helper function to apply feature selections to a character
 async function applyFeatureSelections(
-  character: Character,
   featureSelections: Record<string, FeatureSelectionType>,
-  classId: string,
-  ancestryId: string,
-  backgroundId: string
 ): Promise<SelectedFeature[]> {
   const selectedFeatures: SelectedFeature[] = [];
   const now = new Date();
@@ -76,15 +72,31 @@ async function applyFeatureSelections(
   return selectedFeatures;
 }
 
-// Character builder state
+// Character builder state - maintains all character data until final creation
 interface CharacterBuilderState {
+  // Basic info
   classId?: string;
   ancestryId?: string;
   backgroundId?: string;
   name: string;
-  featureSelections: Record<string, FeatureSelectionType>; // Feature selections before character creation
-  characterId?: string; // Set after character creation
-  equipmentReady?: boolean; // Whether equipment step is ready
+  
+  // Features
+  featureSelections: Record<string, FeatureSelectionType>;
+  
+  // Attributes
+  attributes: {
+    strength: number;
+    dexterity: number;
+    intelligence: number;
+    will: number;
+  };
+  
+  // Skills
+  skillAllocations: Record<string, number>;
+  
+  // Equipment
+  selectedEquipment: string[];
+  equipmentReady: boolean;
 }
 
 // Builder steps
@@ -113,7 +125,16 @@ export function CharacterBuilder({
   const [currentStep, setCurrentStep] = useState(0);
   const [builderState, setBuilderState] = useState<CharacterBuilderState>({
     name: '',
-    featureSelections: {}
+    featureSelections: {},
+    attributes: {
+      strength: 0,
+      dexterity: 0,
+      intelligence: 0,
+      will: 0
+    },
+    skillAllocations: {},
+    selectedEquipment: [],
+    equipmentReady: false
   });
 
   const contentRepository = ContentRepositoryService.getInstance();
@@ -140,12 +161,24 @@ export function CharacterBuilder({
     setBuilderState(prev => ({ ...prev, name }));
   };
 
-  const handleEquipmentReady = () => {
-    setBuilderState(prev => ({ ...prev, equipmentReady: true }));
+  const handleEquipmentReady = (equipment: string[]) => {
+    setBuilderState(prev => ({ 
+      ...prev, 
+      selectedEquipment: equipment,
+      equipmentReady: true 
+    }));
   };
 
   const handleFeatureSelectionsChange = (selections: Record<string, FeatureSelectionType>) => {
     setBuilderState(prev => ({ ...prev, featureSelections: selections }));
+  };
+  
+  const handleAttributesChange = (attributes: typeof builderState.attributes) => {
+    setBuilderState(prev => ({ ...prev, attributes }));
+  };
+  
+  const handleSkillsChange = (skillAllocations: Record<string, number>) => {
+    setBuilderState(prev => ({ ...prev, skillAllocations }));
   };
 
   const canProceedFromHeritage = (): boolean => {
@@ -155,52 +188,41 @@ export function CharacterBuilder({
               builderState.name.trim());
   };
 
-  const createCharacterWithFeatures = async () => {
+  const createCharacterFromBuilder = async () => {
     if (!canProceedFromHeritage()) return;
+    if (!builderState.classId || !builderState.ancestryId || !builderState.backgroundId) return;
 
     try {
-      // Create character with basic info
-      const character = await characterCreationService.createCharacterWithClass({
-        name: builderState.name.trim(),
-        classId: builderState.classId!,
-        ancestryId: builderState.ancestryId!,
-        backgroundId: builderState.backgroundId!
-      });
+      // Prepare selected features from feature selections
+      const selectedFeatures = await applyFeatureSelections(
+        builderState.featureSelections,
+      );
 
-      // Apply feature selections to the character
-      if (Object.keys(builderState.featureSelections).length > 0) {
-        const selectedFeatures = await applyFeatureSelections(
-          character,
-          builderState.featureSelections,
-          builderState.classId!,
-          builderState.ancestryId!,
-          builderState.backgroundId!
-        );
-        
-        // Update character with selected features
-        const updatedCharacter = {
-          ...character,
-          selectedFeatures: [...(character.selectedFeatures || []), ...selectedFeatures]
-        };
-        await characterService.updateCharacter(updatedCharacter);
-      }
-      
-      setBuilderState(prev => ({ ...prev, characterId: character.id }));
+      // Create the complete character at the end
+      const character = await characterCreationService.createCompleteCharacter({
+        name: builderState.name.trim(),
+        classId: builderState.classId,
+        ancestryId: builderState.ancestryId,
+        backgroundId: builderState.backgroundId,
+        attributes: builderState.attributes,
+        skillAllocations: builderState.skillAllocations,
+        selectedFeatures,
+        selectedEquipment: builderState.selectedEquipment
+      });
       
       // Load the character into the character service
       await characterService.loadCharacter(character.id);
       
-      setCurrentStep(3); // Move to attributes step
+      // Notify parent and close
+      onCharacterCreated(character.id);
+      onClose();
     } catch (error) {
       console.error('Failed to create character:', error);
     }
   };
 
-  const handleCreateCharacter = () => {
-    if (builderState.characterId) {
-      onCharacterCreated(builderState.characterId);
-      onClose();
-    }
+  const handleFinalizeCharacter = async () => {
+    await createCharacterFromBuilder();
   };
 
   // Determine if we can proceed from current step
@@ -211,13 +233,13 @@ export function CharacterBuilder({
       case 'heritage':
         return canProceedFromHeritage();
       case 'features':
-        return canProceedFromHeritage(); // Can proceed once selections are made (or if none required)
+        return canProceedFromHeritage();
       case 'attributes':
-        return !!builderState.characterId;
+        return true; // Can always proceed from attributes
       case 'skills':
-        return !!builderState.characterId; // Skills are optional, can always proceed
+        return true; // Skills are optional, can always proceed
       case 'equipment':
-        return !!builderState.equipmentReady; // Equipment step is ready when items are loaded
+        return !!builderState.equipmentReady; // Equipment step is ready when items are selected
       default:
         return false;
     }
@@ -234,7 +256,7 @@ export function CharacterBuilder({
         setCurrentStep(2); // Go to features
         break;
       case 'features':
-        await createCharacterWithFeatures(); // This creates the character and moves to attributes
+        setCurrentStep(3); // Go to attributes
         break;
       case 'attributes':
         setCurrentStep(4); // Go to skills
@@ -243,18 +265,13 @@ export function CharacterBuilder({
         setCurrentStep(5); // Go to equipment
         break;
       case 'equipment':
-        handleCreateCharacter();
+        await handleFinalizeCharacter();
         break;
     }
   };
 
   const handlePrevious = () => {
     if (currentStep > 0) {
-      // Don't allow going back from attributes to features after character is created
-      if (currentStep === 3 && builderState.characterId) {
-        // Character already created, can't go back to features
-        return;
-      }
       setCurrentStep(currentStep - 1);
     }
   };
@@ -266,7 +283,7 @@ export function CharacterBuilder({
       case 'heritage':
         return 'Next: Features';
       case 'features':
-        return 'Create Character';
+        return 'Next: Attributes';
       case 'attributes':
         return 'Next: Skills';
       case 'skills':
@@ -285,7 +302,7 @@ export function CharacterBuilder({
       case 'features':
         return 'Back to Heritage';
       case 'attributes':
-        return builderState.characterId ? 'Previous' : 'Back to Features';
+        return 'Back to Features';
       case 'skills':
         return 'Back to Attributes';
       case 'equipment':
@@ -330,19 +347,29 @@ export function CharacterBuilder({
           />
         );
       case 'attributes':
-        if (!builderState.characterId) return null;
         return (
-          <AttributeSelection />
+          <AttributeSelection 
+            attributes={builderState.attributes}
+            onAttributesChange={handleAttributesChange}
+            classId={builderState.classId}
+            ancestryId={builderState.ancestryId}
+          />
         );
       case 'skills':
-        if (!builderState.characterId) return null;
         return (
-          <SkillsSelection />
+          <SkillsSelection 
+            skillAllocations={builderState.skillAllocations}
+            onSkillsChange={handleSkillsChange}
+            attributes={builderState.attributes}
+          />
         );
       case 'equipment':
-        if (!builderState.characterId) return null;
         return (
-          <EquipmentSelection onEquipmentReady={handleEquipmentReady} />
+          <EquipmentSelection 
+            classId={builderState.classId!}
+            selectedEquipment={builderState.selectedEquipment}
+            onEquipmentReady={handleEquipmentReady} 
+          />
         );
       default:
         return null;
@@ -357,17 +384,18 @@ export function CharacterBuilder({
       completed.push(0); // Class step
     }
     
-    if (canProceedFromHeritage() || builderState.characterId) {
+    if (canProceedFromHeritage()) {
       completed.push(1); // Heritage step
     }
     
     if (canProceedFromHeritage()) {
       completed.push(2); // Features step (available after heritage)
-    }
-    
-    if (builderState.characterId) {
-      completed.push(3); // Attributes step (auto-completed when character created)
-      completed.push(4); // Skills step (optional, so marked complete when available)
+      
+      // Mark subsequent steps as available once features are done
+      if (currentStep > 2) {
+        completed.push(3); // Attributes step
+        completed.push(4); // Skills step
+      }
     }
     
     if (builderState.equipmentReady) {

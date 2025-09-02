@@ -7,7 +7,6 @@ import { Input } from "../ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { RotateCcw } from "lucide-react";
 import { AttributeName } from "@/lib/types/character";
-import { useCharacterService } from "@/lib/hooks/use-character-service";
 import { gameConfig } from '../../lib/config/game-config';
 
 
@@ -25,171 +24,164 @@ const ATTRIBUTE_LABELS = {
   will: 'Will'
 } as const;
 
-export function AttributeSelection() {
-  const [selectedArray, setSelectedArray] = useState<keyof typeof STANDARD_ARRAYS>('standard');
-  const { character, updateCharacter } = useCharacterService();
-
-  // Get attributes from the hook's character state, with fallback
-  const attributes = character?.attributes || {
-    strength: 0,
-    dexterity: 0, 
-    intelligence: 0,
-    will: 0
+interface AttributeSelectionProps {
+  attributes: {
+    strength: number;
+    dexterity: number;
+    intelligence: number;
+    will: number;
   };
+  onAttributesChange: (attributes: {
+    strength: number;
+    dexterity: number;
+    intelligence: number;
+    will: number;
+  }) => void;
+  classId?: string;
+  ancestryId?: string;
+}
+
+export function AttributeSelection({ 
+  attributes, 
+  onAttributesChange,
+  classId,
+  ancestryId 
+}: AttributeSelectionProps) {
+  const [selectedArray, setSelectedArray] = useState<keyof typeof STANDARD_ARRAYS>('standard');
 
   const assignedValues = [attributes.strength, attributes.dexterity, attributes.intelligence, attributes.will];
 
-  const onAttributeChange = async (attribute: AttributeName, value: number) => {
-    try {
-      if (character) {
-        const updatedCharacter = {
-          ...character,
-          attributes: {
-            ...character.attributes,
-            [attribute]: value
-          }
-        };
-        
-        await updateCharacter(updatedCharacter);
-      }
-    } catch (error) {
-      console.error('Failed to update character attributes:', error);
-    }
-  };
-
-  const handleReset = async () => {
-    if (character) {
-      const attributes = {
-        strength: 0,
-        dexterity: 0, 
-        intelligence: 0,
-        will: 0
-      };
-      const updatedCharacter = {
-        ...character,
-        attributes: {
-          ...attributes
-        }
-      };
-      await updateCharacter(updatedCharacter);
-    }
-  };
-
-  const handleManualChange = (attribute: AttributeName, value: string) => {
-    const numValue = parseInt(value) || 0;
-    // Clamp attributes to game config range
-    const clampedValue = Math.max(gameConfig.character.attributeRange.min, Math.min(gameConfig.character.attributeRange.max, numValue));
-    
-    onAttributeChange(attribute, clampedValue);
-  };
-
-  const getAvailableValues = (forAttribute: AttributeName) => {
-    const arrayValues = [...STANDARD_ARRAYS[selectedArray].values] as number[];
-    const currentAttributeValue = attributes[forAttribute];
-    
-    // Get remaining values by removing assigned ones
-    const remainingValues = [...arrayValues];
-    assignedValues.forEach(usedValue => {
-      const index = remainingValues.indexOf(usedValue);
-      if (index > -1) {
-        remainingValues.splice(index, 1);
-      }
+  const onAttributeChange = (attribute: AttributeName, value: number) => {
+    onAttributesChange({
+      ...attributes,
+      [attribute]: value
     });
+  };
+
+  const assignArray = () => {
+    const array = STANDARD_ARRAYS[selectedArray].values;
+    const sortedArray = [...array].sort((a, b) => b - a);
     
-    // If current attribute has a value from this array, add it back as available
-    if (arrayValues.includes(currentAttributeValue)) {
-      remainingValues.push(currentAttributeValue);
-    }
+    onAttributesChange({
+      strength: sortedArray[0],
+      dexterity: sortedArray[1],
+      intelligence: sortedArray[2],
+      will: sortedArray[3]
+    });
+  };
+
+  const resetAttributes = () => {
+    onAttributesChange({
+      strength: 0,
+      dexterity: 0,
+      intelligence: 0,
+      will: 0
+    });
+  };
+
+  const canApplyArray = () => {
+    const array = STANDARD_ARRAYS[selectedArray].values;
+    const sortedArray = [...array].sort((a, b) => b - a);
+    const sortedCurrent = [...assignedValues].sort((a, b) => b - a);
     
-    // Return unique values only
-    return Array.from(new Set(remainingValues)).sort((a, b) => b - a);;
+    return JSON.stringify(sortedArray) !== JSON.stringify(sortedCurrent);
   };
 
   return (
-    <div className="space-y-4">
-      <div className="text-center">
-        <h2 className="text-xl font-bold mb-1">Assign Attributes</h2>
-        <p className="text-sm text-muted-foreground">Choose how to distribute your character&apos;s attributes</p>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-lg font-semibold">Assign Attributes</h3>
+          <p className="text-sm text-muted-foreground">
+            Distribute your attribute scores using a standard array or manual assignment
+          </p>
+        </div>
+        <Button 
+          onClick={resetAttributes} 
+          variant="outline" 
+          size="sm"
+        >
+          <RotateCcw className="w-4 h-4 mr-2" />
+          Reset
+        </Button>
       </div>
 
-      {/* Array Selection */}
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Standard Array</CardTitle>
+        <CardHeader>
+          <CardTitle className="text-base">Standard Arrays</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-            <label htmlFor="array-select" className="text-sm font-medium">
-              Select Array:
-            </label>
+        <CardContent className="space-y-4">
+          <div className="flex gap-4">
             <Select value={selectedArray} onValueChange={(value: keyof typeof STANDARD_ARRAYS) => setSelectedArray(value)}>
-              <SelectTrigger className="w-full sm:flex-1">
+              <SelectTrigger className="flex-1">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(STANDARD_ARRAYS).map(([key, config]) => (
+                {Object.entries(STANDARD_ARRAYS).map(([key, array]) => (
                   <SelectItem key={key} value={key}>
-                    {config.name} ({config.values.join(', ')})
+                    {array.name} ({array.values.join(', ')})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          
-          <div className="text-xs text-muted-foreground">
-            Click the value buttons below each attribute to assign values from the selected array.
-          </div>
-
-          <div className="flex justify-center">
-            <Button variant="outline" onClick={handleReset} size="sm">
-              <RotateCcw className="w-3 h-3 mr-1" />
-              Reset All
+            <Button 
+              onClick={assignArray} 
+              disabled={!canApplyArray()}
+            >
+              Apply Array
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Individual Attribute Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {ATTRIBUTE_NAMES.map((attributeName) => {
-          const availableValues = getAvailableValues(attributeName);
-          
-          return (
-            <Card key={attributeName} className="h-fit">
-              <CardHeader className="pb-2 pt-3">
-                <CardTitle className="text-sm text-center">{ATTRIBUTE_LABELS[attributeName]}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 pt-0">
-                <div className="flex justify-center">
-                  <Input
-                    type="number"
-                    value={attributes[attributeName]}
-                    onChange={(e) => handleManualChange(attributeName, e.target.value)}
-                    className="w-16 h-8 text-center text-sm font-medium"
-                    min="-5"
-                    max="10"
-                  />
-                </div>
-                
-                <div className="flex flex-wrap justify-center gap-1">
-                  {availableValues.map((value) => (
-                    <Button
-                      key={value}
-                      variant={attributes[attributeName] === value ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => onAttributeChange(attributeName, value)}
-                      className="px-2 py-1 h-7 text-xs min-w-8"
-                    >
-                      {value >= 0 ? `+${value}` : value}
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Attribute Scores</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {ATTRIBUTE_NAMES.map((attr) => (
+            <div key={attr} className="flex items-center gap-4">
+              <label className="w-24 text-sm font-medium">
+                {ATTRIBUTE_LABELS[attr]}
+              </label>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onAttributeChange(attr, Math.max(gameConfig.character.attributeRange.min, attributes[attr] - 1))}
+                  disabled={attributes[attr] <= gameConfig.character.attributeRange.min}
+                >
+                  -
+                </Button>
+                <Input
+                  type="number"
+                  value={attributes[attr]}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value) || 0;
+                    if (value >= gameConfig.character.attributeRange.min && value <= gameConfig.character.attributeRange.max) {
+                      onAttributeChange(attr, value);
+                    }
+                  }}
+                  className="w-20 text-center"
+                  min={gameConfig.character.attributeRange.min}
+                  max={gameConfig.character.attributeRange.max}
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onAttributeChange(attr, Math.min(gameConfig.character.attributeRange.max, attributes[attr] + 1))}
+                  disabled={attributes[attr] >= gameConfig.character.attributeRange.max}
+                >
+                  +
+                </Button>
+              </div>
+              <span className="text-sm text-muted-foreground">
+                (Range: {gameConfig.character.attributeRange.min} to {gameConfig.character.attributeRange.max})
+              </span>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
     </div>
   );
 }

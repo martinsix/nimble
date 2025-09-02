@@ -1,4 +1,4 @@
-import { Character, Attributes } from '../types/character';
+import { Character, Attributes, SelectedFeature } from '../types/character';
 import { ICharacterCreation, ICharacterStorage, ICharacterService, IAncestryService, IBackgroundService } from './interfaces';
 import { ContentRepositoryService } from './content-repository-service';
 import { ItemService } from './item-service';
@@ -13,6 +13,7 @@ import {
   createDefaultActionTracker,
   createDefaultWounds,
 } from '../utils/character-defaults';
+import { Item } from '../types/inventory';
 
 export interface CreateCharacterOptions {
   name: string;
@@ -21,6 +22,17 @@ export interface CreateCharacterOptions {
   classId: string;
   level?: number;
   attributes?: Attributes;
+}
+
+export interface CreateCompleteCharacterOptions {
+  name: string;
+  ancestryId: string;
+  backgroundId: string;
+  classId: string;
+  attributes: Attributes;
+  skillAllocations: Record<string, number>;
+  selectedFeatures: SelectedFeature[];
+  selectedEquipment: string[];
 }
 
 /**
@@ -112,6 +124,109 @@ export class CharacterCreationService implements ICharacterCreation {
     this.characterService.notifyCharacterCreated(baseCharacter);
 
     return baseCharacter;
+  }
+
+  /**
+   * Creates a complete character with all selections made during character creation
+   */
+  async createCompleteCharacter(options: CreateCompleteCharacterOptions): Promise<Character> {
+    const {
+      name,
+      ancestryId,
+      backgroundId,
+      classId,
+      attributes,
+      skillAllocations,
+      selectedFeatures,
+      selectedEquipment
+    } = options;
+
+    // Validate class, ancestry, and background exist
+    const classDefinition = this.contentRepository.getClassDefinition(classId);
+    if (!classDefinition) {
+      throw new Error(`Class not found: ${classId}`);
+    }
+
+    const ancestryDefinition = this.contentRepository.getAncestryDefinition(ancestryId);
+    if (!ancestryDefinition) {
+      throw new Error(`Ancestry not found: ${ancestryId}`);
+    }
+
+    const backgroundDefinition = this.contentRepository.getBackgroundDefinition(backgroundId);
+    if (!backgroundDefinition) {
+      throw new Error(`Background not found: ${backgroundId}`);
+    }
+
+    // Create ancestry and background traits
+    const ancestry = this.ancestryService.createAncestryTrait(ancestryId);
+    const background = this.backgroundService.createBackgroundTrait(backgroundId);
+
+    // Create base character configuration
+    const config = createDefaultCharacterConfiguration();
+    const hitPoints = createDefaultHitPoints(classDefinition.startingHP);
+    const hitDice = createDefaultHitDice(1, classDefinition.hitDieSize);
+    const proficiencies = createDefaultProficiencies(classDefinition);
+
+    // Create skills with allocations
+    const skills = createDefaultSkills();
+    Object.entries(skillAllocations).forEach(([skillName, points]) => {
+      const skill = skills[skillName];
+      if (skill) {
+        skills[skillName] = {
+          ...skill,
+          modifier: points
+        };
+      }
+    });
+
+    // Create inventory with selected equipment
+    const inventory = createDefaultInventory(attributes.strength);
+    if (selectedEquipment.length > 0) {
+      const items: Item[] = selectedEquipment.map(itemId => {
+        return this.itemService.createInventoryItem(itemId);
+      }).filter(item => item !== null) as Item[];
+      
+      inventory.items = items;
+    }
+
+    // Create the character with all data
+    const characterId = `character-${Date.now()}`;
+    const character = await this.characterStorage.createCharacter({
+      name,
+      ancestry,
+      background,
+      level: 1,
+      classId,
+      grantedFeatures: [], // Will be populated by syncCharacterFeatures
+      selectedFeatures,
+      spellTierAccess: 0, // Will be updated by class features
+      proficiencies,
+      attributes,
+      saveAdvantages: { ...classDefinition.saveAdvantages },
+      hitPoints,
+      hitDice,
+      wounds: createDefaultWounds(config.maxWounds),
+      resources: [],
+      config,
+      initiative: createDefaultInitiative(),
+      actionTracker: createDefaultActionTracker(),
+      inEncounter: false,
+      skills,
+      inventory,
+      abilities: []
+    }, characterId);
+
+    // Load the character into the service to apply features
+    await this.characterService.loadCharacter(character.id);
+
+    // Apply ancestry features
+    await this.ancestryService.grantAncestryFeatures(character.id);
+    
+    // Apply background features
+    await this.backgroundService.grantBackgroundFeatures(character.id);
+
+    // Return the updated character
+    return this.characterService.getCurrentCharacter() || character;
   }
 
   /**

@@ -5,147 +5,127 @@ import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { RotateCcw } from "lucide-react";
-import { useCharacterService } from "@/lib/hooks/use-character-service";
 import { gameConfig } from "@/lib/config/game-config";
 import { SkillsList } from "../shared/skills-list";
 
-export function SkillsSelection() {
-  const { character, updateCharacter } = useCharacterService();
-  const [skillAllocations, setSkillAllocations] = useState<Record<string, number>>({});
+interface SkillsSelectionProps {
+  skillAllocations: Record<string, number>;
+  onSkillsChange: (skillAllocations: Record<string, number>) => void;
+  attributes: {
+    strength: number;
+    dexterity: number;
+    intelligence: number;
+    will: number;
+  };
+}
+
+export function SkillsSelection({ 
+  skillAllocations, 
+  onSkillsChange,
+  attributes 
+}: SkillsSelectionProps) {
+  const [localAllocations, setLocalAllocations] = useState<Record<string, number>>({});
   
   const maxSkillPoints = gameConfig.character.initialSkillPoints;
   
-  // Initialize skill allocations from character data
+  // Initialize skill allocations
   useEffect(() => {
-    if (character?.skills) {
-      const allocations: Record<string, number> = {};
-      gameConfig.skills.forEach(skill => {
-        const characterSkill = character.skills[skill.name as keyof typeof character.skills];
-        allocations[skill.name] = characterSkill?.modifier || 0;
-      });
-      setSkillAllocations(allocations);
-    }
-  }, [character]);
+    // Initialize with existing allocations or zeros
+    const initialAllocations: Record<string, number> = {};
+    gameConfig.skills.forEach(skill => {
+      initialAllocations[skill.name] = skillAllocations[skill.name] || 0;
+    });
+    setLocalAllocations(initialAllocations);
+  }, [skillAllocations]);
 
   const getTotalAllocatedPoints = () => {
-    return Object.values(skillAllocations).reduce((sum, points) => sum + points, 0);
+    return Object.values(localAllocations).reduce((sum, points) => sum + points, 0);
   };
 
   const getRemainingPoints = () => {
     return maxSkillPoints - getTotalAllocatedPoints();
   };
 
-  const handleSkillChange = async (skillName: string, newValue: number) => {
+  const handleSkillChange = (skillName: string, newValue: number) => {
     const newAllocations = {
-      ...skillAllocations,
+      ...localAllocations,
       [skillName]: newValue
     };
-    setSkillAllocations(newAllocations);
-
-    // Update character with new skill modifiers
-    if (character) {
-      const updatedSkills = { ...character.skills };
-      gameConfig.skills.forEach(skill => {
-        const skillPoints = newAllocations[skill.name] || 0;
-        const skillKey = skill.name as keyof typeof updatedSkills;
-        updatedSkills[skillKey] = {
-          ...updatedSkills[skillKey],
-          modifier: skillPoints
-        };
-      });
-
-      const updatedCharacter = {
-        ...character,
-        skills: updatedSkills
-      };
-      
-      await updateCharacter(updatedCharacter);
-    }
+    setLocalAllocations(newAllocations);
+    onSkillsChange(newAllocations);
   };
 
-  const handleReset = async () => {
+  const handleResetSkills = () => {
     const resetAllocations: Record<string, number> = {};
     gameConfig.skills.forEach(skill => {
       resetAllocations[skill.name] = 0;
     });
-    setSkillAllocations(resetAllocations);
-
-    // Update character with reset skills
-    if (character) {
-      const updatedSkills = { ...character.skills };
-      gameConfig.skills.forEach(skill => {
-        const skillKey = skill.name as keyof typeof updatedSkills;
-        updatedSkills[skillKey] = {
-          ...updatedSkills[skillKey],
-          modifier: 0
-        };
-      });
-
-      const updatedCharacter = {
-        ...character,
-        skills: updatedSkills
-      };
-      
-      await updateCharacter(updatedCharacter);
-    }
+    setLocalAllocations(resetAllocations);
+    onSkillsChange(resetAllocations);
   };
 
-  const getAttributeValues = (): Record<string, number> => {
-    if (!character?.attributes) {
-      return {
-        strength: 0,
-        dexterity: 0,
-        intelligence: 0,
-        will: 0,
-      };
-    }
-    return {
-      strength: character.attributes.strength || 0,
-      dexterity: character.attributes.dexterity || 0,
-      intelligence: character.attributes.intelligence || 0,
-      will: character.attributes.will || 0,
-    };
+  const handleQuickDistribute = () => {
+    const resetAllocations: Record<string, number> = {};
+    const pointsPerSkill = Math.floor(maxSkillPoints / gameConfig.skills.length);
+    const remainder = maxSkillPoints % gameConfig.skills.length;
+    
+    gameConfig.skills.forEach((skill, index) => {
+      resetAllocations[skill.name] = pointsPerSkill + (index < remainder ? 1 : 0);
+    });
+    
+    setLocalAllocations(resetAllocations);
+    onSkillsChange(resetAllocations);
   };
 
   return (
-    <div className="space-y-3">
-      <div className="text-center">
-        <h2 className="text-xl font-bold mb-1">Assign Skill Points</h2>
-        <p className="text-sm text-muted-foreground">
-          Distribute {maxSkillPoints} points across your skills to customize your character&apos;s capabilities
-        </p>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-lg font-semibold">Allocate Skill Points</h3>
+          <p className="text-sm text-muted-foreground">
+            Distribute {maxSkillPoints} points among your skills (optional)
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button 
+            onClick={handleQuickDistribute} 
+            variant="outline" 
+            size="sm"
+          >
+            Distribute Evenly
+          </Button>
+          <Button 
+            onClick={handleResetSkills} 
+            variant="outline" 
+            size="sm"
+          >
+            <RotateCcw className="w-4 h-4 mr-2" />
+            Reset
+          </Button>
+        </div>
       </div>
 
-      {/* Points Summary - Compact */}
       <Card>
-        <CardContent className="p-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="text-sm">
-                <span className="font-medium">Points:</span>
-                <Badge variant={getRemainingPoints() === 0 ? "default" : "secondary"} className="ml-1 text-xs">
-                  {getRemainingPoints()} / {maxSkillPoints}
-                </Badge>
-              </div>
-              <div className="text-xs text-muted-foreground hidden sm:block">
-                Attribute + Points = Total
-              </div>
-            </div>
-            <Button variant="outline" onClick={handleReset} size="sm" className="h-7 px-2 text-xs">
-              <RotateCcw className="w-3 h-3 mr-1" />
-              Reset
-            </Button>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between mb-4">
+            <Badge variant={getRemainingPoints() === 0 ? "default" : "secondary"}>
+              {getRemainingPoints()} points remaining
+            </Badge>
+            <span className="text-sm text-muted-foreground">
+              {getTotalAllocatedPoints()} / {maxSkillPoints} allocated
+            </span>
           </div>
+
+          <SkillsList
+            skillAllocations={localAllocations}
+            attributeValues={attributes}
+            onSkillChange={handleSkillChange}
+            maxPerSkill={gameConfig.character.skillModifierRange.max}
+            availablePoints={getRemainingPoints()}
+            readOnly={false}
+          />
         </CardContent>
       </Card>
-
-      {/* Skills List - Using shared component */}
-      <SkillsList
-        skillAllocations={skillAllocations}
-        attributeValues={getAttributeValues()}
-        onSkillChange={handleSkillChange}
-        availablePoints={getRemainingPoints()}
-      />
     </div>
   );
 }
