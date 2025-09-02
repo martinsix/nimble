@@ -40,7 +40,7 @@ export const gameConfig: GameConfig = {
     },
     skillModifierRange: {
       min: 0,
-      max: 20,
+      max: 12,
     },
     initialSkillPoints: 4,
   },

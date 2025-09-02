@@ -1,18 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "./ui/button";
-import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { WizardDialog } from "./wizard/wizard-dialog";
 import { ContentRepositoryService } from "@/lib/services/content-repository-service";
 import { getCharacterCreation, getCharacterService } from "@/lib/services/service-factory";
-import { StepIndicator } from "./character-builder/step-indicator";
 import { ClassSelection } from "./character-builder/class-selection";
 import { HeritageSelection } from "./character-builder/heritage-selection";
 import { AttributeSelection } from "./character-builder/attribute-selection";
 import { SkillsSelection } from "./character-builder/skills-selection";
 import { EquipmentSelection } from "./character-builder/equipment-selection";
-import { Attributes, AttributeName } from "@/lib/types/character";
+import { Wand2 } from "lucide-react";
 
 // Character builder state
 interface CharacterBuilderState {
@@ -25,7 +22,13 @@ interface CharacterBuilderState {
 }
 
 // Builder steps
-type BuilderStep = 'class' | 'ancestry-background' | 'attributes' | 'skills' | 'equipment' | 'final';
+const STEPS = [
+  { id: 'class', label: 'Class' },
+  { id: 'heritage', label: 'Heritage' },
+  { id: 'attributes', label: 'Attributes' },
+  { id: 'skills', label: 'Skills' },
+  { id: 'equipment', label: 'Equipment' }
+];
 
 interface CharacterBuilderProps {
   isOpen: boolean;
@@ -34,14 +37,13 @@ interface CharacterBuilderProps {
   editingCharacterId?: string; // For future editing support
 }
 
-
 export function CharacterBuilder({ 
   isOpen, 
   onClose, 
   onCharacterCreated,
   editingCharacterId 
 }: CharacterBuilderProps) {
-  const [currentStep, setCurrentStep] = useState<BuilderStep>('class');
+  const [currentStep, setCurrentStep] = useState(0);
   const [builderState, setBuilderState] = useState<CharacterBuilderState>({
     name: ''
   });
@@ -74,7 +76,6 @@ export function CharacterBuilder({
     setBuilderState(prev => ({ ...prev, equipmentReady: true }));
   };
 
-
   const canProceedFromStep2 = (): boolean => {
     return !!(builderState.classId && 
               builderState.ancestryId && 
@@ -99,7 +100,7 @@ export function CharacterBuilder({
       // Load the character into the character service
       await characterService.loadCharacter(character.id);
       
-      setCurrentStep('attributes');
+      setCurrentStep(2); // Move to attributes step
     } catch (error) {
       console.error('Failed to create character:', error);
     }
@@ -112,12 +113,12 @@ export function CharacterBuilder({
     }
   };
 
-  // Centralized navigation logic
+  // Determine if we can proceed from current step
   const canProceedFromCurrentStep = (): boolean => {
-    switch (currentStep) {
+    switch (STEPS[currentStep].id) {
       case 'class':
         return !!builderState.classId;
-      case 'ancestry-background':
+      case 'heritage':
         return canProceedFromStep2();
       case 'attributes':
         return !!builderState.characterId;
@@ -130,19 +131,21 @@ export function CharacterBuilder({
     }
   };
 
-  const handleNextStep = async () => {
-    switch (currentStep) {
+  const handleNext = async () => {
+    const currentStepId = STEPS[currentStep].id;
+    
+    switch (currentStepId) {
       case 'class':
-        setCurrentStep('ancestry-background');
+        setCurrentStep(1); // Go to heritage
         break;
-      case 'ancestry-background':
-        await proceedToAttributes();
+      case 'heritage':
+        await proceedToAttributes(); // This creates the character and moves to step 2
         break;
       case 'attributes':
-        setCurrentStep('skills');
+        setCurrentStep(3); // Go to skills
         break;
       case 'skills':
-        setCurrentStep('equipment');
+        setCurrentStep(4); // Go to equipment
         break;
       case 'equipment':
         handleCreateCharacter();
@@ -150,29 +153,22 @@ export function CharacterBuilder({
     }
   };
 
-  const handlePreviousStep = () => {
-    switch (currentStep) {
-      case 'ancestry-background':
-        setCurrentStep('class');
-        break;
-      case 'attributes':
-        setCurrentStep('ancestry-background');
-        break;
-      case 'skills':
-        setCurrentStep('attributes');
-        break;
-      case 'equipment':
-        setCurrentStep('skills');
-        break;
-      // Class step has no previous step
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      // Don't allow going back from attributes to heritage after character is created
+      if (currentStep === 2 && builderState.characterId) {
+        // Character already created, can't go back to heritage
+        return;
+      }
+      setCurrentStep(currentStep - 1);
     }
   };
 
   const getNextButtonText = (): string => {
-    switch (currentStep) {
+    switch (STEPS[currentStep].id) {
       case 'class':
         return 'Next: Heritage';
-      case 'ancestry-background':
+      case 'heritage':
         return 'Create Character';
       case 'attributes':
         return 'Next: Skills';
@@ -186,11 +182,11 @@ export function CharacterBuilder({
   };
 
   const getPreviousButtonText = (): string => {
-    switch (currentStep) {
-      case 'ancestry-background':
+    switch (STEPS[currentStep].id) {
+      case 'heritage':
         return 'Back to Class';
       case 'attributes':
-        return 'Back to Heritage';
+        return builderState.characterId ? 'Previous' : 'Back to Heritage';
       case 'skills':
         return 'Back to Attributes';
       case 'equipment':
@@ -201,7 +197,7 @@ export function CharacterBuilder({
   };
 
   const renderStepContent = () => {
-    switch (currentStep) {
+    switch (STEPS[currentStep].id) {
       case 'class':
         return (
           <ClassSelection
@@ -210,7 +206,7 @@ export function CharacterBuilder({
             onClassSelect={handleClassSelect}
           />
         );
-      case 'ancestry-background':
+      case 'heritage':
         return (
           <HeritageSelection
             availableAncestries={availableAncestries}
@@ -243,52 +239,55 @@ export function CharacterBuilder({
     }
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] p-0 flex flex-col">
-        <div className="sticky top-0 bg-background border-b px-4 sm:px-6 py-4 flex items-center justify-between">
-          <DialogTitle className="text-lg sm:text-xl font-bold">Character Builder</DialogTitle>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto">
-          <div className="px-4 sm:px-6 py-4 overflow-x-hidden pb-20">
-            <StepIndicator
-              currentStep={currentStep}
-              classSelected={!!builderState.classId}
-              heritageComplete={canProceedFromStep2()}
-              attributesComplete={!!builderState.characterId}
-              skillsComplete={!!builderState.characterId} // Skills are optional, considered complete when character exists
-              equipmentComplete={!!builderState.equipmentReady} // Equipment step completion tracked separately
-            />
-            <div className="min-w-0">
-              {renderStepContent()}
-            </div>
-          </div>
-        </div>
+  // Determine which steps are completed for visual indication
+  const getCompletedSteps = (): number[] => {
+    const completed: number[] = [];
+    
+    if (builderState.classId) {
+      completed.push(0); // Class step
+    }
+    
+    if (canProceedFromStep2() || builderState.characterId) {
+      completed.push(1); // Heritage step
+    }
+    
+    if (builderState.characterId) {
+      completed.push(2); // Attributes step (auto-completed when character created)
+      completed.push(3); // Skills step (optional, so marked complete when available)
+    }
+    
+    if (builderState.equipmentReady) {
+      completed.push(4); // Equipment step
+    }
+    
+    return completed;
+  };
 
-        {/* Always Visible Bottom Navigation */}
-        <div className="sticky bg-background border-t px-4 sm:px-6 py-4">
-          <div className="flex justify-between">
-            <Button 
-              variant="outline" 
-              onClick={handlePreviousStep}
-              disabled={currentStep === 'class'}
-              size="sm"
-            >
-              <ChevronLeft className="w-4 h-4 mr-2" />
-              {getPreviousButtonText()}
-            </Button>
-            <Button 
-              onClick={handleNextStep}
-              disabled={!canProceedFromCurrentStep()}
-              size="sm"
-            >
-              {getNextButtonText()}
-              <ChevronRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+  return (
+    <WizardDialog
+      open={isOpen}
+      onOpenChange={onClose}
+      title="Character Builder"
+      titleIcon={<Wand2 className="h-5 w-5 text-primary" />}
+      steps={STEPS}
+      currentStep={currentStep}
+      onStepChange={(step) => {
+        // Only allow direct step navigation if the step is accessible
+        if (step < currentStep || (step === 0 || (step === 1 && builderState.classId))) {
+          setCurrentStep(step);
+        }
+      }}
+      onNext={handleNext}
+      onPrevious={handlePrevious}
+      canProceed={canProceedFromCurrentStep()}
+      nextButtonText={getNextButtonText()}
+      previousButtonText={getPreviousButtonText()}
+      className="max-w-4xl w-[95vw]"
+      completedSteps={getCompletedSteps()}
+    >
+      <div className="min-w-0 px-4 sm:px-6 py-4">
+        {renderStepContent()}
+      </div>
+    </WizardDialog>
   );
 }
