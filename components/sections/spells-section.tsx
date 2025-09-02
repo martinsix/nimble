@@ -27,7 +27,7 @@ export function SpellsSection() {
   const contentRepository = ContentRepositoryService.getInstance();
   const [isLockedSectionOpen, setIsLockedSectionOpen] = useState<boolean>(false);
   
-  if (!character || character.spellTierAccess === 0) return null;
+  if (!character) return null;
   
   // Get all spell abilities from character
   const spellAbilities = character.abilities.abilities.filter(ability => ability.type === 'spell') as SpellAbility[];
@@ -50,6 +50,7 @@ export function SpellsSection() {
       if (feature.type === 'spell_school' && feature.spellSchool) {
         const schoolId = feature.spellSchool.schoolId;
         const allSpells = contentRepository.getSpellsBySchool(schoolId);
+        // Include tier 0 spells when checking what's available vs locked
         const lockedSpells = allSpells.filter(spell => spell.tier > character.spellTierAccess);
         
         if (lockedSpells.length > 0) {

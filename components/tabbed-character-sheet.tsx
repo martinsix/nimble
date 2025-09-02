@@ -17,7 +17,8 @@ export function TabbedCharacterSheet() {
   const activeTab = uiState.activeTab;
   
   // Check if spells tab should be accessible
-  const hasSpellAccess = character && character.spellTierAccess > 0 && 
+  // Tier 0 access is allowed as long as the character has spell schools unlocked
+  const hasSpellAccess = character && character.spellTierAccess >= 0 && 
     character.abilities.abilities.some(ability => ability.type === 'spell');
   
   // Auto-switch away from spells tab if character loses spell access

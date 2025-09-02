@@ -69,7 +69,7 @@ const SpellAbilitySchema = z.object({
   description: z.string().min(1).meta({ title: 'Description', description: 'Detailed description of the spell\'s effects' }),
   type: z.literal('spell').meta({ title: 'Type', description: 'Must be "spell" for spell abilities' }),
   school: z.string().min(1).meta({ title: 'School', description: 'ID of the spell school this belongs to' }),
-  tier: z.number().int().min(1).max(9).meta({ title: 'Tier', description: 'Spell tier/level (1-9, integer)' }),
+  tier: z.number().int().min(0).max(9).meta({ title: 'Tier', description: 'Spell tier/level (0-9, integer)' }),
   roll: AbilityRollSchema.optional().meta({ title: 'Roll', description: 'Dice roll configuration for the spell' }),
   actionCost: z.number().int().min(0).max(2).optional().meta({ title: 'Action Cost', description: 'Action cost (0=bonus, 1=action, 2=full turn, integer)' }),
   resourceCost: ResourceCostSchema.optional().meta({ title: 'Resource Cost', description: 'Resource cost to cast the spell' })

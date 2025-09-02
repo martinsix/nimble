@@ -31,10 +31,10 @@ export function BottomTabBar({ activeTab, onTabChange }: BottomTabBarProps) {
   
   // Filter tabs based on character capabilities
   const visibleTabs = tabs.filter(tab => {
-    // Hide spells tab if character has no spell access or no spells
+    // Hide spells tab if character has no spell schools unlocked
     if (tab.id === 'spells') {
-      if (!character || character.spellTierAccess === 0) return false;
-      // Also check if character has any spell abilities
+      if (!character) return false;
+      // Show spells tab if character has any spell abilities (even tier 0)
       const hasSpells = character.abilities.abilities.some(ability => ability.type === 'spell');
       return hasSpells;
     }
