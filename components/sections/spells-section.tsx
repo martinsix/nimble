@@ -11,6 +11,12 @@ import { Sparkles, ChevronDown, ChevronRight, Zap, Lock } from "lucide-react";
 import { useCharacterService } from "@/lib/hooks/use-character-service";
 import { useUIStateService } from "@/lib/hooks/use-ui-state-service";
 import { ContentRepositoryService } from "@/lib/services/content-repository-service";
+import { 
+  hasEnoughResourcesForSpell, 
+  getInsufficientResourceMessage,
+  formatResourceCost,
+  formatActionCost
+} from "@/lib/utils/spell-utils";
 
 export function SpellsSection() {
   const { character, performUseAbility } = useCharacterService();
@@ -186,53 +192,63 @@ export function SpellsSection() {
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <div className="space-y-3 pt-2">
-                  {spells.map((spell) => (
-                    <div key={spell.id} className="border rounded-lg p-4 space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-2 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="font-semibold">{spell.name}</h4>
-                            <Badge variant="outline" className={getTierColor(spell.tier)}>
-                              Tier {spell.tier}
-                            </Badge>
-                            {spell.actionCost !== undefined && (
-                              <Badge variant="secondary" className="text-xs">
-                                {spell.actionCost === 0 ? 'Bonus Action' : 
-                                 spell.actionCost === 1 ? 'Action' : 
-                                 `${spell.actionCost} Actions`}
+                  {spells.map((spell) => {
+                    const canCast = hasEnoughResourcesForSpell(character, spell);
+                    const insufficientMessage = getInsufficientResourceMessage(character, spell);
+                    
+                    return (
+                      <div key={spell.id} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-2 flex-1">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-semibold">{spell.name}</h4>
+                              <Badge variant="outline" className={getTierColor(spell.tier)}>
+                                Tier {spell.tier}
                               </Badge>
-                            )}
-                            {spell.resourceCost && (
-                              <Badge variant="secondary" className="text-xs">
-                                {spell.resourceCost.type === 'fixed' 
-                                  ? `${spell.resourceCost.amount} ${spell.resourceCost.resourceId}`
-                                  : `${spell.resourceCost.minAmount}-${spell.resourceCost.maxAmount} ${spell.resourceCost.resourceId}`
-                                }
-                              </Badge>
+                            </div>
+                            
+                            {/* Action and Resource costs in a row */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {spell.actionCost !== undefined && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {formatActionCost(spell.actionCost)}
+                                </Badge>
+                              )}
+                              {spell.resourceCost && (
+                                <Badge 
+                                  variant={canCast ? "secondary" : "destructive"} 
+                                  className="text-xs"
+                                >
+                                  {formatResourceCost(spell.resourceCost)}
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            <p className="text-sm text-muted-foreground">
+                              {spell.description}
+                            </p>
+                            {spell.roll && (
+                              <div className="text-xs text-muted-foreground">
+                                Roll: {spell.roll.dice.count}d{spell.roll.dice.sides}
+                                {spell.roll.modifier && ` + ${spell.roll.modifier}`}
+                                {spell.roll.attribute && ` + ${spell.roll.attribute}`}
+                              </div>
                             )}
                           </div>
-                          <p className="text-sm text-muted-foreground">
-                            {spell.description}
-                          </p>
-                          {spell.roll && (
-                            <div className="text-xs text-muted-foreground">
-                              Roll: {spell.roll.dice.count}d{spell.roll.dice.sides}
-                              {spell.roll.modifier && ` + ${spell.roll.modifier}`}
-                              {spell.roll.attribute && ` + ${spell.roll.attribute}`}
-                            </div>
-                          )}
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleSpellCast(spell)}
-                          className="ml-4"
-                        >
-                          <Zap className="w-4 h-4" />
-                        </Button>
+                          <Button
+                            size="sm"
+                            variant={canCast ? "outline" : "ghost"}
+                            onClick={() => handleSpellCast(spell)}
+                            className="ml-4"
+                            disabled={!canCast}
+                            title={insufficientMessage || 'Cast spell'}
+                          >
+                            <Zap className="w-4 h-4" />
+                          </Button>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CollapsibleContent>
             </Collapsible>
