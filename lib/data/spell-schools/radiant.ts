@@ -1,14 +1,14 @@
 import { SpellAbility } from '../../types/abilities';
 
 export const radiantSchoolSpells: SpellAbility[] = [
-  // Tier 1 (Cantrips & Low-level spells)
+  // Tier 0 (Cantrips)
   {
     id: 'sacred-flame',
     name: 'Sacred Flame',
     description: 'Flame-like radiance descends on a creature that you can see. This is a cantrip that requires no mana.',
     type: 'spell',
     school: 'radiant',
-    tier: 1,
+    tier: 0,
     actionCost: 1,
     roll: {
       dice: { count: 1, sides: 8 },
@@ -16,6 +16,8 @@ export const radiantSchoolSpells: SpellAbility[] = [
     }
     // No resource cost - cantrip
   },
+  
+  // Tier 1
   {
     id: 'guiding-bolt',
     name: 'Guiding Bolt',

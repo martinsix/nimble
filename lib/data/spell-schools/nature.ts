@@ -1,20 +1,22 @@
 import { SpellAbility } from '../../types/abilities';
 
 export const natureSchoolSpells: SpellAbility[] = [
-  // Tier 1
+  // Tier 0 (Cantrips)
   {
     id: 'thorn-whip',
     name: 'Thorn Whip',
     description: 'You create a long, vine-like whip covered in thorns that lashes out at your command.',
     type: 'spell',
     school: 'nature',
-    tier: 1,
+    tier: 0,
     actionCost: 1,
     roll: {
       dice: { count: 1, sides: 6 }
     }
     // No resource cost - cantrip
   },
+  
+  // Tier 1
   {
     id: 'entangle',
     name: 'Entangle',

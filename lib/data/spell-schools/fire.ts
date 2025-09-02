@@ -1,20 +1,22 @@
 import { SpellAbility } from '../../types/abilities';
 
 export const fireSchoolSpells: SpellAbility[] = [
-  // Tier 1 (Cantrips & Low-level spells)
+  // Tier 0 (Cantrips)
   {
     id: 'fire-bolt',
     name: 'Fire Bolt',
     description: 'You hurl a mote of fire at a creature or object within range. This is a cantrip that requires no mana.',
     type: 'spell',
     school: 'fire',
-    tier: 1,
+    tier: 0,
     actionCost: 1,
     roll: {
       dice: { count: 1, sides: 10 }
     }
     // No resource cost - cantrip
   },
+  
+  // Tier 1
   {
     id: 'burning-hands',
     name: 'Burning Hands',

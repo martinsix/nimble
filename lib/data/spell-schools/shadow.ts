@@ -1,20 +1,22 @@
 import { SpellAbility } from '../../types/abilities';
 
 export const shadowSchoolSpells: SpellAbility[] = [
-  // Tier 1
+  // Tier 0 (Cantrips)
   {
     id: 'chill-touch',
     name: 'Chill Touch',
     description: 'You create a ghostly, skeletal hand in the space of a creature within range.',
     type: 'spell',
     school: 'shadow',
-    tier: 1,
+    tier: 0,
     actionCost: 1,
     roll: {
       dice: { count: 1, sides: 8 }
     }
     // No resource cost - cantrip
   },
+  
+  // Tier 1
   {
     id: 'inflict-wounds',
     name: 'Inflict Wounds',

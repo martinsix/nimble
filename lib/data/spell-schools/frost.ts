@@ -1,20 +1,22 @@
 import { SpellAbility } from '../../types/abilities';
 
 export const frostSchoolSpells: SpellAbility[] = [
-  // Tier 1
+  // Tier 0 (Cantrips)
   {
     id: 'frost-bolt',
     name: 'Frost Bolt',
     description: 'A beam of crackling blue energy streaks toward a creature within range, slowing their movement.',
     type: 'spell',
     school: 'frost',
-    tier: 1,
+    tier: 0,
     actionCost: 1,
     roll: {
       dice: { count: 1, sides: 8 }
     }
     // No resource cost - cantrip
   },
+  
+  // Tier 1
   {
     id: 'ice-knife',
     name: 'Ice Knife',
