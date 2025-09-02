@@ -469,12 +469,24 @@ export class ContentRepositoryService {
       const data = JSON.parse(subclassesJson);
       const subclasses = Array.isArray(data) ? data : [data];
       
-      const validSubclasses = subclasses.filter(sub => 
-        sub.id && sub.name && sub.description && sub.parentClassId && sub.features
-      );
+      // Validate using Zod schemas
+      const validSubclasses: SubclassDefinition[] = [];
+      const errors: string[] = [];
+
+      subclasses.forEach((subclass, index) => {
+        const validation = ContentValidationService.validateSubclass(subclass);
+        if (validation.valid && validation.data) {
+          validSubclasses.push(validation.data);
+        } else {
+          errors.push(`Subclass ${index + 1}: ${validation.errors?.join(', ') || 'Invalid format'}`);
+        }
+      });
 
       if (validSubclasses.length === 0) {
-        return { success: false, message: 'No valid subclass definitions found' };
+        return { 
+          success: false, 
+          message: `No valid subclass definitions found. Errors: ${errors.join('; ')}`
+        };
       }
 
       const existingSubclasses = this.getCustomSubclasses();
@@ -491,9 +503,13 @@ export class ContentRepositoryService {
 
       localStorage.setItem(STORAGE_KEYS.customSubclasses, JSON.stringify(updatedSubclasses));
 
+      const message = errors.length > 0 
+        ? `Successfully added/updated ${validSubclasses.length} subclass(es). ${errors.length} invalid entries skipped.`
+        : `Successfully added/updated ${validSubclasses.length} subclass(es)`;
+
       return { 
         success: true, 
-        message: `Successfully added/updated ${validSubclasses.length} subclass(es)`,
+        message,
         itemsAdded: validSubclasses.length
       };
     } catch (error) {

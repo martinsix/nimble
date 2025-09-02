@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { ClassFeatureSchema } from './class';
 
 // Size categories for different ancestries
 const SizeCategorySchema = z.enum(['tiny', 'small', 'medium', 'large', 'huge', 'gargantuan']);
@@ -62,36 +61,13 @@ const AncestryResistanceFeatureSchema = BaseAncestryFeatureSchema.extend({
   resistances: z.array(ResistanceSchema).meta({ title: 'Resistances', description: 'Damage or condition resistances' })
 });
 
-export const AncestryFeatureSchema = z.union([
+export const AncestryFeatureSchema = z.discriminatedUnion('type', [
   AncestryAbilityFeatureSchema,
   AncestryPassiveFeatureSchema,
   AncestryStatBoostFeatureSchema,
   AncestryProficiencyFeatureSchema,
   AncestryDarkvisionFeatureSchema,
   AncestryResistanceFeatureSchema
-]);
-
-// Armor proficiency schemas (reused from class schema)
-const ArmorProficiencySchema = z.union([
-  z.object({ type: z.literal('cloth') }),
-  z.object({ type: z.literal('leather') }),
-  z.object({ type: z.literal('mail') }),
-  z.object({ type: z.literal('plate') }),
-  z.object({ type: z.literal('shields') }),
-  z.object({ 
-    type: z.literal('freeform'),
-    name: z.string().min(1)
-  })
-]);
-
-// Weapon proficiency schemas (reused from class schema)
-const WeaponProficiencySchema = z.union([
-  z.object({ type: z.literal('strength_weapons') }),
-  z.object({ type: z.literal('dexterity_weapons') }),
-  z.object({ 
-    type: z.literal('freeform'),
-    name: z.string().min(1)
-  })
 ]);
 
 // Name generator configuration schemas

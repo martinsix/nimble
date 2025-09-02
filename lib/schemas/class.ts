@@ -12,7 +12,7 @@ const AbilityRollSchema = z.object({
   attribute: z.enum(['strength', 'dexterity', 'intelligence', 'will']).optional().meta({ title: 'Attribute', description: 'Attribute to add to the roll' })
 }).meta({ title: 'Ability Roll', description: 'Roll configuration for abilities' });
 
-const ResourceCostSchema = z.union([
+const ResourceCostSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('fixed').meta({ title: 'Fixed Cost', description: 'Fixed resource cost' }),
     resourceId: z.string().meta({ title: 'Resource ID', description: 'ID of the resource to consume' }),
@@ -75,7 +75,7 @@ const SpellAbilitySchema = z.object({
   resourceCost: ResourceCostSchema.optional().meta({ title: 'Resource Cost', description: 'Resource cost to cast the spell' })
 }).meta({ title: 'Spell Ability', description: 'Spell that characters can cast' });
 
-const AbilitySchema = z.union([ActionAbilitySchema, SpellAbilitySchema]);
+const AbilitySchema = z.discriminatedUnion('type', [ActionAbilitySchema, SpellAbilitySchema]);
 
 // Class Feature Schemas
 const BaseClassFeatureSchema = z.object({

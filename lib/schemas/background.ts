@@ -12,7 +12,7 @@ const BackgroundPassiveFeatureSchema = BaseBackgroundFeatureSchema.extend({
   category: z.enum(['social', 'professional', 'cultural', 'knowledge']).optional().meta({ title: 'Category', description: 'Feature category' })
 });
 
-export const BackgroundFeatureSchema = z.union([
+export const BackgroundFeatureSchema = z.discriminatedUnion('type', [
   BackgroundPassiveFeatureSchema
 ]);
 
