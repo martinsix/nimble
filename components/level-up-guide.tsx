@@ -3,14 +3,24 @@
 import React, { useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { useCharacterService } from '@/lib/hooks/use-character-service';
-import { getCharacterService, getDiceService, getClassService, getContentRepository } from '@/lib/services/service-factory';
+import { getDiceService, getClassService, getContentRepository } from '@/lib/services/service-factory';
+import { ClassFeature, StatBoostFeature, SpellSchoolFeature, UtilitySpellsFeature, PickFeatureFromPoolFeature, SpellTierAccessFeature, ResourceFeature, AbilityFeature } from '@/lib/types/class';
+import { AttributeName, SelectedFeature } from '@/lib/types/character';
+import { createResourceInstance } from '@/lib/types/resources';
 import { WizardDialog } from '@/components/wizard/wizard-dialog';
-import { LevelSelectionStep, HitPointsStep, SkillsStep } from './level-up-guide/steps';
+import { LevelSelectionStep, HitPointsStep, SkillsStep, FeatureSelectionStep } from './level-up-guide/index';
 
 interface LevelUpGuideProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+// Type for feature selections during level up
+type FeatureSelectionType = 
+  | { type: 'stat_boost'; attribute: AttributeName }
+  | { type: 'spell_school_choice'; schoolId: string }
+  | { type: 'utility_spells'; spellIds: string[] }
+  | { type: 'feature_pool'; selectedFeatureId: string };
 
 interface LevelUpData {
   levelsToGain: number;
@@ -24,13 +34,15 @@ interface LevelUpData {
   newMaxHp: number;
   newHitDice: { current: number; max: number };
   skillAllocations: Record<string, number>;
+  featureSelections: Record<string, FeatureSelectionType>; // Selections for interactive features
 }
 
 const STEPS = [
   { id: 'levels', label: 'Choose Levels' },
   { id: 'hp', label: 'Roll Hit Points' },
   { id: 'skills', label: 'Allocate Skills' },
-  // More steps to come: 'features', 'abilities', 'review'
+  { id: 'features', label: 'Select Features' },
+  // More steps to come: 'abilities', 'review'
 ];
 
 export function LevelUpGuide({ open, onOpenChange }: LevelUpGuideProps) {
@@ -42,7 +54,8 @@ export function LevelUpGuide({ open, onOpenChange }: LevelUpGuideProps) {
     totalHpGain: 0,
     newMaxHp: character?.hitPoints.max || 0,
     newHitDice: character ? { ...character.hitDice } : { current: 0, max: 0 },
-    skillAllocations: {}
+    skillAllocations: {},
+    featureSelections: {}
   });
 
   // Service instances
@@ -64,6 +77,9 @@ export function LevelUpGuide({ open, onOpenChange }: LevelUpGuideProps) {
     } else if (currentStep === 1) {
       // Moving from HP to Skills
       setCurrentStep(2);
+    } else if (currentStep === 2) {
+      // Moving from Skills to Features
+      setCurrentStep(3);
     } else if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
@@ -131,7 +147,190 @@ export function LevelUpGuide({ open, onOpenChange }: LevelUpGuideProps) {
         }
       });
       
-      // Update character with new level, HP, and skills
+      // Prepare feature-related updates
+      let updatedAttributes = { ...character.attributes };
+      let updatedAbilities = [...character.abilities];
+      let updatedResources = [...character.resources];
+      let grantedFeatures = [...character.grantedFeatures];
+      let selectedFeatures: SelectedFeature[] = [...(character.selectedFeatures || [])];
+      let spellTierAccess = character.spellTierAccess;
+      
+      // Process feature selections
+      const classService = getClassService();
+      
+      // Get all features for the levels being gained
+      for (let i = 0; i < levelUpData.levelsToGain; i++) {
+        const targetLevel = character.level + i + 1;
+        
+        // Get features for this specific level by comparing with previous level
+        const tempCharacter = { ...character, level: targetLevel };
+        const allFeaturesAtLevel = classService.getExpectedFeaturesForCharacter(tempCharacter);
+        const tempCharacterPrev = { ...character, level: targetLevel - 1 };
+        const allFeaturesAtPrevLevel = classService.getExpectedFeaturesForCharacter(tempCharacterPrev);
+        
+        // Features for this level are the difference
+        const levelFeatures = allFeaturesAtLevel.filter(feature => 
+          !allFeaturesAtPrevLevel.some(prevFeature => 
+            prevFeature.name === feature.name && prevFeature.level === feature.level
+          )
+        );
+        
+        // Process each feature
+        for (const feature of levelFeatures) {
+          const featureId = classService.generateFeatureId(character.classId, targetLevel, feature.name);
+          
+          // Add to granted features
+          if (!grantedFeatures.includes(featureId)) {
+            grantedFeatures.push(featureId);
+          }
+          
+          // Apply feature based on type and selections
+          const selection = levelUpData.featureSelections[featureId];
+          
+          switch (feature.type) {
+            case 'stat_boost':
+              if (selection?.type === 'stat_boost' && selection.attribute) {
+                const statBoostFeature = feature as StatBoostFeature;
+                const boostAmount = statBoostFeature.statBoosts[0]?.amount || 1;
+                updatedAttributes[selection.attribute] = Math.min(
+                  10,
+                  updatedAttributes[selection.attribute] + boostAmount
+                );
+                // Track the selection
+                selectedFeatures.push({
+                  type: 'stat_boost',
+                  attribute: selection.attribute,
+                  amount: boostAmount,
+                  selectedAt: new Date(),
+                  grantedByFeatureId: featureId
+                });
+              }
+              break;
+              
+            case 'spell_school_choice':
+              if (selection?.type === 'spell_school_choice' && selection.schoolId) {
+                // Create a spell school feature for the selected school
+                const selectedSchool = contentRepo.getAllSpellSchools().find(s => s.id === selection.schoolId);
+                if (selectedSchool) {
+                  // Get spells from the selected school up to current tier access
+                  const schoolSpells = contentRepo.getSpellsBySchool(selection.schoolId)
+                    .filter(spell => spell.tier <= spellTierAccess);
+                  
+                  // Add spells that aren't already in abilities
+                  const currentSpellIds = new Set(updatedAbilities.filter(a => a.type === 'spell').map(a => a.id));
+                  const newSpells = schoolSpells.filter(spell => !currentSpellIds.has(spell.id));
+                  updatedAbilities.push(...newSpells);
+                  
+                  // Track the selection
+                  selectedFeatures.push({
+                    type: 'spell_school',
+                    schoolId: selection.schoolId,
+                    selectedAt: new Date(),
+                    grantedByFeatureId: featureId
+                  });
+                }
+              }
+              break;
+              
+            case 'utility_spells':
+              if (selection?.type === 'utility_spells' && selection.spellIds && selection.spellIds.length > 0) {
+                // Add selected utility spells
+                const utilityFeature = feature as UtilitySpellsFeature;
+                const addedSpellIds: string[] = [];
+                
+                utilityFeature.schools.forEach(schoolId => {
+                  const utilitySpells = contentRepo.getSpellsBySchool(schoolId)
+                    .filter(spell => spell.tier === 0 && selection.spellIds.includes(spell.id));
+                  
+                  // Add spells that aren't already in abilities
+                  const currentSpellIds = new Set(updatedAbilities.filter(a => a.type === 'spell').map(a => a.id));
+                  const newSpells = utilitySpells.filter(spell => !currentSpellIds.has(spell.id));
+                  updatedAbilities.push(...newSpells);
+                  addedSpellIds.push(...newSpells.map(s => s.id));
+                });
+                
+                // Track the selection
+                if (addedSpellIds.length > 0) {
+                  selectedFeatures.push({
+                    type: 'utility_spells',
+                    spellIds: addedSpellIds,
+                    fromSchools: utilityFeature.schools,
+                    selectedAt: new Date(),
+                    grantedByFeatureId: featureId
+                  });
+                }
+              }
+              break;
+              
+            case 'pick_feature_from_pool':
+              if (selection?.type === 'feature_pool' && selection.selectedFeatureId) {
+                const poolFeature = feature as PickFeatureFromPoolFeature;
+                const pool = classService.getFeaturePool(character.classId, poolFeature.poolId);
+                if (pool) {
+                  const selectedFeature = pool.features.find(f => f.id === selection.selectedFeatureId);
+                  if (selectedFeature) {
+                    // Apply the selected feature
+                    if (selectedFeature.type === 'ability') {
+                      const abilityFeature = selectedFeature as AbilityFeature;
+                      if (abilityFeature.ability && !updatedAbilities.some(a => a.id === abilityFeature.ability.id)) {
+                        updatedAbilities.push(abilityFeature.ability);
+                      }
+                    }
+                    
+                    // Track the selection
+                    selectedFeatures.push({
+                      type: 'pool_feature',
+                      poolId: poolFeature.poolId,
+                      featureId: selection.selectedFeatureId,
+                      feature: selectedFeature,
+                      selectedAt: new Date(),
+                      grantedByFeatureId: featureId
+                    });
+                  }
+                }
+              }
+              break;
+              
+            case 'spell_school':
+              const spellSchoolFeature = feature as SpellSchoolFeature;
+              // Get spells from the school up to current tier access
+              const schoolSpells = contentRepo.getSpellsBySchool(spellSchoolFeature.spellSchool.schoolId)
+                .filter(spell => spell.tier <= spellTierAccess);
+              
+              // Add spells that aren't already in abilities
+              const currentSpellIds = new Set(updatedAbilities.filter(a => a.type === 'spell').map(a => a.id));
+              const newSpells = schoolSpells.filter(spell => !currentSpellIds.has(spell.id));
+              updatedAbilities.push(...newSpells);
+              break;
+              
+            case 'spell_tier_access':
+              const tierFeature = feature as SpellTierAccessFeature;
+              spellTierAccess = Math.max(spellTierAccess, tierFeature.maxTier);
+              break;
+              
+            case 'resource':
+              const resourceFeature = feature as ResourceFeature;
+              if (resourceFeature.resourceDefinition && !updatedResources.some(r => r.definition.id === resourceFeature.resourceDefinition.id)) {
+                const resourceInstance = createResourceInstance(
+                  resourceFeature.resourceDefinition,
+                  resourceFeature.startingAmount,
+                  updatedResources.length
+                );
+                updatedResources.push(resourceInstance);
+              }
+              break;
+              
+            case 'ability':
+              const abilityFeature = feature as AbilityFeature;
+              if (abilityFeature.ability && !updatedAbilities.some(a => a.id === abilityFeature.ability.id)) {
+                updatedAbilities.push(abilityFeature.ability);
+              }
+              break;
+          }
+        }
+      }
+      
+      // Update character with new level, HP, skills, and features
       const updatedCharacter = {
         ...character,
         level: character.level + levelUpData.levelsToGain,
@@ -145,14 +344,19 @@ export function LevelUpGuide({ open, onOpenChange }: LevelUpGuideProps) {
           current: levelUpData.newHitDice.current,
           max: levelUpData.newHitDice.max
         },
-        skills: updatedSkills
+        skills: updatedSkills,
+        attributes: updatedAttributes,
+        abilities: updatedAbilities,
+        resources: updatedResources,
+        grantedFeatures,
+        selectedFeatures,
+        spellTierAccess
       };
       
       // Save the updated character
       await updateCharacter(updatedCharacter);
       
-      // Sync class features for the new level
-      const classService = getClassService();
+      // Sync any remaining features
       await classService.syncCharacterFeatures();
       
       // Close the dialog
@@ -185,6 +389,14 @@ export function LevelUpGuide({ open, onOpenChange }: LevelUpGuideProps) {
           levelsToGain={levelUpData.levelsToGain}
           skillAllocations={levelUpData.skillAllocations}
           onSkillAllocationsChange={(allocations) => setLevelUpData(prev => ({ ...prev, skillAllocations: allocations }))}
+        />;
+      
+      case 'features':
+        return <FeatureSelectionStep
+          character={character}
+          levelsToGain={levelUpData.levelsToGain}
+          featureSelections={levelUpData.featureSelections}
+          onFeatureSelectionsChange={(selections) => setLevelUpData(prev => ({ ...prev, featureSelections: selections }))}
         />;
       
       default:

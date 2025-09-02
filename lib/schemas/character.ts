@@ -225,13 +225,44 @@ export const proficienciesSchema = z.object({
   weapons: z.array(weaponProficiencySchema),
 });
 
-const selectedPoolFeatureSchema = z.object({
+// Base schema for all selected features
+const baseSelectedFeatureSchema = z.object({
+  grantedByFeatureId: z.string().min(1),
+  selectedAt: z.coerce.date()
+});
+
+// Individual feature selection schemas
+const selectedPoolFeatureSchema = baseSelectedFeatureSchema.extend({
+  type: z.literal('pool_feature'),
   poolId: z.string().min(1),
   featureId: z.string().min(1),
-  feature: ClassFeatureSchema,
-  selectedAt: z.coerce.date(),
-  grantedByFeatureId: z.string().min(1)
+  feature: ClassFeatureSchema
 });
+
+const selectedSpellSchoolSchema = baseSelectedFeatureSchema.extend({
+  type: z.literal('spell_school'),
+  schoolId: z.string().min(1)
+});
+
+const selectedStatBoostSchema = baseSelectedFeatureSchema.extend({
+  type: z.literal('stat_boost'),
+  attribute: attributeNameSchema,
+  amount: z.number().int().positive()
+});
+
+const selectedUtilitySpellsSchema = baseSelectedFeatureSchema.extend({
+  type: z.literal('utility_spells'),
+  spellIds: z.array(z.string().min(1)),
+  fromSchools: z.array(z.string().min(1))
+});
+
+// Union of all selected feature types
+const selectedFeatureSchema = z.discriminatedUnion('type', [
+  selectedPoolFeatureSchema,
+  selectedSpellSchoolSchema,
+  selectedStatBoostSchema,
+  selectedUtilitySpellsSchema
+]);
 
 export const createCharacterSchema = z.object({
   name: z.string().min(1).max(50),
@@ -241,7 +272,7 @@ export const createCharacterSchema = z.object({
   classId: z.string().min(1),
   subclassId: z.string().optional(),
   grantedFeatures: z.array(z.string()),
-  selectedPoolFeatures: z.array(selectedPoolFeatureSchema),
+  selectedFeatures: z.array(selectedFeatureSchema),
   spellTierAccess: z.int().min(0).max(9),
   proficiencies: proficienciesSchema,
   attributes: attributeSchema,
@@ -268,7 +299,7 @@ export const characterSchema = z.object({
   classId: z.string().min(1),
   subclassId: z.string().optional(),
   grantedFeatures: z.array(z.string()),
-  selectedPoolFeatures: z.array(selectedPoolFeatureSchema),
+  selectedFeatures: z.array(selectedFeatureSchema),
   spellTierAccess: z.int().min(0).max(9),
   proficiencies: proficienciesSchema,
   attributes: attributeSchema,

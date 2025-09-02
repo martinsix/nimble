@@ -24,14 +24,46 @@ import { ResourceInstance } from './resources';
 import { AncestryTrait } from './ancestry';
 import { BackgroundTrait } from './background';
 
-// Tracks features selected from pools by the character
-export interface SelectedPoolFeature {
+// Base interface for all feature selections
+export interface BaseSelectedFeature {
+  grantedByFeatureId: string; // ID of the feature that granted this selection
+  selectedAt: Date; // When this selection was made
+}
+
+// Feature pool selection
+export interface SelectedPoolFeature extends BaseSelectedFeature {
+  type: 'pool_feature';
   poolId: string; // ID of the pool the feature was selected from
   featureId: string; // Unique ID of the selected feature within the pool
   feature: ClassFeature; // The actual feature that was selected
-  selectedAt: Date; // When this feature was selected
-  grantedByFeatureId: string; // ID of the PickFeatureFromPoolFeature that granted this selection
 }
+
+// Spell school selection
+export interface SelectedSpellSchool extends BaseSelectedFeature {
+  type: 'spell_school';
+  schoolId: string; // ID of the selected spell school
+}
+
+// Stat boost selection
+export interface SelectedStatBoost extends BaseSelectedFeature {
+  type: 'stat_boost';
+  attribute: AttributeName; // Which attribute was boosted
+  amount: number; // How much the boost was
+}
+
+// Utility spell selection
+export interface SelectedUtilitySpells extends BaseSelectedFeature {
+  type: 'utility_spells';
+  spellIds: string[]; // IDs of the selected utility spells
+  fromSchools: string[]; // Which schools these spells came from
+}
+
+// Union type for all selected features
+export type SelectedFeature = 
+  | SelectedPoolFeature 
+  | SelectedSpellSchool 
+  | SelectedStatBoost 
+  | SelectedUtilitySpells;
 
 export interface ActionTracker {
   current: number; // Currently available actions
@@ -71,7 +103,7 @@ export interface Character {
   classId: string; // Character's class (e.g., 'fighter', 'wizard')
   subclassId?: string; // Character's subclass (e.g., 'fighter-champion', 'wizard-evocation')
   grantedFeatures: string[]; // IDs of class features already granted to this character
-  selectedPoolFeatures: SelectedPoolFeature[]; // Features selected from pools
+  selectedFeatures: SelectedFeature[]; // All feature selections made by the character
   spellTierAccess: number; // Highest tier of spells character can access (1-9, 0 for no spell access)
   proficiencies: Proficiencies; // Armor and weapon proficiencies
   attributes: Attributes;
@@ -103,7 +135,7 @@ export interface CreateCharacterData {
   classId: string;
   subclassId?: string;
   grantedFeatures: string[];
-  selectedPoolFeatures: SelectedPoolFeature[]; // Features selected from pools
+  selectedFeatures: SelectedFeature[]; // All feature selections made by the character
   spellTierAccess: number; // Highest tier of spells character can access (1-9, 0 for no spell access)
   proficiencies: Proficiencies;
   attributes: {

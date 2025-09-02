@@ -1,4 +1,4 @@
-import { Character, SelectedPoolFeature } from '../types/character';
+import { Character, SelectedFeature, SelectedPoolFeature } from '../types/character';
 import { ClassDefinition, ClassFeature, ClassFeatureGrant, AbilityFeature, StatBoostFeature, ProficiencyFeature, SpellSchoolFeature, SpellSchoolChoiceFeature, UtilitySpellsFeature, SpellTierAccessFeature, ResourceFeature, SubclassChoiceFeature, SubclassDefinition, PickFeatureFromPoolFeature, FeaturePool } from '../types/class';
 import { ResourceInstance, createResourceInstance } from '../types/resources';
 import { getSubclassDefinition, getSubclassFeaturesForLevel, getAllSubclassFeaturesUpToLevel } from '../data/subclasses/index';
@@ -522,8 +522,11 @@ export class ClassService implements IClassService {
     }
 
     // Filter out features that have already been selected
+    const selectedPoolFeatures = (character.selectedFeatures || [])
+      .filter((f): f is SelectedPoolFeature => f.type === 'pool_feature');
+    
     const selectedFeatureIds = new Set(
-      character.selectedPoolFeatures
+      selectedPoolFeatures
         .filter(selected => selected.poolId === poolId)
         .map(selected => selected.featureId)
     );
@@ -554,6 +557,7 @@ export class ClassService implements IClassService {
 
     // Create the selected pool feature record
     const selectedPoolFeature: SelectedPoolFeature = {
+      type: 'pool_feature',
       poolId,
       featureId: selectedFeature.id,
       feature: selectedFeature,
@@ -561,10 +565,10 @@ export class ClassService implements IClassService {
       grantedByFeatureId
     };
 
-    // Add to character's selected pool features
+    // Add to character's selected features
     const updatedCharacter = {
       ...character,
-      selectedPoolFeatures: [...character.selectedPoolFeatures, selectedPoolFeature]
+      selectedFeatures: [...(character.selectedFeatures || []), selectedPoolFeature]
     };
 
     // Apply the feature effects
@@ -588,7 +592,11 @@ export class ClassService implements IClassService {
    */
   getRemainingPoolSelections(character: Character, pickFeatureFromPoolFeature: PickFeatureFromPoolFeature): number {
     const grantedByFeatureId = this.generateFeatureId(character.classId, pickFeatureFromPoolFeature.level, pickFeatureFromPoolFeature.name);
-    const currentSelections = character.selectedPoolFeatures.filter(
+    
+    const selectedPoolFeatures = (character.selectedFeatures || [])
+      .filter((f): f is SelectedPoolFeature => f.type === 'pool_feature');
+    
+    const currentSelections = selectedPoolFeatures.filter(
       selected => selected.grantedByFeatureId === grantedByFeatureId
     ).length;
     

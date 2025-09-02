@@ -97,7 +97,7 @@ export const createDefaultCharacterTemplate = (): Partial<Character> => {
     name: 'Unnamed Character',
     level: 1,
     grantedFeatures: [],
-    selectedPoolFeatures: [],
+    selectedFeatures: [],
     spellTierAccess: 0,
     proficiencies: createDefaultProficiencies(),
     attributes: defaultAttributes,
