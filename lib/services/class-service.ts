@@ -1,5 +1,5 @@
 import { Character, SelectedPoolFeature } from '../types/character';
-import { ClassDefinition, ClassFeature, ClassFeatureGrant, AbilityFeature, StatBoostFeature, ProficiencyFeature, SpellSchoolFeature, SpellTierAccessFeature, ResourceFeature, SubclassChoiceFeature, SubclassDefinition, PickFeatureFromPoolFeature, FeaturePool } from '../types/class';
+import { ClassDefinition, ClassFeature, ClassFeatureGrant, AbilityFeature, StatBoostFeature, ProficiencyFeature, SpellSchoolFeature, SpellSchoolChoiceFeature, UtilitySpellsFeature, SpellTierAccessFeature, ResourceFeature, SubclassChoiceFeature, SubclassDefinition, PickFeatureFromPoolFeature, FeaturePool } from '../types/class';
 import { ResourceInstance, createResourceInstance } from '../types/resources';
 import { getSubclassDefinition, getSubclassFeaturesForLevel, getAllSubclassFeaturesUpToLevel } from '../data/subclasses/index';
 import { SpellAbility } from '../types/abilities';
@@ -273,6 +273,54 @@ export class ClassService implements IClassService {
   }
 
   /**
+   * Grant spell school choice feature (allows player to choose a spell school)
+   */
+  private async grantSpellSchoolChoiceFeature(character: Character, feature: SpellSchoolChoiceFeature): Promise<Character> {
+    // This feature enables a choice - the actual selection happens through UI interaction
+    // The feature is recorded in grantedFeatures to track that the choice is available
+    return character;
+  }
+
+  /**
+   * Grant utility spells feature (grants access to utility spells from specified schools)
+   */
+  private async grantUtilitySpellsFeature(character: Character, feature: UtilitySpellsFeature): Promise<Character> {
+    // Collect all utility spells from the specified schools
+    const utilitySpells: SpellAbility[] = [];
+    
+    for (const schoolId of feature.schools) {
+      const schoolUtilitySpells = this.contentRepository.getUtilitySpellsForSchool(schoolId);
+      
+      if (feature.spellsPerSchool && feature.spellsPerSchool < schoolUtilitySpells.length) {
+        // Only grant a subset of utility spells - this would require UI selection
+        // For now, grant the first N spells
+        utilitySpells.push(...schoolUtilitySpells.slice(0, feature.spellsPerSchool));
+      } else {
+        // Grant all utility spells from the school
+        utilitySpells.push(...schoolUtilitySpells);
+      }
+    }
+    
+    // Add utility spells to character's abilities
+    if (utilitySpells.length > 0) {
+      const currentAbilities = character.abilities || [];
+      // Filter out spells that are already in the character's abilities
+      const newSpells = utilitySpells.filter(spell => 
+        !currentAbilities.some(existing => 
+          existing.type === 'spell' && existing.id === spell.id
+        )
+      );
+      
+      return {
+        ...character,
+        abilities: [...currentAbilities, ...newSpells]
+      };
+    }
+    
+    return character;
+  }
+
+  /**
    * Grant spell tier access feature (increases max spell tier and syncs spells)
    */
   private async grantSpellTierAccessFeature(character: Character, feature: SpellTierAccessFeature): Promise<Character> {
@@ -426,6 +474,10 @@ export class ClassService implements IClassService {
         return await this.grantProficiencyFeature(character, feature);
       case 'spell_school':
         return await this.grantSpellSchoolFeature(character, feature);
+      case 'spell_school_choice':
+        return await this.grantSpellSchoolChoiceFeature(character, feature);
+      case 'utility_spells':
+        return await this.grantUtilitySpellsFeature(character, feature);
       case 'spell_tier_access':
         return await this.grantSpellTierAccessFeature(character, feature);
       case 'resource':

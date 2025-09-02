@@ -143,6 +143,18 @@ const SpellSchoolFeatureSchema = BaseClassFeatureSchema.extend({
   })
 });
 
+const SpellSchoolChoiceFeatureSchema = BaseClassFeatureSchema.extend({
+  type: z.literal('spell_school_choice'),
+  availableSchools: z.array(z.string()).optional(),
+  numberOfChoices: z.number().int().min(1).optional()
+});
+
+const UtilitySpellsFeatureSchema = BaseClassFeatureSchema.extend({
+  type: z.literal('utility_spells'),
+  schools: z.array(z.string()).min(1),
+  spellsPerSchool: z.number().int().min(1).optional()
+});
+
 const SpellTierAccessFeatureSchema = BaseClassFeatureSchema.extend({
   type: z.literal('spell_tier_access'),
   maxTier: z.number().int().min(1).max(9)
@@ -166,6 +178,8 @@ export const ClassFeatureSchema = z.discriminatedUnion('type', [
   ProficiencyFeatureSchema,
   ResourceFeatureSchema,
   SpellSchoolFeatureSchema,
+  SpellSchoolChoiceFeatureSchema,
+  UtilitySpellsFeatureSchema,
   SpellTierAccessFeatureSchema,
   SubclassChoiceFeatureSchema,
   PickFeatureFromPoolFeatureSchema

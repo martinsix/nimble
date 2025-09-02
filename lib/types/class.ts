@@ -2,7 +2,7 @@ import { HitDieSize, AttributeName, SaveAdvantageMap } from './character';
 import { Ability } from './abilities';
 import { ResourceDefinition } from './resources';
 
-export type ClassFeatureType = 'ability' | 'passive_feature' | 'stat_boost' | 'proficiency' | 'spell_school' | 'spell_tier_access' | 'resource' | 'subclass_choice' | 'pick_feature_from_pool';
+export type ClassFeatureType = 'ability' | 'passive_feature' | 'stat_boost' | 'proficiency' | 'spell_school' | 'spell_school_choice' | 'utility_spells' | 'spell_tier_access' | 'resource' | 'subclass_choice' | 'pick_feature_from_pool';
 
 export interface StatBoost {
   attribute: AttributeName;
@@ -63,10 +63,24 @@ export interface ProficiencyFeature extends BaseClassFeature {
   proficiencies: ProficiencyGrant[];
 }
 
-// Spell school - grants access to a school of magic
+// Spell school - grants access to a specific school of magic
 export interface SpellSchoolFeature extends BaseClassFeature {
   type: 'spell_school';
   spellSchool: SpellSchool;
+}
+
+// Spell school choice - allows player to choose a spell school
+export interface SpellSchoolChoiceFeature extends BaseClassFeature {
+  type: 'spell_school_choice';
+  availableSchools?: string[]; // Optional: specific schools to choose from. If not provided, any school can be chosen
+  numberOfChoices?: number; // Optional: number of schools to choose (default: 1)
+}
+
+// Utility spells - grants access to utility spells from specific schools
+export interface UtilitySpellsFeature extends BaseClassFeature {
+  type: 'utility_spells';
+  schools: string[]; // Array of school IDs to grant utility spells from
+  spellsPerSchool?: number; // Optional: how many utility spells to grant per school (default: all)
 }
 
 // Resource - grants new resources (like Ki, Bardic Inspiration, etc.)
@@ -101,6 +115,8 @@ export type ClassFeature =
   | StatBoostFeature 
   | ProficiencyFeature 
   | SpellSchoolFeature 
+  | SpellSchoolChoiceFeature
+  | UtilitySpellsFeature
   | SpellTierAccessFeature
   | ResourceFeature
   | SubclassChoiceFeature
