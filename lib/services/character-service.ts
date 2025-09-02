@@ -1,5 +1,5 @@
 import { Character, ActionTracker, CharacterConfiguration } from '../types/character';
-import { Abilities, ActionAbility, SpellAbility } from '../types/abilities';
+import { Ability, ActionAbility, SpellAbility } from '../types/abilities';
 import { DiceType } from '../types/dice';
 import { Item } from '../types/inventory';
 import { ICharacterService, ICharacterStorage, IActivityLog, IAbilityService, IClassService, IAncestryService, IBackgroundService } from './interfaces';
@@ -315,7 +315,7 @@ export class CharacterService implements ICharacterService {
   /**
    * Update abilities
    */
-  async updateAbilities(abilities: Abilities): Promise<void> {
+  async updateAbilities(abilities: Ability[]): Promise<void> {
     if (!this._character) return;
 
     this._character = {
@@ -346,7 +346,7 @@ export class CharacterService implements ICharacterService {
     const healingAmount = this._character.hitPoints.max - this._character.hitPoints.current;
     const hitDiceRestored = this._character.hitDice.max - this._character.hitDice.current;
     const woundsRemoved = this._character.wounds.current > 0 ? 1 : 0;
-    const abilitiesReset = this._character.abilities.abilities.filter(ability => 
+    const abilitiesReset = this._character.abilities.filter(ability => 
       ability.type === 'action' && 
       ability.frequency !== 'at_will' && 
       ability.currentUses !== ability.maxUses

@@ -11,9 +11,7 @@ import {
   createDefaultInventory,
   createDefaultInitiative,
   createDefaultActionTracker,
-  createDefaultAbilities,
   createDefaultWounds,
-  createDefaultResources
 } from '../utils/character-defaults';
 
 export interface CreateCharacterOptions {
@@ -101,14 +99,14 @@ export class CharacterCreationService implements ICharacterCreation {
       hitPoints,
       hitDice,
       wounds: createDefaultWounds(config.maxWounds),
-      resources: createDefaultResources(), // Initialize with default resources
+      resources: [],
       config,
       initiative: createDefaultInitiative(),
       actionTracker: createDefaultActionTracker(),
       inEncounter: false,
       skills: createDefaultSkills(),
       inventory: createDefaultInventory(attributes.strength),
-      abilities: createDefaultAbilities(),
+      abilities: [],
     }, characterId);
 
     this.characterService.notifyCharacterCreated(baseCharacter);

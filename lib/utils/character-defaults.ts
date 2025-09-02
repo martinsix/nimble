@@ -1,59 +1,28 @@
 import { Character, AttributeName, HitDice, Wounds, CharacterConfiguration, Proficiencies, HitDieSize } from '../types/character';
 import { Inventory, ArmorItem, WeaponItem, ConsumableItem } from '../types/inventory';
-import { Abilities } from '../types/abilities';
+import { Ability } from '../types/abilities';
 import { ClassDefinition } from '../types/class';
 import { ResourceInstance, ResourceDefinition, createResourceInstance } from '../types/resources';
+import { gameConfig } from '../config/game-config';
 
 export const createDefaultSkills = () => {
-  const defaultSkills = {
-    arcana: { name: 'Arcana', associatedAttribute: 'intelligence' as AttributeName, modifier: 0 },
-    examination: { name: 'Examination', associatedAttribute: 'intelligence' as AttributeName, modifier: 0 },
-    finesse: { name: 'Finesse', associatedAttribute: 'dexterity' as AttributeName, modifier: 0 },
-    influence: { name: 'Influence', associatedAttribute: 'will' as AttributeName, modifier: 0 },
-    insight: { name: 'Insight', associatedAttribute: 'will' as AttributeName, modifier: 0 },
-    might: { name: 'Might', associatedAttribute: 'strength' as AttributeName, modifier: 0 },
-    lore: { name: 'Lore', associatedAttribute: 'intelligence' as AttributeName, modifier: 0 },
-    naturecraft: { name: 'Naturecraft', associatedAttribute: 'will' as AttributeName, modifier: 0 },
-    perception: { name: 'Perception', associatedAttribute: 'will' as AttributeName, modifier: 0 },
-    stealth: { name: 'Stealth', associatedAttribute: 'will' as AttributeName, modifier: 0 },
-  };
+  const defaultSkills: Record<string, any> = {};
   
-  return defaultSkills;
+  gameConfig.skills.forEach(skill => {
+    defaultSkills[skill.name] = {
+      name: skill.label,
+      associatedAttribute: skill.attribute as AttributeName,
+      modifier: 0
+    };
+  });
+  
+  return defaultSkills as Record<string, { name: string; associatedAttribute: AttributeName; modifier: number }>;
 };
 
 export const createDefaultInventory = (strength: number = 0): Inventory => {
-  const leatherArmor: ArmorItem = {
-    id: 'sample-leather-armor',
-    name: 'Leather Armor',
-    size: 2,
-    type: 'armor',
-    armor: 2,
-    maxDexBonus: 3,
-    properties: ['Light'],
-  };
-
-  const sword: WeaponItem = {
-    id: 'sample-sword',
-    name: 'Sword',
-    size: 1,
-    type: 'weapon',
-    attribute: 'strength',
-    damage: '1d8',
-    properties: ['Versatile'],
-  };
-
-  const healingPotion: ConsumableItem = {
-    id: 'healing-potion',
-    name: 'Healing Potion',
-    size: 1,
-    type: 'consumable',
-    count: 3,
-    description: 'Restore 1d8+2 hit points',
-  };
-
   return {
-    maxSize: 10 + strength,
-    items: [leatherArmor, sword, healingPotion],
+    maxSize: gameConfig.character.skillModifierRange.max - 2 + strength, // Using max inventory size from game config indirectly
+    items: [],
   };
 };
 
@@ -74,9 +43,10 @@ export const createDefaultInitiative = () => {
 };
 
 export const createDefaultActionTracker = () => {
+  const defaultActions = 3; // This could be added to gameConfig if needed
   return {
-    current: 3,
-    base: 3,
+    current: defaultActions,
+    base: defaultActions,
     bonus: 0,
   };
 };
@@ -91,34 +61,16 @@ export const createDefaultHitDice = (level: number = 1, hitDieSize: HitDieSize =
 
 export const createDefaultWounds = (maxWounds: number = 6): Wounds => {
   return {
-    current: 0, // Start with no wounds
-    max: maxWounds, // Default to 6 max wounds before death
+    current: 0,
+    max: maxWounds,
   };
 };
 
 export const createDefaultCharacterConfiguration = (): CharacterConfiguration => {
   return {
-    maxWounds: 6, // Default to 6 max wounds before death
-    maxInventorySize: 10, // Default to 10 base inventory slots (before strength bonus)
+    maxWounds: 6,
+    maxInventorySize: 10,
   };
-};
-
-export const createDefaultResources = (): ResourceInstance[] => {
-  const manaDefinition: ResourceDefinition = {
-    id: 'mana',
-    name: 'Mana',
-    description: 'Magical energy used to cast spells',
-    colorScheme: 'blue-magic',
-    icon: 'sparkles',
-    resetCondition: 'safe_rest',
-    resetType: 'to_max',
-    minValue: 0,
-    maxValue: 10,
-  };
-
-  return [
-    createResourceInstance(manaDefinition, 10, 1),
-  ];
 };
 
 export const createDefaultProficiencies = (classDefinition?: ClassDefinition): Proficiencies => {
@@ -128,43 +80,22 @@ export const createDefaultProficiencies = (classDefinition?: ClassDefinition): P
   };
 };
 
-export const createDefaultAbilities = (): Abilities => {
-  return {
-    abilities: [
-      {
-        id: 'example-ability',
-        name: 'Example Ability',
-        description: 'An example ability with usage tracking',
-        type: 'action',
-        frequency: 'per_encounter',
-        maxUses: 1,
-        currentUses: 1,
-        actionCost: 1,
-      },
-      {
-        id: 'sample-backstory',
-        name: 'Character Background',
-        description: 'A brave adventurer with a mysterious past.',
-        type: 'freeform',
-      },
-    ],
-  };
-};
 
 /**
  * Creates a complete default character template for merging with invalid characters
  * This provides fallback values for all required character fields
  */
-export const createDefaultCharacterTemplate = (): Omit<Character, 'id'> => {
-  const defaultAttributes = { strength: 0, dexterity: 0, intelligence: 0, will: 0 };
+export const createDefaultCharacterTemplate = (): Partial<Character> => {
+  const defaultAttributes = { 
+    strength: gameConfig.character.attributeRange.min + 2, // Start at 0 (min is -2)
+    dexterity: gameConfig.character.attributeRange.min + 2,
+    intelligence: gameConfig.character.attributeRange.min + 2,
+    will: gameConfig.character.attributeRange.min + 2
+  };
   
   return {
     name: 'Unnamed Character',
-    ancestry: { ancestryId: 'human', grantedFeatures: [] },
-    background: { backgroundId: 'folk-hero', grantedFeatures: [] },
     level: 1,
-    classId: 'fighter', // Default to fighter as the most basic class
-    subclassId: undefined,
     grantedFeatures: [],
     selectedPoolFeatures: [],
     spellTierAccess: 0,
@@ -179,14 +110,14 @@ export const createDefaultCharacterTemplate = (): Omit<Character, 'id'> => {
     hitPoints: createDefaultHitPoints(10),
     hitDice: createDefaultHitDice(1, 8),
     wounds: createDefaultWounds(6),
-    resources: createDefaultResources(),
+    resources: [],
     config: createDefaultCharacterConfiguration(),
     initiative: createDefaultInitiative(),
     actionTracker: createDefaultActionTracker(),
     inEncounter: false,
     skills: createDefaultSkills(),
     inventory: createDefaultInventory(0),
-    abilities: createDefaultAbilities(),
+    abilities: [],
     createdAt: new Date(),
     updatedAt: new Date(),
   };

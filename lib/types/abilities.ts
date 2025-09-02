@@ -54,7 +54,3 @@ export interface SpellAbility extends BaseAbility {
 }
 
 export type Ability = FreeformAbility | ActionAbility | SpellAbility;
-
-export interface Abilities {
-  abilities: Ability[];
-}

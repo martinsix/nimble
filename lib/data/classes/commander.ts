@@ -15,7 +15,8 @@ const commandersOrdersFeatures: ClassFeature[] = [
       name: 'Coordinated Strike!',
       description: 'You and an ally within 6 spaces both immediately make a weapon attack or cast a cantrip for free.',
       type: 'action',
-      frequency: 'per_safe_rest'
+      frequency: 'per_turn',
+      maxUses: 1
     }
   },
   {
@@ -187,7 +188,8 @@ const commanderFeatures: ClassFeature[] = [
       name: 'Coordinated Strike!',
       description: 'You and an ally within 6 spaces both immediately make a weapon attack or cast a cantrip for free.',
       type: 'action',
-      frequency: 'per_safe_rest'
+      frequency: 'per_safe_rest',
+      maxUses: 1
     }
   },
   // Level 2

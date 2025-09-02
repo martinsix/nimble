@@ -9,7 +9,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Abilities, Ability, ActionAbility, FreeformAbility, AbilityFrequency, AbilityRoll, ResourceCost } from "@/lib/types/abilities";
+import { Ability, ActionAbility, FreeformAbility, AbilityFrequency, AbilityRoll, ResourceCost } from "@/lib/types/abilities";
 import { AttributeName } from "@/lib/types/character";
 import { abilityService } from "@/lib/services/ability-service";
 import { parseDiceExpression } from "@/lib/utils/dice-parser";
@@ -63,10 +63,7 @@ export function AbilitySection() {
   const onToggle = (isOpen: boolean) => updateCollapsibleState('abilities', isOpen);
   
   // Filter out spell abilities - they have their own spells tab
-  const abilities = {
-    ...character.abilities,
-    abilities: character.abilities.abilities.filter(ability => ability.type !== 'spell')
-  };
+  const abilities = character.abilities.filter(ability => ability.type !== 'spell');
 
   const handleUseAbility = async (abilityId: string, variableAmount?: number) => {
     if (!character) return;
@@ -116,9 +113,7 @@ export function AbilitySection() {
           } : {}),
         };
 
-    updateAbilities({
-      abilities: [...abilities.abilities, ability],
-    });
+    updateAbilities([...abilities, ability]);
 
     setNewAbility({
       name: '',
@@ -132,9 +127,7 @@ export function AbilitySection() {
   };
 
   const deleteAbility = (abilityId: string) => {
-    updateAbilities({
-      abilities: abilities.abilities.filter(ability => ability.id !== abilityId),
-    });
+    updateAbilities(abilities.filter(ability => ability.id !== abilityId));
   };
 
   const getFrequencyBadge = (frequency: AbilityFrequency) => {
@@ -310,7 +303,7 @@ export function AbilitySection() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-lg font-bold">
-                  {abilities.abilities.length}
+                  {abilities.length}
                 </span>
                 {isOpen ? (
                   <ChevronDown className="w-4 h-4" />
@@ -325,12 +318,12 @@ export function AbilitySection() {
           <CardContent className="space-y-4">
             {/* Existing Abilities */}
             <div className="space-y-2">
-              {abilities.abilities.length === 0 ? (
+              {abilities.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   No abilities yet. Add your first ability below!
                 </div>
               ) : (
-                abilities.abilities.map(renderAbility)
+                abilities.map(renderAbility)
               )}
             </div>
 

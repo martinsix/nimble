@@ -99,7 +99,7 @@ export class AncestryService implements IAncestryService {
     const ability = feature.ability;
     
     // Add to the abilities array
-    character.abilities.abilities.push(ability);
+    character.abilities.push(ability);
   }
 
   /**

@@ -1,28 +1,28 @@
-import { Abilities, Ability, ActionAbility, SpellAbility, AbilityRoll, ResourceCost } from '../types/abilities';
+import { Ability, ActionAbility, SpellAbility, AbilityRoll, ResourceCost } from '../types/abilities';
 import { Character } from '../types/character';
 import { ResourceInstance } from '../types/resources';
 
 export class AbilityService {
   
   /**
-   * Use an ability and return the updated abilities object
+   * Use an ability and return the updated abilities array
    */
   useAbility(
-    abilities: Abilities, 
+    abilities: Ability[], 
     abilityId: string, 
     availableActions?: number, 
     inEncounter?: boolean,
     availableResources?: ResourceInstance[],
     variableResourceAmount?: number
   ): { 
-    updatedAbilities: Abilities; 
+    updatedAbilities: Ability[]; 
     usedAbility: ActionAbility | SpellAbility | null;
     success: boolean;
     actionsRequired?: number;
     resourceCost?: { resourceId: string; amount: number };
     insufficientResource?: string;
   } {
-    const ability = abilities.abilities.find(a => a.id === abilityId);
+    const ability = abilities.find(a => a.id === abilityId);
     
     if (!ability || (ability.type !== 'action' && ability.type !== 'spell')) {
       return { updatedAbilities: abilities, usedAbility: null, success: false };
@@ -126,13 +126,11 @@ export class AbilityService {
     }
 
     // Update uses for limited-use action abilities
-    const updatedAbilities: Abilities = {
-      abilities: abilities.abilities.map(a => 
-        a.id === abilityId && a.type === 'action'
-          ? { ...a, currentUses: (a.currentUses || 1) - 1 }
-          : a
-      )
-    };
+    const updatedAbilities: Ability[] = abilities.map(a => 
+      a.id === abilityId && a.type === 'action'
+        ? { ...a, currentUses: (a.currentUses || 1) - 1 }
+        : a
+    );
 
     const usedAbility = ability.type === 'action' 
       ? { ...ability, currentUses: (ability.currentUses || 1) - 1 }
@@ -150,51 +148,43 @@ export class AbilityService {
   /**
    * Reset abilities based on frequency
    */
-  resetAbilities(abilities: Abilities, frequency: 'per_turn' | 'per_encounter' | 'per_safe_rest'): Abilities {
-    return {
-      abilities: abilities.abilities.map(ability => {
-        if (ability.type === 'action' && ability.frequency === frequency && ability.maxUses) {
-          return { ...ability, currentUses: ability.maxUses };
-        }
-        return ability;
-      })
-    };
+  resetAbilities(abilities: Ability[], frequency: 'per_turn' | 'per_encounter' | 'per_safe_rest'): Ability[] {
+    return abilities.map(ability => {
+      if (ability.type === 'action' && ability.frequency === frequency && ability.maxUses) {
+        return { ...ability, currentUses: ability.maxUses };
+      }
+      return ability;
+    });
   }
 
   /**
    * Add a new ability to the abilities collection
    */
-  addAbility(abilities: Abilities, newAbility: Ability): Abilities {
-    return {
-      abilities: [...abilities.abilities, newAbility]
-    };
+  addAbility(abilities: Ability[], newAbility: Ability): Ability[] {
+    return [...abilities, newAbility];
   }
 
   /**
    * Remove an ability from the abilities collection
    */
-  removeAbility(abilities: Abilities, abilityId: string): Abilities {
-    return {
-      abilities: abilities.abilities.filter(ability => ability.id !== abilityId)
-    };
+  removeAbility(abilities: Ability[], abilityId: string): Ability[] {
+    return abilities.filter(ability => ability.id !== abilityId);
   }
 
   /**
    * Update an existing ability
    */
-  updateAbility(abilities: Abilities, updatedAbility: Ability): Abilities {
-    return {
-      abilities: abilities.abilities.map(ability => 
-        ability.id === updatedAbility.id ? updatedAbility : ability
-      )
-    };
+  updateAbility(abilities: Ability[], updatedAbility: Ability): Ability[] {
+    return abilities.map(ability => 
+      ability.id === updatedAbility.id ? updatedAbility : ability
+    );
   }
 
   /**
    * Get all action abilities (filtered from freeform)
    */
-  getActionAbilities(abilities: Abilities): ActionAbility[] {
-    return abilities.abilities.filter(
+  getActionAbilities(abilities: Ability[]): ActionAbility[] {
+    return abilities.filter(
       (ability): ability is ActionAbility => ability.type === 'action'
     );
   }
@@ -202,8 +192,8 @@ export class AbilityService {
   /**
    * Get all spell abilities
    */
-  getSpellAbilities(abilities: Abilities): SpellAbility[] {
-    return abilities.abilities.filter(
+  getSpellAbilities(abilities: Ability[]): SpellAbility[] {
+    return abilities.filter(
       (ability): ability is SpellAbility => ability.type === 'spell'
     );
   }
@@ -211,8 +201,8 @@ export class AbilityService {
   /**
    * Get all usable abilities (action and spell types)
    */
-  getUsableAbilities(abilities: Abilities): (ActionAbility | SpellAbility)[] {
-    return abilities.abilities.filter(
+  getUsableAbilities(abilities: Ability[]): (ActionAbility | SpellAbility)[] {
+    return abilities.filter(
       (ability): ability is ActionAbility | SpellAbility => 
         ability.type === 'action' || ability.type === 'spell'
     );

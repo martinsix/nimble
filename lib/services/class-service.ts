@@ -180,17 +180,14 @@ export class ClassService implements IClassService {
    */
   private async grantAbilityFeature(character: Character, feature: AbilityFeature): Promise<Character> {
     // Check if ability already exists to avoid duplicates
-    const existingAbility = character.abilities.abilities.find(ability => ability.id === feature.ability.id);
+    const existingAbility = character.abilities.find(ability => ability.id === feature.ability.id);
     if (existingAbility) {
       // If ability already exists, don't add it again
       return character;
     }
 
     // Add the ability directly to character's abilities
-    const updatedAbilities = {
-      ...character.abilities,
-      abilities: [...character.abilities.abilities, feature.ability]
-    };
+    const updatedAbilities = [...character.abilities, feature.ability];
 
     return {
       ...character,
@@ -247,7 +244,7 @@ export class ClassService implements IClassService {
     }
     
     // Get current spell abilities
-    const currentSpells = character.abilities.abilities.filter(ability => ability.type === 'spell') as SpellAbility[];
+    const currentSpells = character.abilities.filter(ability => ability.type === 'spell') as SpellAbility[];
     const currentSpellIds = new Set(currentSpells.map(spell => spell.id));
     
     // Find missing spells
@@ -255,15 +252,12 @@ export class ClassService implements IClassService {
     
     // Add missing spells to character's abilities
     if (missingSpells.length > 0) {
-      const nonSpellAbilities = character.abilities.abilities.filter(ability => ability.type !== 'spell');
+      const nonSpellAbilities = character.abilities.filter(ability => ability.type !== 'spell');
       const allAbilities = [...nonSpellAbilities, ...currentSpells, ...missingSpells];
       
       return {
         ...character,
-        abilities: {
-          ...character.abilities,
-          abilities: allAbilities
-        }
+        abilities: allAbilities
       };
     }
     

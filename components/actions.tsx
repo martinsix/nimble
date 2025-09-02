@@ -4,7 +4,7 @@ import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Character, AttributeName } from "@/lib/types/character";
 import { WeaponItem } from "@/lib/types/inventory";
-import { ActionAbility, Abilities, AbilityFrequency } from "@/lib/types/abilities";
+import { ActionAbility, Ability, AbilityFrequency } from "@/lib/types/abilities";
 import { Action, WeaponAction, AbilityAction } from "@/lib/types/actions";
 import { getEquippedWeapons } from "@/lib/utils/equipment";
 import { useCharacterService } from "@/lib/hooks/use-character-service";
@@ -21,7 +21,7 @@ interface ActionsProps {
 export function Actions({ character, onAttack, advantageLevel }: ActionsProps) {
   const { performAttack, performUseAbility } = useCharacterService();
   const weapons = getEquippedWeapons(character.inventory.items);
-  const actionAbilities = character.abilities.abilities.filter(
+  const actionAbilities = character.abilities.filter(
     (ability): ability is ActionAbility => ability.type === 'action'
   );
 

@@ -30,7 +30,7 @@ export function SpellsSection() {
   if (!character) return null;
   
   // Get all spell abilities from character
-  const spellAbilities = character.abilities.abilities.filter(ability => ability.type === 'spell') as SpellAbility[];
+  const spellAbilities = character.abilities.filter(ability => ability.type === 'spell') as SpellAbility[];
   
   // Find mana resource (if any)
   const manaResource = character.resources.find(resource => 

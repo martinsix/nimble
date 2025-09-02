@@ -69,19 +69,6 @@ export const skillSchema = z.object({
   modifier: z.int().min(gameConfig.character.skillModifierRange.min).max(gameConfig.character.skillModifierRange.max),
 });
 
-export const skillsSchema = z.object({
-  arcana: skillSchema,
-  examination: skillSchema,
-  finesse: skillSchema,
-  influence: skillSchema,
-  insight: skillSchema,
-  might: skillSchema,
-  lore: skillSchema,
-  naturecraft: skillSchema,
-  perception: skillSchema,
-  stealth: skillSchema,
-});
-
 export const hitPointsSchema = z.object({
   current: z.int().min(0),
   max: z.int().min(1),
@@ -216,9 +203,7 @@ export const abilitySchema = z.discriminatedUnion('type', [
   }),
 ]);
 
-export const abilitiesSchema = z.object({
-  abilities: z.array(abilitySchema),
-});
+export const abilitiesSchema = z.array(abilitySchema);
 
 const armorProficiencySchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('cloth') }),
@@ -269,9 +254,9 @@ export const createCharacterSchema = z.object({
   initiative: skillSchema,
   actionTracker: actionTrackerSchema,
   inEncounter: z.boolean(),
-  skills: skillsSchema,
+  skills: z.record(z.string(), skillSchema),
   inventory: inventorySchema,
-  abilities: abilitiesSchema,
+  abilities: z.array(abilitySchema),
 });
 
 export const characterSchema = z.object({
@@ -296,9 +281,9 @@ export const characterSchema = z.object({
   initiative: skillSchema,
   actionTracker: actionTrackerSchema,
   inEncounter: z.boolean(),
-  skills: skillsSchema,
+  skills: z.record(z.string(), skillSchema),
   inventory: inventorySchema,
-  abilities: abilitiesSchema,
+  abilities: z.array(abilitySchema),
   createdAt: z.date(),
   updatedAt: z.date(),
 });

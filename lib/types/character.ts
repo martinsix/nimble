@@ -18,7 +18,7 @@ export interface Skill {
 }
 
 import { Inventory } from './inventory';
-import { Abilities } from './abilities';
+import { Ability } from './abilities';
 import { ArmorProficiency, WeaponProficiency, ClassFeature } from './class';
 import { ResourceInstance } from './resources';
 import { AncestryTrait } from './ancestry';
@@ -88,20 +88,9 @@ export interface Character {
   initiative: Skill;
   actionTracker: ActionTracker;
   inEncounter: boolean; // Whether currently in an encounter/combat
-  skills: {
-    arcana: Skill;
-    examination: Skill;
-    finesse: Skill;
-    influence: Skill;
-    insight: Skill;
-    might: Skill;
-    lore: Skill;
-    naturecraft: Skill;
-    perception: Skill;
-    stealth: Skill;
-  };
+  skills: Skills;
   inventory: Inventory;
-  abilities: Abilities;
+  abilities: Ability[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -136,20 +125,11 @@ export interface CreateCharacterData {
   initiative: Skill;
   actionTracker: ActionTracker;
   inEncounter: boolean;
-  skills: {
-    arcana: Skill;
-    examination: Skill;
-    finesse: Skill;
-    influence: Skill;
-    insight: Skill;
-    might: Skill;
-    lore: Skill;
-    naturecraft: Skill;
-    perception: Skill;
-    stealth: Skill;
-  };
+  skills: Skills;
   inventory: Inventory;
-  abilities: Abilities;
+  abilities: Ability[];
 }
 
-export type SkillName = keyof Character['skills'];
+export type SkillName = keyof Skills;
+
+export type Skills = Record<string, Skill>;

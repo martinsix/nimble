@@ -1,5 +1,5 @@
 import { Character, ActionTracker, CharacterConfiguration, Attributes } from '../types/character';
-import { Abilities, ActionAbility, SpellAbility, AbilityRoll } from '../types/abilities';
+import { Ability, ActionAbility, SpellAbility, AbilityRoll } from '../types/abilities';
 import { LogEntry, SingleDie } from '../types/log-entries';
 import { Item } from '../types/inventory';
 import { ClassFeatureGrant, ClassFeature, PickFeatureFromPoolFeature, FeaturePool } from '../types/class';
@@ -56,8 +56,8 @@ export interface IActivityLog {
  * Handles ability management and usage
  */
 export interface IAbilityService {
-  resetAbilities(abilities: Abilities, frequency: 'per_turn' | 'per_encounter' | 'per_safe_rest'): Abilities;
-  useAbility(abilities: Abilities, abilityId: string, availableActions?: number, inEncounter?: boolean, availableResources?: ResourceInstance[], variableResourceAmount?: number): { success: boolean; updatedAbilities: Abilities; usedAbility: ActionAbility | SpellAbility | null; actionsRequired?: number; resourceCost?: { resourceId: string; amount: number }; insufficientResource?: string };
+  resetAbilities(abilities: Ability[], frequency: 'per_turn' | 'per_encounter' | 'per_safe_rest'): Ability[];
+  useAbility(abilities: Ability[], abilityId: string, availableActions?: number, inEncounter?: boolean, availableResources?: ResourceInstance[], variableResourceAmount?: number): { success: boolean; updatedAbilities: Ability[]; usedAbility: ActionAbility | SpellAbility | null; actionsRequired?: number; resourceCost?: { resourceId: string; amount: number }; insufficientResource?: string };
   calculateAbilityRollModifier(roll: AbilityRoll, character: Character): number;
 }
 
@@ -77,7 +77,7 @@ export interface ICharacterService {
   updateHitPoints(current: number, max: number, temporary: number): Promise<void>;
   updateWounds(current: number, max: number): Promise<void>;
   updateActionTracker(actionTracker: ActionTracker): Promise<void>;
-  updateAbilities(abilities: Abilities): Promise<void>;
+  updateAbilities(abilities: Ability[]): Promise<void>;
   startEncounter(initiativeRoll: number): Promise<void>;
   performSafeRest(): Promise<void>;
   performCatchBreath(): Promise<void>;

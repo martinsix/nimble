@@ -26,7 +26,7 @@ function getSkillIcon(skillName: SkillName) {
     stealth: EyeOff,
   };
   
-  return iconMap[skillName] || Dice6;
+  return iconMap[skillName as keyof typeof iconMap] || Dice6;
 }
 
 export function SkillsSection() {
