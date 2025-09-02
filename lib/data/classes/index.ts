@@ -7,6 +7,13 @@ export { berserkerClass as berserker } from './berserker';
 export { cheatClass as cheat } from './cheat';
 export { commanderClass as commander } from './commander';
 export { hunterClass as hunter } from './hunter';
+export { mageClass as mage } from './mage';
+export { oathswornClass as oathsworn } from './oathsworn';
+export { shadowmancerClass as shadowmancer } from './shadowmancer';
+export { shepherdClass as shepherd } from './shepherd';
+export { songweaverClass as songweaver } from './songweaver';
+export { stormshifterClass as stormshifter } from './stormshifter';
+export { zephyrClass as zephyr } from './zephyr';
 
 // Import all class definitions for the main classes object
 import { fighter } from './fighter';
@@ -17,6 +24,13 @@ import { berserkerClass as berserker } from './berserker';
 import { cheatClass as cheat } from './cheat';
 import { commanderClass as commander } from './commander';
 import { hunterClass as hunter } from './hunter';
+import { mageClass as mage } from './mage';
+import { oathswornClass as oathsworn } from './oathsworn';
+import { shadowmancerClass as shadowmancer } from './shadowmancer';
+import { shepherdClass as shepherd } from './shepherd';
+import { songweaverClass as songweaver } from './songweaver';
+import { stormshifterClass as stormshifter } from './stormshifter';
+import { zephyrClass as zephyr } from './zephyr';
 
 import { ClassDefinition } from '../../types/class';
 
@@ -29,7 +43,14 @@ export const classDefinitions: Record<string, ClassDefinition> = {
   berserker,
   cheat,
   commander,
-  hunter
+  hunter,
+  mage,
+  oathsworn,
+  shadowmancer,
+  shepherd,
+  songweaver,
+  stormshifter,
+  zephyr
 };
 
 // Helper function to get a class definition by ID
