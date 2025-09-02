@@ -80,6 +80,116 @@ export const MUNDANE_FREEFORM: RepositoryFreeformItem[] = [
       description: 'Flint, steel, and tinder for starting fires.'
     },
     category: 'mundane'
+  },
+  {
+    item: {
+      id: 'chalk',
+      name: 'Chalk',
+      type: 'freeform',
+      size: 0,
+      description: 'White chalk for marking surfaces and leaving messages.'
+    },
+    category: 'mundane'
+  },
+  {
+    item: {
+      id: 'javelins-4',
+      name: 'Javelins (4)',
+      type: 'freeform',
+      size: 2,
+      description: 'Four light throwing spears used for hunting or combat.'
+    },
+    category: 'mundane'
+  },
+  {
+    item: {
+      id: 'hunting-trap',
+      name: 'Hunting Trap',
+      type: 'freeform',
+      size: 2,
+      description: 'A mechanical trap with sharp teeth for catching game or intruders.'
+    },
+    category: 'mundane'
+  },
+  {
+    item: {
+      id: 'soap',
+      name: 'Soap',
+      type: 'freeform',
+      size: 0,
+      description: 'A bar of soap for cleaning and hygiene.'
+    },
+    category: 'mundane'
+  },
+  {
+    item: {
+      id: 'manacles',
+      name: 'Manacles',
+      type: 'freeform',
+      size: 1,
+      description: 'Iron shackles for restraining prisoners.'
+    },
+    category: 'mundane'
+  },
+  {
+    item: {
+      id: 'shovel',
+      name: 'Shovel',
+      type: 'freeform',
+      size: 2,
+      description: 'A sturdy digging tool for excavation.'
+    },
+    category: 'mundane'
+  },
+  {
+    item: {
+      id: 'bell',
+      name: 'Bell',
+      type: 'freeform',
+      size: 0,
+      description: 'A small brass bell that rings clearly when shaken.'
+    },
+    category: 'mundane'
+  },
+  {
+    item: {
+      id: 'instrument',
+      name: 'Musical Instrument',
+      type: 'freeform',
+      size: 1,
+      description: 'A flute, lute, or other instrument for making music.'
+    },
+    category: 'mundane'
+  },
+  {
+    item: {
+      id: 'mirror',
+      name: 'Small Mirror',
+      type: 'freeform',
+      size: 0,
+      description: 'A polished metal mirror for signaling or grooming.'
+    },
+    category: 'mundane'
+  },
+  {
+    item: {
+      id: 'strange-plant',
+      name: 'Strange Plant',
+      type: 'freeform',
+      size: 1,
+      description: 'An unusual potted plant with unknown properties.'
+    },
+    category: 'mundane'
+  },
+  {
+    item: {
+      id: 'sandals',
+      name: 'Sandals',
+      type: 'freeform',
+      size: 0,
+      description: 'Simple leather sandals for warm weather travel.'
+    },
+    category: 'mundane'
   }
 ];
 

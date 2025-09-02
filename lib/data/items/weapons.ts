@@ -130,6 +130,45 @@ export const MUNDANE_WEAPONS: RepositoryWeaponItem[] = [
       description: 'A balanced hammer perfect for both war and smithing.'
     },
     category: 'mundane'
+  },
+  {
+    item: {
+      id: 'battleaxe',
+      name: 'Battleaxe',
+      type: 'weapon',
+      size: 2,
+      attribute: 'strength',
+      damage: '1d8',
+      properties: ['Versatile (1d10)'],
+      description: 'A broad-bladed axe designed for heavy strikes in battle.'
+    },
+    category: 'mundane'
+  },
+  {
+    item: {
+      id: 'hand-axe',
+      name: 'Hand Axe',
+      type: 'weapon',
+      size: 1,
+      attribute: 'strength',
+      damage: '1d6',
+      properties: ['Light', 'Thrown'],
+      description: 'A small axe balanced for both melee and throwing.'
+    },
+    category: 'mundane'
+  },
+  {
+    item: {
+      id: 'sling',
+      name: 'Sling',
+      type: 'weapon',
+      size: 1,
+      attribute: 'dexterity',
+      damage: '1d4',
+      properties: ['Ammunition', 'Range (30/120)'],
+      description: 'A simple leather pouch on cords for hurling stones.'
+    },
+    category: 'mundane'
   }
 ];
 

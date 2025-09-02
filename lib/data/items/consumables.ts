@@ -77,6 +77,17 @@ export const MUNDANE_CONSUMABLES: RepositoryConsumableItem[] = [
       description: 'Strong braided rope suitable for climbing and binding.'
     },
     category: 'mundane'
+  },
+  {
+    item: {
+      id: 'rations-meat',
+      name: 'Preserved Meat',
+      type: 'consumable',
+      size: 1,
+      count: 5,
+      description: 'Salted and dried meat that keeps for weeks without spoiling.'
+    },
+    category: 'mundane'
   }
 ];
 

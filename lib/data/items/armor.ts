@@ -112,6 +112,76 @@ export const MUNDANE_ARMOR: RepositoryArmorItem[] = [
       description: 'A protective helm that guards the head from harm.'
     },
     category: 'mundane'
+  },
+  {
+    item: {
+      id: 'cheap-hides',
+      name: 'Cheap Hides',
+      type: 'armor',
+      size: 2,
+      armor: 10,
+      maxDexBonus: 10,
+      isMainArmor: true,
+      properties: ['Light'],
+      description: 'Poorly cured animal hides offering minimal protection.'
+    },
+    category: 'mundane'
+  },
+  {
+    item: {
+      id: 'rusty-mail',
+      name: 'Rusty Mail',
+      type: 'armor',
+      size: 4,
+      armor: 12,
+      maxDexBonus: 2,
+      isMainArmor: true,
+      properties: ['Medium', 'Disadvantage on Stealth'],
+      description: 'Old chain mail covered in rust, still functional but barely.'
+    },
+    category: 'mundane'
+  },
+  {
+    item: {
+      id: 'wooden-buckler',
+      name: 'Wooden Buckler',
+      type: 'armor',
+      size: 1,
+      armor: 1,
+      maxDexBonus: 10,
+      isMainArmor: false,
+      properties: [],
+      description: 'A small wooden shield offering basic protection.'
+    },
+    category: 'mundane'
+  },
+  {
+    item: {
+      id: 'adventurers-garb',
+      name: "Adventurer's Garb",
+      type: 'armor',
+      size: 1,
+      armor: 10,
+      maxDexBonus: 10,
+      isMainArmor: true,
+      properties: ['Unarmored'],
+      description: 'Sturdy traveling clothes suitable for adventure.'
+    },
+    category: 'mundane'
+  },
+  {
+    item: {
+      id: 'traveling-robes',
+      name: 'Traveling Robes',
+      type: 'armor',
+      size: 1,
+      armor: 10,
+      maxDexBonus: 10,
+      isMainArmor: true,
+      properties: ['Unarmored'],
+      description: 'Simple robes worn by scholars and wanderers.'
+    },
+    category: 'mundane'
   }
 ];
 
