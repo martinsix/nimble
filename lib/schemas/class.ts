@@ -218,7 +218,8 @@ export const SpellSchoolDefinitionSchema = z.object({
   id: z.string().min(1).meta({ title: 'ID', description: 'Unique identifier for the spell school' }),
   name: z.string().min(1).meta({ title: 'Name', description: 'Display name of the spell school' }),
   description: z.string().min(1).meta({ title: 'Description', description: 'Description of the school\'s magical focus' }),
-  spells: z.array(SpellAbilitySchema).meta({ title: 'Spells', description: 'Array of spells in this school' })
+  spells: z.array(SpellAbilitySchema).meta({ title: 'Spells', description: 'Array of spells in this school' }),
+  utilitySpells: z.array(SpellAbilitySchema).optional().default([]).meta({ title: 'Utility Spells', description: 'Array of utility spells that must be learned separately' })
 }).meta({ title: 'Spell School Definition', description: 'School of magic with associated spells' });
 
 // Export individual schemas for content validation

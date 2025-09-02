@@ -5,6 +5,7 @@ import { lightningSchoolSpells } from './lightning';
 import { windSchoolSpells } from './wind';
 import { radiantSchoolSpells } from './radiant';
 import { necroticSchoolSpells } from './necrotic';
+import { utilitySpellsBySchool } from './utility-spells';
 
 /**
  * Get spells from a specific school
@@ -29,6 +30,13 @@ export function getSpellsBySchool(schoolId: string): SpellAbility[] {
 }
 
 /**
+ * Get utility spells from a specific school
+ */
+export function getUtilitySpellsBySchool(schoolId: string): SpellAbility[] {
+  return utilitySpellsBySchool[schoolId] || [];
+}
+
+/**
  * Get all available spell schools
  */
 export function getAllSpellSchools(): { id: string; name: string; spells: SpellAbility[] }[] {
@@ -49,5 +57,6 @@ export {
   lightningSchoolSpells,
   windSchoolSpells,
   radiantSchoolSpells,
-  necroticSchoolSpells
+  necroticSchoolSpells,
+  utilitySpellsBySchool
 };

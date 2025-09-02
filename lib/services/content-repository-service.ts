@@ -18,7 +18,8 @@ import {
   windSchoolSpells,
   radiantSchoolSpells,
   necroticSchoolSpells,
-  getSpellsBySchool
+  getSpellsBySchool,
+  getUtilitySpellsBySchool
 } from '../data/spell-schools/index';
 import { PREDEFINED_SPELL_SCHOOLS, getSpellSchoolDefinition } from '../data/spell-schools';
 
@@ -47,6 +48,7 @@ export interface SpellSchoolWithSpells {
   name: string;
   description: string;
   spells: SpellAbility[];
+  utilitySpells: SpellAbility[]; // Utility spells that must be learned separately
 }
 
 export class ContentRepositoryService {
@@ -571,7 +573,8 @@ export class ContentRepositoryService {
         id: schoolDef.schoolId,
         name: schoolDef.name,
         description: schoolDef.description,
-        spells: getSpellsBySchool(schoolDef.schoolId)
+        spells: getSpellsBySchool(schoolDef.schoolId),
+        utilitySpells: getUtilitySpellsBySchool(schoolDef.schoolId)
       }));
 
       // Merge with existing schools
@@ -601,6 +604,13 @@ export class ContentRepositoryService {
     
     // Merge school's defined spells with custom spells
     return [...school.spells, ...customSpells];
+  }
+
+  public getUtilitySpellsForSchool(schoolId: string): SpellAbility[] {
+    const school = this.getSpellSchool(schoolId);
+    if (!school) return [];
+    
+    return school.utilitySpells || [];
   }
 
   public uploadSpellSchools(schoolsJson: string): ContentUploadResult {
