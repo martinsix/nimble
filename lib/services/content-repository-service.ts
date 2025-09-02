@@ -16,6 +16,8 @@ import {
   iceSchoolSpells,
   lightningSchoolSpells,
   windSchoolSpells,
+  radiantSchoolSpells,
+  necroticSchoolSpells,
   getSpellsBySchool
 } from '../data/spell-schools/index';
 import { PREDEFINED_SPELL_SCHOOLS, getSpellSchoolDefinition } from '../data/spell-schools';
@@ -784,7 +786,9 @@ export class ContentRepositoryService {
       ...fireSchoolSpells, 
       ...iceSchoolSpells,
       ...lightningSchoolSpells,
-      ...windSchoolSpells
+      ...windSchoolSpells,
+      ...radiantSchoolSpells,
+      ...necroticSchoolSpells
     ];
     const customSpells = this.getCustomSpells();
     return [...builtInSpells, ...customSpells];
