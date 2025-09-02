@@ -5,7 +5,7 @@ import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { ItemBrowser } from "../item-browser";
 import { getCharacterService, getItemService, getContentRepository } from "@/lib/services/service-factory";
-import { Package, Search, Plus, Trash2 } from "lucide-react";
+import { Package, Search, Plus, Trash2, Sword, Shield, Shirt, Beaker, Target } from "lucide-react";
 import { Item } from "@/lib/types/inventory";
 
 interface EquipmentSelectionProps {
@@ -42,7 +42,7 @@ export function EquipmentSelection({ onEquipmentReady }: EquipmentSelectionProps
           // Add items directly to character's inventory
           const updatedInventory = {
             ...character.inventory,
-            items: [...character.inventory.items, ...equipmentItems]
+            items: equipmentItems
           };
 
           await characterService.updateCharacterFields({
@@ -89,18 +89,19 @@ export function EquipmentSelection({ onEquipmentReady }: EquipmentSelectionProps
   };
 
   const getItemIcon = (item: Item) => {
-    // Use same logic as inventory component
+    // Use same icons as inventory component
     switch (item.type) {
       case 'weapon': 
-        return '🗡️';
+        return <Sword className="w-4 h-4" />;
       case 'armor': 
-        return '🛡️';
+        const armor = item as any;
+        return armor.isMainArmor ? <Shirt className="w-4 h-4" /> : <Shield className="w-4 h-4" />;
       case 'consumable': 
-        return '🧪';
+        return <Beaker className="w-4 h-4" />;
       case 'ammunition': 
-        return '🏹';
+        return <Target className="w-4 h-4" />;
       default: 
-        return '📦';
+        return <Package className="w-4 h-4" />;
     }
   };
 
@@ -154,7 +155,7 @@ export function EquipmentSelection({ onEquipmentReady }: EquipmentSelectionProps
               <CardContent className="p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="text-lg">{getItemIcon(item)}</div>
+                    <div className="shrink-0">{getItemIcon(item)}</div>
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
                         <span className="font-medium">{item.name}</span>

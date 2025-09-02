@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
-import { Database, Upload, ChevronDown, ChevronRight, FileText, Wand2, Shield, Zap, Sparkles, BookOpen, Users, Package } from "lucide-react";
+import { Database, Upload, ChevronDown, ChevronRight, FileText, Wand2, Shield, Zap, Sparkles, BookOpen, Users, Package, Copy, ExternalLink } from "lucide-react";
 import { ContentRepositoryService, ContentUploadResult } from "@/lib/services/content-repository-service";
 import { getSchemaDocumentation, getAllSchemaDocumentation } from "@/lib/utils/schema-documentation";
 import { ExampleGenerator } from "@/lib/utils/example-generator";
@@ -237,6 +237,9 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
                   if (contentType && showSchemaHelp[contentType]) {
                     try {
                       const schema = getSchemaDocumentation(contentType);
+                      const exampleJson = ExampleGenerator.generateExampleJSON(contentType);
+                      const schemaString = JSON.stringify(schema, null, 2);
+
                       return (
                         <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded text-xs">
                           <div className="font-semibold text-blue-900 mb-1">
@@ -250,17 +253,53 @@ export function ContentManagementPanel({ isOpen, onClose }: ContentManagementPan
                           
                           <details className="mt-2">
                             <summary className="font-medium text-blue-900 cursor-pointer">Example JSON</summary>
-                            <pre className="mt-1 p-2 bg-green-100 rounded overflow-x-auto text-xs">
-                              {ExampleGenerator.generateExampleJSON(contentType) || 'Failed to generate example'}
-                            </pre>
+                            <div className="relative">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="absolute top-1 right-1 h-6 w-6 p-0"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(exampleJson || '');
+                                }}
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                              <pre className="mt-1 p-2 pr-10 bg-green-100 rounded overflow-x-auto text-xs">
+                                {exampleJson || 'Failed to generate example'}
+                              </pre>
+                            </div>
                           </details>
                           
                           <details className="mt-2">
                             <summary className="font-medium text-blue-900 cursor-pointer">JSON Schema</summary>
-                            <pre className="mt-1 p-2 bg-blue-100 rounded overflow-x-auto text-xs">
-                              {JSON.stringify(schema, null, 2)}
-                            </pre>
+                            <div className="relative">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="absolute top-1 right-1 h-6 w-6 p-0"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(schemaString);
+                                }}
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                              <pre className="mt-1 p-2 pr-10 bg-blue-100 rounded overflow-x-auto text-xs">
+                                {schemaString}
+                              </pre>
+                            </div>
                           </details>
+                          
+                          <div className="mt-2 flex items-center gap-1">
+                            <a
+                              href="https://json-editor.github.io/json-editor/"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-700 hover:text-blue-900 flex items-center gap-1"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              Use JSON Editor for easier data creation
+                            </a>
+                          </div>
                         </div>
                       );
                     } catch {
