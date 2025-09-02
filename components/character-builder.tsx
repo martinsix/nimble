@@ -9,7 +9,72 @@ import { HeritageSelection } from "./character-builder/heritage-selection";
 import { AttributeSelection } from "./character-builder/attribute-selection";
 import { SkillsSelection } from "./character-builder/skills-selection";
 import { EquipmentSelection } from "./character-builder/equipment-selection";
+import { FeaturesOverview, FeatureSelectionType } from "./character-builder/features-overview";
 import { Wand2 } from "lucide-react";
+import { SelectedFeature, Character } from "@/lib/types/character";
+
+// Helper function to apply feature selections to a character
+async function applyFeatureSelections(
+  character: Character,
+  featureSelections: Record<string, FeatureSelectionType>,
+  classId: string,
+  ancestryId: string,
+  backgroundId: string
+): Promise<SelectedFeature[]> {
+  const selectedFeatures: SelectedFeature[] = [];
+  const now = new Date();
+
+  // Process each selection
+  for (const [featureId, selection] of Object.entries(featureSelections)) {
+    switch (selection.type) {
+      case 'stat_boost':
+        selectedFeatures.push({
+          type: 'stat_boost',
+          attribute: selection.attribute,
+          amount: 1, // Default amount, could be extracted from feature definition
+          selectedAt: now,
+          grantedByFeatureId: featureId
+        });
+        break;
+
+      case 'spell_school_choice':
+        selectedFeatures.push({
+          type: 'spell_school',
+          schoolId: selection.schoolId,
+          selectedAt: now,
+          grantedByFeatureId: featureId
+        });
+        break;
+
+      case 'utility_spells':
+        if (selection.spellIds.length > 0) {
+          selectedFeatures.push({
+            type: 'utility_spells',
+            spellIds: selection.spellIds,
+            fromSchools: [], // Would need to determine from feature definition
+            selectedAt: now,
+            grantedByFeatureId: featureId
+          });
+        }
+        break;
+
+      case 'feature_pool':
+        // Need to get the actual feature from the pool
+        // This would require looking up the feature definition
+        selectedFeatures.push({
+          type: 'pool_feature',
+          poolId: '', // Would need to extract from feature definition
+          featureId: selection.selectedFeatureId,
+          feature: {} as any, // Would need to get actual feature
+          selectedAt: now,
+          grantedByFeatureId: featureId
+        });
+        break;
+    }
+  }
+
+  return selectedFeatures;
+}
 
 // Character builder state
 interface CharacterBuilderState {
@@ -17,7 +82,8 @@ interface CharacterBuilderState {
   ancestryId?: string;
   backgroundId?: string;
   name: string;
-  characterId?: string; // Set after character creation in step 2
+  featureSelections: Record<string, FeatureSelectionType>; // Feature selections before character creation
+  characterId?: string; // Set after character creation
   equipmentReady?: boolean; // Whether equipment step is ready
 }
 
@@ -25,6 +91,7 @@ interface CharacterBuilderState {
 const STEPS = [
   { id: 'class', label: 'Class' },
   { id: 'heritage', label: 'Heritage' },
+  { id: 'features', label: 'Features' },
   { id: 'attributes', label: 'Attributes' },
   { id: 'skills', label: 'Skills' },
   { id: 'equipment', label: 'Equipment' }
@@ -45,7 +112,8 @@ export function CharacterBuilder({
 }: CharacterBuilderProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [builderState, setBuilderState] = useState<CharacterBuilderState>({
-    name: ''
+    name: '',
+    featureSelections: {}
   });
 
   const contentRepository = ContentRepositoryService.getInstance();
@@ -76,15 +144,19 @@ export function CharacterBuilder({
     setBuilderState(prev => ({ ...prev, equipmentReady: true }));
   };
 
-  const canProceedFromStep2 = (): boolean => {
+  const handleFeatureSelectionsChange = (selections: Record<string, FeatureSelectionType>) => {
+    setBuilderState(prev => ({ ...prev, featureSelections: selections }));
+  };
+
+  const canProceedFromHeritage = (): boolean => {
     return !!(builderState.classId && 
               builderState.ancestryId && 
               builderState.backgroundId && 
               builderState.name.trim());
   };
 
-  const proceedToAttributes = async () => {
-    if (!canProceedFromStep2()) return;
+  const createCharacterWithFeatures = async () => {
+    if (!canProceedFromHeritage()) return;
 
     try {
       // Create character with basic info
@@ -95,12 +167,30 @@ export function CharacterBuilder({
         backgroundId: builderState.backgroundId!
       });
 
+      // Apply feature selections to the character
+      if (Object.keys(builderState.featureSelections).length > 0) {
+        const selectedFeatures = await applyFeatureSelections(
+          character,
+          builderState.featureSelections,
+          builderState.classId!,
+          builderState.ancestryId!,
+          builderState.backgroundId!
+        );
+        
+        // Update character with selected features
+        const updatedCharacter = {
+          ...character,
+          selectedFeatures: [...(character.selectedFeatures || []), ...selectedFeatures]
+        };
+        await characterService.updateCharacter(updatedCharacter);
+      }
+      
       setBuilderState(prev => ({ ...prev, characterId: character.id }));
       
       // Load the character into the character service
       await characterService.loadCharacter(character.id);
       
-      setCurrentStep(2); // Move to attributes step
+      setCurrentStep(3); // Move to attributes step
     } catch (error) {
       console.error('Failed to create character:', error);
     }
@@ -119,7 +209,9 @@ export function CharacterBuilder({
       case 'class':
         return !!builderState.classId;
       case 'heritage':
-        return canProceedFromStep2();
+        return canProceedFromHeritage();
+      case 'features':
+        return canProceedFromHeritage(); // Can proceed once selections are made (or if none required)
       case 'attributes':
         return !!builderState.characterId;
       case 'skills':
@@ -139,13 +231,16 @@ export function CharacterBuilder({
         setCurrentStep(1); // Go to heritage
         break;
       case 'heritage':
-        await proceedToAttributes(); // This creates the character and moves to step 2
+        setCurrentStep(2); // Go to features
+        break;
+      case 'features':
+        await createCharacterWithFeatures(); // This creates the character and moves to attributes
         break;
       case 'attributes':
-        setCurrentStep(3); // Go to skills
+        setCurrentStep(4); // Go to skills
         break;
       case 'skills':
-        setCurrentStep(4); // Go to equipment
+        setCurrentStep(5); // Go to equipment
         break;
       case 'equipment':
         handleCreateCharacter();
@@ -155,9 +250,9 @@ export function CharacterBuilder({
 
   const handlePrevious = () => {
     if (currentStep > 0) {
-      // Don't allow going back from attributes to heritage after character is created
-      if (currentStep === 2 && builderState.characterId) {
-        // Character already created, can't go back to heritage
+      // Don't allow going back from attributes to features after character is created
+      if (currentStep === 3 && builderState.characterId) {
+        // Character already created, can't go back to features
         return;
       }
       setCurrentStep(currentStep - 1);
@@ -169,6 +264,8 @@ export function CharacterBuilder({
       case 'class':
         return 'Next: Heritage';
       case 'heritage':
+        return 'Next: Features';
+      case 'features':
         return 'Create Character';
       case 'attributes':
         return 'Next: Skills';
@@ -185,8 +282,10 @@ export function CharacterBuilder({
     switch (STEPS[currentStep].id) {
       case 'heritage':
         return 'Back to Class';
+      case 'features':
+        return 'Back to Heritage';
       case 'attributes':
-        return builderState.characterId ? 'Previous' : 'Back to Heritage';
+        return builderState.characterId ? 'Previous' : 'Back to Features';
       case 'skills':
         return 'Back to Attributes';
       case 'equipment':
@@ -219,6 +318,17 @@ export function CharacterBuilder({
             onNameChange={handleNameChange}
           />
         );
+      case 'features':
+        if (!builderState.classId || !builderState.ancestryId || !builderState.backgroundId) return null;
+        return (
+          <FeaturesOverview
+            classId={builderState.classId}
+            ancestryId={builderState.ancestryId}
+            backgroundId={builderState.backgroundId}
+            featureSelections={builderState.featureSelections}
+            onFeatureSelectionsChange={handleFeatureSelectionsChange}
+          />
+        );
       case 'attributes':
         if (!builderState.characterId) return null;
         return (
@@ -247,13 +357,17 @@ export function CharacterBuilder({
       completed.push(0); // Class step
     }
     
-    if (canProceedFromStep2() || builderState.characterId) {
+    if (canProceedFromHeritage() || builderState.characterId) {
       completed.push(1); // Heritage step
     }
     
+    if (canProceedFromHeritage()) {
+      completed.push(2); // Features step (available after heritage)
+    }
+    
     if (builderState.characterId) {
-      completed.push(2); // Attributes step (auto-completed when character created)
-      completed.push(3); // Skills step (optional, so marked complete when available)
+      completed.push(3); // Attributes step (auto-completed when character created)
+      completed.push(4); // Skills step (optional, so marked complete when available)
     }
     
     if (builderState.equipmentReady) {
