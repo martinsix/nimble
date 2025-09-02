@@ -5,6 +5,7 @@ export { rogue } from './rogue';
 export { cleric } from './cleric';
 export { berserkerClass as berserker } from './berserker';
 export { cheatClass as cheat } from './cheat';
+export { commanderClass as commander } from './commander';
 
 // Import all class definitions for the main classes object
 import { fighter } from './fighter';
@@ -13,6 +14,7 @@ import { rogue } from './rogue';
 import { cleric } from './cleric';
 import { berserkerClass as berserker } from './berserker';
 import { cheatClass as cheat } from './cheat';
+import { commanderClass as commander } from './commander';
 
 import { ClassDefinition } from '../../types/class';
 
@@ -23,7 +25,8 @@ export const classDefinitions: Record<string, ClassDefinition> = {
   rogue,
   cleric,
   berserker,
-  cheat
+  cheat,
+  commander
 };
 
 // Helper function to get a class definition by ID
