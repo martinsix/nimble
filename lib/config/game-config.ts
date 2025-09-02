@@ -1,3 +1,9 @@
+export interface SkillDefinition {
+  name: string;
+  label: string;
+  attribute: 'strength' | 'dexterity' | 'intelligence' | 'will';
+}
+
 export interface GameConfig {
   dice: {
     maxCriticalHitsInRow: number;
@@ -17,6 +23,7 @@ export interface GameConfig {
     };
     initialSkillPoints: number;
   };
+  skills: SkillDefinition[];
   storage: {
     maxRollHistory: number;
   };
@@ -44,6 +51,18 @@ export const gameConfig: GameConfig = {
     },
     initialSkillPoints: 4,
   },
+  skills: [
+    { name: 'arcana', label: 'Arcana', attribute: 'intelligence' },
+    { name: 'examination', label: 'Examination', attribute: 'intelligence' },
+    { name: 'finesse', label: 'Finesse', attribute: 'dexterity' },
+    { name: 'influence', label: 'Influence', attribute: 'will' },
+    { name: 'insight', label: 'Insight', attribute: 'will' },
+    { name: 'might', label: 'Might', attribute: 'strength' },
+    { name: 'lore', label: 'Lore', attribute: 'intelligence' },
+    { name: 'naturecraft', label: 'Naturecraft', attribute: 'will' },
+    { name: 'perception', label: 'Perception', attribute: 'will' },
+    { name: 'stealth', label: 'Stealth', attribute: 'dexterity' },
+  ],
   storage: {
     maxRollHistory: 100,
   },

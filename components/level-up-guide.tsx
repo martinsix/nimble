@@ -1,16 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sparkles, Plus, Minus } from 'lucide-react';
-import { Character } from '@/lib/types/character';
+import { Sparkles } from 'lucide-react';
 import { useCharacterService } from '@/lib/hooks/use-character-service';
 import { getCharacterService, getDiceService, getClassService, getContentRepository } from '@/lib/services/service-factory';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { WizardDialog } from '@/components/wizard/wizard-dialog';
+import { LevelSelectionStep, HitPointsStep, SkillsStep } from './level-up-guide/steps';
 
 interface LevelUpGuideProps {
   open: boolean;
@@ -28,11 +23,13 @@ interface LevelUpData {
   totalHpGain: number;
   newMaxHp: number;
   newHitDice: { current: number; max: number };
+  skillAllocations: Record<string, number>;
 }
 
 const STEPS = [
   { id: 'levels', label: 'Choose Levels' },
   { id: 'hp', label: 'Roll Hit Points' },
+  { id: 'skills', label: 'Allocate Skills' },
   // More steps to come: 'features', 'abilities', 'review'
 ];
 
@@ -44,7 +41,8 @@ export function LevelUpGuide({ open, onOpenChange }: LevelUpGuideProps) {
     hpRolls: [],
     totalHpGain: 0,
     newMaxHp: character?.hitPoints.max || 0,
-    newHitDice: character ? { ...character.hitDice } : { current: 0, max: 0 }
+    newHitDice: character ? { ...character.hitDice } : { current: 0, max: 0 },
+    skillAllocations: {}
   });
 
   // Service instances
@@ -63,6 +61,9 @@ export function LevelUpGuide({ open, onOpenChange }: LevelUpGuideProps) {
       // Moving from level selection to HP rolling - roll the dice
       rollHitPoints();
       setCurrentStep(1);
+    } else if (currentStep === 1) {
+      // Moving from HP to Skills
+      setCurrentStep(2);
     } else if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
@@ -118,7 +119,19 @@ export function LevelUpGuide({ open, onOpenChange }: LevelUpGuideProps) {
 
   const applyLevelUp = async () => {
     try {
-      // Update character with new level and HP
+      // Apply skill allocations
+      const updatedSkills = { ...character.skills };
+      Object.entries(levelUpData.skillAllocations).forEach(([skillName, points]) => {
+        const skill = updatedSkills[skillName as keyof typeof updatedSkills];
+        if (points > 0 && skill) {
+          updatedSkills[skillName as keyof typeof updatedSkills] = {
+            ...skill,
+            modifier: (skill.modifier || 0) + points
+          };
+        }
+      });
+      
+      // Update character with new level, HP, and skills
       const updatedCharacter = {
         ...character,
         level: character.level + levelUpData.levelsToGain,
@@ -131,7 +144,8 @@ export function LevelUpGuide({ open, onOpenChange }: LevelUpGuideProps) {
           ...character.hitDice,
           current: levelUpData.newHitDice.current,
           max: levelUpData.newHitDice.max
-        }
+        },
+        skills: updatedSkills
       };
       
       // Save the updated character
@@ -165,6 +179,14 @@ export function LevelUpGuide({ open, onOpenChange }: LevelUpGuideProps) {
           onHpChange={(newHp) => setLevelUpData(prev => ({ ...prev, newMaxHp: newHp }))}
         />;
       
+      case 'skills':
+        return <SkillsStep 
+          character={character}
+          levelsToGain={levelUpData.levelsToGain}
+          skillAllocations={levelUpData.skillAllocations}
+          onSkillAllocationsChange={(allocations) => setLevelUpData(prev => ({ ...prev, skillAllocations: allocations }))}
+        />;
+      
       default:
         return null;
     }
@@ -188,185 +210,5 @@ export function LevelUpGuide({ open, onOpenChange }: LevelUpGuideProps) {
         {renderStepContent()}
       </div>
     </WizardDialog>
-  );
-}
-
-// Level Selection Step Component
-function LevelSelectionStep({ 
-  character, 
-  levelsToGain, 
-  onLevelsChange 
-}: { 
-  character: Character;
-  levelsToGain: number;
-  onLevelsChange: (levels: number) => void;
-}) {
-  const maxLevel = 20; // Standard D&D max level
-  const availableLevels = maxLevel - character.level;
-
-  const handleIncrement = () => {
-    if (levelsToGain < availableLevels) {
-      onLevelsChange(levelsToGain + 1);
-    }
-  };
-
-  const handleDecrement = () => {
-    if (levelsToGain > 1) {
-      onLevelsChange(levelsToGain - 1);
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <h3 className="text-lg font-semibold">Level Up Your Character</h3>
-        <p className="text-sm text-muted-foreground">
-          {character.name} is currently level {character.level}
-        </p>
-      </div>
-
-      <Card>
-        <CardContent className="pt-6">
-          <div className="space-y-6">
-            <div>
-              <Label htmlFor="levels">How many levels would you like to gain?</Label>
-              <div className="flex items-center gap-2 mt-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={handleDecrement}
-                  disabled={levelsToGain <= 1}
-                  className="h-10 w-10"
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <Input
-                  id="levels"
-                  type="number"
-                  min={1}
-                  max={availableLevels}
-                  value={levelsToGain}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value) || 1;
-                    onLevelsChange(Math.min(Math.max(1, value), availableLevels));
-                  }}
-                  className="w-20 text-center text-lg font-semibold"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={handleIncrement}
-                  disabled={levelsToGain >= availableLevels}
-                  className="h-10 w-10"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-                <span className="text-sm text-muted-foreground ml-2">
-                  (Max: {availableLevels})
-                </span>
-              </div>
-            </div>
-
-            {/* Level Progression Indicator */}
-            <div className="flex items-center justify-center py-4 bg-muted/50 rounded-lg">
-              <div className="text-2xl font-bold">
-                Level {character.level} → Level {character.level + levelsToGain}
-              </div>
-            </div>
-
-            <div className="pt-4 border-t">
-              <p className="text-sm font-medium mb-2">What you'll gain:</p>
-              <div className="space-y-1 text-sm text-muted-foreground">
-                <p>• {levelsToGain} additional hit {levelsToGain === 1 ? 'die' : 'dice'} to roll for HP</p>
-                <p>• Increased maximum hit points</p>
-                <p>• Possible new class features</p>
-                <p>• Possible ability score improvements</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-// Hit Points Step Component
-function HitPointsStep({ 
-  character, 
-  levelUpData,
-  hitDieSize,
-  onHpChange 
-}: { 
-  character: Character;
-  levelUpData: LevelUpData;
-  hitDieSize: string;
-  onHpChange: (hp: number) => void;
-}) {
-  return (
-    <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <h3 className="text-lg font-semibold">Roll for Hit Points</h3>
-        <p className="text-sm text-muted-foreground">
-          Rolling {hitDieSize} with advantage for each level
-        </p>
-      </div>
-
-      <Card>
-        <CardContent className="pt-6 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Current HP</Label>
-              <div className="text-2xl font-bold">{character.hitPoints.max}</div>
-            </div>
-            <div>
-              <Label htmlFor="new-hp">New HP</Label>
-              <Input
-                id="new-hp"
-                type="number"
-                value={levelUpData.newMaxHp}
-                onChange={(e) => onHpChange(parseInt(e.target.value) || 0)}
-                className="text-2xl font-bold h-auto py-1"
-              />
-            </div>
-          </div>
-
-          <div className="pt-4 border-t">
-            <p className="text-sm font-medium mb-3">Hit Die Rolls (with advantage):</p>
-            <div className="space-y-2">
-              {levelUpData.hpRolls.map((roll, index) => (
-                <div key={index} className="flex items-center justify-between p-2 bg-muted/50 rounded">
-                  <span className="text-sm font-medium">Level {roll.level}:</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">
-                      Rolled: {roll.roll1} & {roll.roll2}
-                    </span>
-                    <Badge variant="default">
-                      Result: {roll.result}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-3 pt-3 border-t flex items-center justify-between">
-              <span className="font-medium">Total HP Gain:</span>
-              <Badge className="text-lg px-3 py-1">+{levelUpData.totalHpGain}</Badge>
-            </div>
-          </div>
-
-          <div className="pt-4 border-t">
-            <p className="text-sm font-medium mb-2">Hit Dice:</p>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Current: {character.hitDice.current}/{character.hitDice.max}</span>
-              <span>→</span>
-              <span className="text-foreground font-medium">
-                New: {levelUpData.newHitDice.current}/{levelUpData.newHitDice.max}
-              </span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
   );
 }
