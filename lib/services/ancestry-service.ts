@@ -157,19 +157,4 @@ export class AncestryService implements IAncestryService {
   async removeCustomAncestry(ancestryId: string): Promise<void> {
     return this.contentRepository.removeCustomAncestry(ancestryId);
   }
-
-  /**
-   * Validate ancestry definition
-   */
-  validateAncestryDefinition(ancestry: Partial<AncestryDefinition>): boolean {
-    return !!(
-      ancestry.id &&
-      ancestry.name &&
-      ancestry.description &&
-      ancestry.size &&
-      typeof ancestry.baseSpeed === 'number' &&
-      ancestry.languages &&
-      ancestry.features
-    );
-  }
 }

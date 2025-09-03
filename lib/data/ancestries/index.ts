@@ -3,12 +3,14 @@ export { human } from './human';
 export { elf } from './elf';
 export { dwarf } from './dwarf';
 export { halfling } from './halfling';
+export { gnome } from './gnome';
 
 // Import all ancestry definitions for the main ancestries object
 import { human } from './human';
 import { elf } from './elf';
 import { dwarf } from './dwarf';
 import { halfling } from './halfling';
+import { gnome } from './gnome';
 
 import { AncestryDefinition } from '../../types/ancestry';
 
@@ -17,7 +19,8 @@ export const ancestryDefinitions: Record<string, AncestryDefinition> = {
   human,
   elf,
   dwarf,
-  halfling
+  halfling,
+  gnome
 };
 
 // Helper function to get an ancestry definition by ID

@@ -1,7 +1,5 @@
-import { AttributeName, SaveAdvantageMap } from './character';
 import { Ability } from './abilities';
-import { ResourceDefinition } from './resources';
-import { ArmorProficiency, WeaponProficiency, StatBoost, ProficiencyGrant, SpellSchool } from './class';
+import { StatBoost, ProficiencyGrant } from './class';
 import { AncestryNameConfig } from '../utils/name-generator';
 
 export type AncestryFeatureType = 'ability' | 'passive_feature' | 'stat_boost' | 'proficiency' | 'darkvision' | 'resistance';
@@ -31,7 +29,6 @@ export interface AncestryAbilityFeature extends BaseAncestryFeature {
 // Passive feature - background benefits, cultural traits
 export interface AncestryPassiveFeature extends BaseAncestryFeature {
   type: 'passive_feature';
-  category?: 'cultural' | 'biological' | 'magical' | 'social'; // Ancestry-specific categories
 }
 
 // Stat boost - racial attribute modifiers
@@ -73,11 +70,6 @@ export interface AncestryDefinition {
   name: string; // Display name (e.g., "Human", "Elf", "Dwarf")
   description: string; // Brief description of the ancestry
   size: SizeCategory; // Default size category
-  baseSpeed: number; // Base movement speed in feet
-  languages: string[]; // Languages known by default
-  lifespan?: string; // Typical lifespan description
-  culture?: string; // Cultural background description
-  physicalTraits?: string; // Physical appearance description
   features: AncestryFeature[]; // All features provided by this ancestry
   nameConfig?: AncestryNameConfig; // Optional name generation configuration
 }

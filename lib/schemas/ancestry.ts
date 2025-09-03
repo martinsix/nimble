@@ -25,7 +25,6 @@ const AncestryAbilityFeatureSchema = BaseAncestryFeatureSchema.extend({
 // Passive feature - background benefits, cultural traits
 const AncestryPassiveFeatureSchema = BaseAncestryFeatureSchema.extend({
   type: z.literal('passive_feature'),
-  category: z.enum(['cultural', 'biological', 'magical', 'social']).optional().meta({ title: 'Category', description: 'Feature category' })
 });
 
 // Stat boost - racial attribute modifiers
@@ -100,11 +99,6 @@ export const AncestryDefinitionSchema = z.object({
   name: z.string().min(1).meta({ title: 'Name', description: 'Display name of the ancestry' }),
   description: z.string().min(1).meta({ title: 'Description', description: 'Detailed description of the ancestry' }),
   size: SizeCategorySchema.meta({ title: 'Size', description: 'Default size category' }),
-  baseSpeed: z.number().int().min(0).meta({ title: 'Base Speed', description: 'Base movement speed in feet' }),
-  languages: z.array(z.string().min(1)).meta({ title: 'Languages', description: 'Languages known by default' }),
-  lifespan: z.string().optional().meta({ title: 'Lifespan', description: 'Typical lifespan description' }),
-  culture: z.string().optional().meta({ title: 'Culture', description: 'Cultural background description' }),
-  physicalTraits: z.string().optional().meta({ title: 'Physical Traits', description: 'Physical appearance description' }),
   features: z.array(AncestryFeatureSchema).meta({ title: 'Features', description: 'All features provided by this ancestry' }),
   nameConfig: AncestryNameConfigSchema.optional().meta({ title: 'Name Config', description: 'Optional name generation configuration' })
 }).meta({ title: 'Ancestry Definition', description: 'Character ancestry definition with features and traits' });

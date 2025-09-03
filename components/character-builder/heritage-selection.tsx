@@ -116,9 +116,6 @@ export function HeritageSelection({
                   <Badge variant="outline" className="text-xs capitalize px-1 py-0">
                     {ancestry.size}
                   </Badge>
-                  <Badge variant="outline" className="text-xs px-1 py-0">
-                    Speed {ancestry.baseSpeed}
-                  </Badge>
                 </div>
               </CardContent>
             </Card>

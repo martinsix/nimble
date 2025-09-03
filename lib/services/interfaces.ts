@@ -125,7 +125,6 @@ export interface IAncestryService {
   getAvailableAncestries(): AncestryDefinition[];
   addCustomAncestry(ancestry: AncestryDefinition): Promise<void>;
   removeCustomAncestry(ancestryId: string): Promise<void>;
-  validateAncestryDefinition(ancestry: Partial<AncestryDefinition>): boolean;
 }
 
 /**
