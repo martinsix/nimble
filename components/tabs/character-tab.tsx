@@ -12,8 +12,8 @@ export function CharacterTab() {
     <div className="space-y-6">
       {/* Pool Selections - Important actions that need player attention */}
       <PoolSelectionsSection />
-      <AttributesSection />
       <HitDiceSection />
+      <AttributesSection />
       <ResourceSection />
       <AbilitySection />
       <ClassFeaturesSection />
