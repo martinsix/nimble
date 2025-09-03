@@ -57,8 +57,8 @@ import { wyrdling } from './wyrdling';
 
 import { AncestryDefinition } from '../../types/ancestry';
 
-// Main ancestry definitions object
-export const ancestryDefinitions: Record<string, AncestryDefinition> = {
+// Main ancestry definitions array
+export const ancestryDefinitions: AncestryDefinition[] = [
   // Common ancestries
   human,
   elf,
@@ -78,7 +78,7 @@ export const ancestryDefinitions: Record<string, AncestryDefinition> = {
   changeling,
   crystalborn,
   dryad,
-  'half-giant': halfGiant,
+  halfGiant,
   minotaur,
   oozeling,
   planarbeing,
@@ -86,16 +86,16 @@ export const ancestryDefinitions: Record<string, AncestryDefinition> = {
   stoatling,
   turtlefolk,
   wyrdling
-};
+];
 
 // Helper function to get an ancestry definition by ID
 export function getAncestryDefinition(ancestryId: string): AncestryDefinition | null {
-  return ancestryDefinitions[ancestryId] || null;
+  return ancestryDefinitions.find(ancestry => ancestry.id === ancestryId) || null;
 }
 
 // Helper function to get all available ancestries
 export function getAllAncestries(): AncestryDefinition[] {
-  return Object.values(ancestryDefinitions);
+  return ancestryDefinitions;
 }
 
 // Helper function to get ancestry features
@@ -108,5 +108,5 @@ export function getAncestryFeatures(ancestryId: string): AncestryDefinition['fea
 
 // Helper function to check if an ancestry is available
 export function isValidAncestry(ancestryId: string): boolean {
-  return ancestryId in ancestryDefinitions;
+  return ancestryDefinitions.some(ancestry => ancestry.id === ancestryId);
 }

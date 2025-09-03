@@ -94,12 +94,12 @@ export class ContentRepositoryService {
   // Ancestry Management
   public getAllAncestries(): AncestryDefinition[] {
     const customAncestries = this.getCustomAncestries();
-    return [...Object.values(builtInAncestries), ...customAncestries];
+    return [...builtInAncestries, ...customAncestries];
   }
 
   public getAncestryDefinition(ancestryId: string): AncestryDefinition | null {
     // Check built-in ancestries first
-    const builtInAncestry = builtInAncestries[ancestryId];
+    const builtInAncestry = builtInAncestries.find(ancestry => ancestry.id === ancestryId);
     if (builtInAncestry) return builtInAncestry;
 
     // Check custom ancestries
@@ -179,12 +179,12 @@ export class ContentRepositoryService {
   // Background Management
   public getAllBackgrounds(): BackgroundDefinition[] {
     const customBackgrounds = this.getCustomBackgrounds();
-    return [...Object.values(builtInBackgrounds), ...customBackgrounds];
+    return [...builtInBackgrounds, ...customBackgrounds];
   }
 
   public getBackgroundDefinition(backgroundId: string): BackgroundDefinition | null {
     // Check built-in backgrounds first
-    const builtInBackground = builtInBackgrounds[backgroundId];
+    const builtInBackground = builtInBackgrounds.find(background => background.id === backgroundId);
     if (builtInBackground) return builtInBackground;
 
     // Check custom backgrounds
