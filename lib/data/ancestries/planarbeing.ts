@@ -12,5 +12,20 @@ export const planarbeing: AncestryDefinition = {
       name: 'Planeshift',
       description: 'Whenever you Defend, you can gain 1 Wound to temporarily phase out of the material plane and ignore the damage. -2 max Wounds.'
     }
-  ]
+  ],
+  nameConfig: {
+    unisex: {
+      syllables: {
+        prefixes: ['void', 'plane', 'ether', 'phase', 'shift', 'drift', 'wander', 'flow', 'between', 'beyond', 'far', 'distant'],
+        middle: ['walk', 'step', 'drift', 'flow', 'shift', 'phase', 'move'],
+        suffixes: ['walker', 'stepper', 'drifter', 'shifter', 'phaser', 'wanderer', 'born', 'touched', 'made']
+      },
+      patterns: ['P', 'PS', 'PM'],
+      constraints: {
+        minLength: 4,
+        maxLength: 14,
+        syllableCount: { min: 1, max: 2 }
+      }
+    }
+  }
 };

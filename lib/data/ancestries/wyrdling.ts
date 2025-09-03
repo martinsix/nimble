@@ -12,5 +12,20 @@ export const wyrdling: AncestryDefinition = {
       name: 'Chaotic Surge',
       description: 'Whenever you or a willing ally within Reach 6 casts a tiered spell, you may allow them to roll on the Chaos Table. 1/encounter.'
     }
-  ]
+  ],
+  nameConfig: {
+    unisex: {
+      syllables: {
+        prefixes: ['chaos', 'wild', 'weird', 'strange', 'odd', 'twist', 'flux', 'shift', 'change', 'warp', 'bend', 'magic'],
+        middle: ['spark', 'surge', 'burst', 'flash', 'pop', 'crack', 'twist'],
+        suffixes: ['spark', 'surge', 'burst', 'flash', 'pop', 'crack', 'twist', 'ling', 'kin', 'born', 'made', 'touched']
+      },
+      patterns: ['P', 'PS', 'PM'],
+      constraints: {
+        minLength: 4,
+        maxLength: 14,
+        syllableCount: { min: 1, max: 2 }
+      }
+    }
+  }
 };

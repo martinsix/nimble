@@ -12,5 +12,20 @@ export const crystalborn: AncestryDefinition = {
       name: 'Reflective Aura',
       description: 'When you Defend, gain KEY armor and deal KEY damage back to the attacker. 1/encounter.'
     }
-  ]
+  ],
+  nameConfig: {
+    unisex: {
+      syllables: {
+        prefixes: ['crystal', 'prism', 'quartz', 'gem', 'shard', 'facet', 'gleam', 'shine', 'spark', 'glint', 'dazzle', 'bright'],
+        middle: ['song', 'hum', 'ring', 'chime', 'tone', 'note', 'echo'],
+        suffixes: ['song', 'hum', 'ring', 'chime', 'tone', 'note', 'echo', 'born', 'made', 'formed', 'carved']
+      },
+      patterns: ['P', 'PS', 'PM'],
+      constraints: {
+        minLength: 4,
+        maxLength: 16,
+        syllableCount: { min: 1, max: 2 }
+      }
+    }
+  }
 };

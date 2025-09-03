@@ -12,5 +12,46 @@ export const orc: AncestryDefinition = {
       name: 'Relentless',
       description: 'When you would drop to 0 HP, you may set your HP to LVL instead, 1/Safe Rest. +1 Might. You know Goblin if your INT is not negative (but you call it Orcish, of course).'
     }
-  ]
+  ],
+  nameConfig: {
+    male: {
+      syllables: {
+        prefixes: ['gra', 'gro', 'gru', 'kro', 'mor', 'rog', 'thra', 'ugh', 'urk', 'var', 'gur', 'mag', 'bru', 'drak'],
+        middle: ['ak', 'ok', 'uk', 'ag', 'og', 'ug', 'ar', 'or', 'ur'],
+        suffixes: ['ash', 'gul', 'mash', 'nak', 'narg', 'rog', 'ugh', 'urk', 'goth', 'tok', 'lok', 'gak']
+      },
+      patterns: ['P', 'PM', 'PS'],
+      constraints: {
+        minLength: 3,
+        maxLength: 10,
+        syllableCount: { min: 1, max: 2 }
+      }
+    },
+    female: {
+      syllables: {
+        prefixes: ['gra', 'kri', 'mog', 'rog', 'sha', 'ugh', 'var', 'yar', 'zog', 'bru', 'dra', 'mag'],
+        middle: ['a', 'o', 'u', 'ak', 'ok', 'uk'],
+        suffixes: ['a', 'ash', 'ga', 'ka', 'na', 'ra', 'sha', 'tha', 'gul', 'mog']
+      },
+      patterns: ['P', 'PM', 'PS'],
+      constraints: {
+        minLength: 3,
+        maxLength: 10,
+        syllableCount: { min: 1, max: 2 }
+      }
+    },
+    surnames: {
+      syllables: {
+        prefixes: ['blood', 'bone', 'death', 'fire', 'iron', 'skull', 'stone', 'war', 'wolf', 'rage', 'storm', 'black'],
+        middle: ['tooth', 'claw', 'fist', 'axe', 'blade', 'hammer'],
+        suffixes: ['tooth', 'claw', 'fist', 'axe', 'blade', 'hammer', 'crusher', 'basher', 'slayer', 'bane']
+      },
+      patterns: ['P', 'PS', 'PM'],
+      constraints: {
+        minLength: 4,
+        maxLength: 16,
+        syllableCount: { min: 1, max: 2 }
+      }
+    }
+  }
 };

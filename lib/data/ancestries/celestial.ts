@@ -12,5 +12,46 @@ export const celestial: AncestryDefinition = {
       name: 'Highborn',
       description: "Your disadvantaged save is Neutral instead. You know Celestial if your INT isn't negative."
     }
-  ]
+  ],
+  nameConfig: {
+    male: {
+      syllables: {
+        prefixes: ['aur', 'cel', 'lum', 'ray', 'ser', 'uri', 'gab', 'mich', 'raph', 'az', 'el', 'joph', 'raguel', 'rem'],
+        middle: ['ae', 'ai', 'iel', 'ael', 'ial', 'uel', 'ith', 'oth', 'ien'],
+        suffixes: ['el', 'iel', 'ael', 'ial', 'uel', 'ith', 'oth', 'ien', 'on', 'an']
+      },
+      patterns: ['P', 'PM', 'PS', 'PMS'],
+      constraints: {
+        minLength: 4,
+        maxLength: 14,
+        syllableCount: { min: 1, max: 3 }
+      }
+    },
+    female: {
+      syllables: {
+        prefixes: ['aur', 'cel', 'lum', 'ray', 'ser', 'gab', 'sar', 'mir', 'raph', 'az', 'el', 'joph', 'zel'],
+        middle: ['ae', 'ai', 'iel', 'ael', 'ial', 'iel', 'ith', 'oth', 'ien', 'a', 'e', 'i'],
+        suffixes: ['a', 'ah', 'iel', 'ael', 'ial', 'iel', 'ith', 'wen', 'ien', 'on', 'an', 'ela', 'ina']
+      },
+      patterns: ['P', 'PM', 'PS', 'PMS'],
+      constraints: {
+        minLength: 4,
+        maxLength: 14,
+        syllableCount: { min: 1, max: 3 }
+      }
+    },
+    surnames: {
+      syllables: {
+        prefixes: ['bright', 'divine', 'golden', 'light', 'pure', 'radiant', 'sacred', 'silver', 'star', 'sun', 'dawn', 'heaven'],
+        middle: ['wing', 'song', 'heart', 'soul', 'voice', 'light', 'fire'],
+        suffixes: ['wing', 'song', 'heart', 'soul', 'voice', 'light', 'fire', 'born', 'touched', 'blessed', 'sworn']
+      },
+      patterns: ['P', 'PS', 'PM'],
+      constraints: {
+        minLength: 5,
+        maxLength: 16,
+        syllableCount: { min: 1, max: 2 }
+      }
+    }
+  }
 };

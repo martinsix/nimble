@@ -12,5 +12,20 @@ export const turtlefolk: AncestryDefinition = {
       name: 'Slow & Steady',
       description: '+4 Armor, -2 speed.'
     }
-  ]
+  ],
+  nameConfig: {
+    unisex: {
+      syllables: {
+        prefixes: ['shell', 'slow', 'steady', 'patient', 'wise', 'ancient', 'old', 'calm', 'peace', 'quiet', 'still', 'deep'],
+        middle: ['shell', 'back', 'pace', 'step', 'move', 'flow'],
+        suffixes: ['shell', 'back', 'pace', 'stepper', 'mover', 'walker', 'folk', 'kin', 'born', 'made']
+      },
+      patterns: ['P', 'PS', 'PM'],
+      constraints: {
+        minLength: 4,
+        maxLength: 14,
+        syllableCount: { min: 1, max: 2 }
+      }
+    }
+  }
 };

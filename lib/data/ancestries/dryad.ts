@@ -12,5 +12,20 @@ export const dryad: AncestryDefinition = {
       name: 'Danger Pollen/Spores',
       description: 'Whenever an enemy causes you one or more Wounds, you excrete soporific spores: all adjacent enemies are Dazed. You know Elvish if your INT is not negative.'
     }
-  ]
+  ],
+  nameConfig: {
+    unisex: {
+      syllables: {
+        prefixes: ['oak', 'ash', 'elm', 'willow', 'birch', 'moss', 'fern', 'leaf', 'bloom', 'petal', 'root', 'bark', 'thorn', 'vine', 'spore', 'cap'],
+        middle: ['song', 'whisper', 'dance', 'sway', 'grow', 'bloom', 'flow'],
+        suffixes: ['song', 'whisper', 'dance', 'sway', 'grove', 'bloom', 'flow', 'born', 'wood', 'leaf', 'root', 'branch']
+      },
+      patterns: ['P', 'PS', 'PM'],
+      constraints: {
+        minLength: 3,
+        maxLength: 14,
+        syllableCount: { min: 1, max: 2 }
+      }
+    }
+  }
 };

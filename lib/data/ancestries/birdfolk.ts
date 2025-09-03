@@ -12,5 +12,20 @@ export const birdfolk: AncestryDefinition = {
       name: 'Hollow Bones',
       description: 'You have a fly Speed as long as you are wearing armor no heavier than Leather. Crits against you are Vicious (the attacker rolls 1 additional die). Forced movement moves you twice as far.'
     }
-  ]
+  ],
+  nameConfig: {
+    unisex: {
+      syllables: {
+        prefixes: ['aer', 'avi', 'sky', 'wing', 'crow', 'hawk', 'eagle', 'swift', 'storm', 'wind', 'cloud', 'dawn', 'dusk', 'sun', 'moon'],
+        middle: ['wing', 'song', 'call', 'cry', 'soar', 'fly', 'dive', 'glide', 'nest', 'perch'],
+        suffixes: ['wing', 'song', 'call', 'cry', 'soar', 'flight', 'feather', 'beak', 'talon', 'nest', 'perch', 'sky', 'air']
+      },
+      patterns: ['P', 'PS', 'PM'],
+      constraints: {
+        minLength: 4,
+        maxLength: 14,
+        syllableCount: { min: 1, max: 2 }
+      }
+    }
+  }
 };

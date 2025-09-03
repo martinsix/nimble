@@ -12,5 +12,20 @@ export const changeling: AncestryDefinition = {
       name: 'New Place, New Face',
       description: '+2 shifting skill points. You may take on the appearance of any ancestry. When you do, you may place your 2 shifting skill points into any 1 skill. 1/day.'
     }
-  ]
+  ],
+  nameConfig: {
+    unisex: {
+      syllables: {
+        prefixes: ['flux', 'shift', 'mist', 'echo', 'mirror', 'shadow', 'void', 'drift', 'phase', 'blur', 'vague', 'wisp', 'grey', 'smoke'],
+        middle: ['walk', 'step', 'face', 'mask', 'veil', 'cloak', 'shift', 'turn', 'bend'],
+        suffixes: ['walker', 'stepper', 'face', 'mask', 'veil', 'cloak', 'shifter', 'turner', 'bender', 'ling', 'born', 'made']
+      },
+      patterns: ['P', 'PS', 'PM'],
+      constraints: {
+        minLength: 4,
+        maxLength: 14,
+        syllableCount: { min: 1, max: 2 }
+      }
+    }
+  }
 };

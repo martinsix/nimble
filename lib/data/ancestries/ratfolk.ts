@@ -12,5 +12,20 @@ export const ratfolk: AncestryDefinition = {
       name: 'Scurry',
       description: 'Gain +2 armor if you moved on your last turn.'
     }
-  ]
+  ],
+  nameConfig: {
+    unisex: {
+      syllables: {
+        prefixes: ['squeak', 'nibble', 'scurry', 'whisker', 'tail', 'scamper', 'dash', 'quick', 'swift', 'clever', 'sly', 'sharp'],
+        middle: ['tail', 'tooth', 'claw', 'nose', 'ear', 'eye', 'paw'],
+        suffixes: ['tail', 'tooth', 'claw', 'nose', 'ear', 'eye', 'paw', 'kin', 'folk', 'runner', 'squeaker']
+      },
+      patterns: ['P', 'PS', 'PM'],
+      constraints: {
+        minLength: 4,
+        maxLength: 14,
+        syllableCount: { min: 1, max: 2 }
+      }
+    }
+  }
 };
