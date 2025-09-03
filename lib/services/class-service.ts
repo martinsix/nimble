@@ -513,7 +513,14 @@ export class ClassService implements IClassService {
   }
 
   /**
-   * Get available pool features that can be selected by a character
+   * Get available pool features that can be selected by a character.
+   * 
+   * This returns the actual ClassFeature objects from a specific pool that haven't been selected yet.
+   * Used when displaying what features a player can choose from within a specific pool.
+   * 
+   * @param character - The character making the selection
+   * @param poolId - The ID of the specific feature pool to get features from
+   * @returns Array of ClassFeature objects that haven't been selected yet from this pool
    */
   getAvailablePoolFeatures(character: Character, poolId: string): ClassFeature[] {
     const pool = this.getFeaturePool(character.classId, poolId);
@@ -537,11 +544,24 @@ export class ClassService implements IClassService {
   }
 
   /**
-   * Get pick feature from pool features that are available for a character
+   * Get pick feature from pool features that are available for a character.
+   * 
+   * This returns PickFeatureFromPoolFeature objects (the "chooser" features) that still have selections remaining.
+   * These are the features that grant the ability to pick from a pool, not the pool contents themselves.
+   * Used to show which pool selections the player still needs to make.
+   * 
+   * @param character - The character to check for available selections
+   * @returns Array of PickFeatureFromPoolFeature objects that have remaining selections to make
    */
   getAvailablePoolSelections(character: Character): PickFeatureFromPoolFeature[] {
     const expectedFeatures = this.getExpectedFeaturesForCharacter(character);
-    return expectedFeatures.filter(feature => feature.type === 'pick_feature_from_pool') as PickFeatureFromPoolFeature[];
+    const pickFeatures = expectedFeatures.filter(feature => feature.type === 'pick_feature_from_pool') as PickFeatureFromPoolFeature[];
+    
+    // Filter out features where all selections have been made
+    return pickFeatures.filter(pickFeature => {
+      const remaining = this.getRemainingPoolSelections(character, pickFeature);
+      return remaining > 0;
+    });
   }
 
   /**
@@ -580,7 +600,13 @@ export class ClassService implements IClassService {
 
 
   /**
-   * Check if character has pending pool selections to make
+   * Check if character has pending pool selections to make.
+   * 
+   * This is a convenience method that checks if there are any PickFeatureFromPoolFeature 
+   * features with remaining selections. Returns true if the player needs to make selections.
+   * 
+   * @param character - The character to check
+   * @returns True if there are pool selections remaining, false otherwise
    */
   hasPendingPoolSelections(character: Character): boolean {
     const availableSelections = this.getAvailablePoolSelections(character);
@@ -588,7 +614,15 @@ export class ClassService implements IClassService {
   }
 
   /**
-   * Get count of remaining selections for a specific pool selection feature
+   * Get count of remaining selections for a specific pool selection feature.
+   * 
+   * This calculates how many more times a player can select from a specific pool.
+   * For example, if a PickFeatureFromPoolFeature allows 2 choices and the player has made 1,
+   * this returns 1.
+   * 
+   * @param character - The character making selections
+   * @param pickFeatureFromPoolFeature - The specific PickFeatureFromPoolFeature to check
+   * @returns Number of remaining selections allowed (0 if all selections have been made)
    */
   getRemainingPoolSelections(character: Character, pickFeatureFromPoolFeature: PickFeatureFromPoolFeature): number {
     const grantedByFeatureId = this.generateFeatureId(character.classId, pickFeatureFromPoolFeature.level, pickFeatureFromPoolFeature.name);
