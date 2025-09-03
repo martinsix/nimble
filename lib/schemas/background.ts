@@ -9,7 +9,6 @@ const BaseBackgroundFeatureSchema = z.object({
 // Passive feature - background benefits, social traits, knowledge, etc.
 const BackgroundPassiveFeatureSchema = BaseBackgroundFeatureSchema.extend({
   type: z.literal('passive_feature'),
-  category: z.enum(['social', 'professional', 'cultural', 'knowledge']).optional().meta({ title: 'Category', description: 'Feature category' })
 });
 
 export const BackgroundFeatureSchema = z.discriminatedUnion('type', [

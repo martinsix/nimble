@@ -65,11 +65,14 @@ export type AncestryFeature =
   | AncestryDarkvisionFeature
   | AncestryResistanceFeature;
 
+export type AncestryRarity = 'common' | 'exotic';
+
 export interface AncestryDefinition {
   id: string; // Unique identifier for the ancestry
   name: string; // Display name (e.g., "Human", "Elf", "Dwarf")
   description: string; // Brief description of the ancestry
   size: SizeCategory; // Default size category
+  rarity: AncestryRarity; // Common or exotic
   features: AncestryFeature[]; // All features provided by this ancestry
   nameConfig?: AncestryNameConfig; // Optional name generation configuration
 }

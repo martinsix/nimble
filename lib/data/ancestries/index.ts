@@ -1,26 +1,91 @@
-// Core fantasy ancestries
+// Common ancestries
 export { human } from './human';
 export { elf } from './elf';
 export { dwarf } from './dwarf';
 export { halfling } from './halfling';
 export { gnome } from './gnome';
 
+// Exotic ancestries
+export { bunbun } from './bunbun';
+export { goblin } from './goblin';
+export { dragonborn } from './dragonborn';
+export { kobold } from './kobold';
+export { fiendkin } from './fiendkin';
+export { orc } from './orc';
+export { birdfolk } from './birdfolk';
+export { celestial } from './celestial';
+export { changeling } from './changeling';
+export { crystalborn } from './crystalborn';
+export { dryad } from './dryad';
+export { halfGiant } from './half-giant';
+export { minotaur } from './minotaur';
+export { oozeling } from './oozeling';
+export { planarbeing } from './planarbeing';
+export { ratfolk } from './ratfolk';
+export { stoatling } from './stoatling';
+export { turtlefolk } from './turtlefolk';
+export { wyrdling } from './wyrdling';
+
 // Import all ancestry definitions for the main ancestries object
+// Common ancestries
 import { human } from './human';
 import { elf } from './elf';
 import { dwarf } from './dwarf';
 import { halfling } from './halfling';
 import { gnome } from './gnome';
 
+// Exotic ancestries
+import { bunbun } from './bunbun';
+import { goblin } from './goblin';
+import { dragonborn } from './dragonborn';
+import { kobold } from './kobold';
+import { fiendkin } from './fiendkin';
+import { orc } from './orc';
+import { birdfolk } from './birdfolk';
+import { celestial } from './celestial';
+import { changeling } from './changeling';
+import { crystalborn } from './crystalborn';
+import { dryad } from './dryad';
+import { halfGiant } from './half-giant';
+import { minotaur } from './minotaur';
+import { oozeling } from './oozeling';
+import { planarbeing } from './planarbeing';
+import { ratfolk } from './ratfolk';
+import { stoatling } from './stoatling';
+import { turtlefolk } from './turtlefolk';
+import { wyrdling } from './wyrdling';
+
 import { AncestryDefinition } from '../../types/ancestry';
 
 // Main ancestry definitions object
 export const ancestryDefinitions: Record<string, AncestryDefinition> = {
+  // Common ancestries
   human,
   elf,
   dwarf,
   halfling,
-  gnome
+  gnome,
+  
+  // Exotic ancestries
+  bunbun,
+  goblin,
+  dragonborn,
+  kobold,
+  fiendkin,
+  orc,
+  birdfolk,
+  celestial,
+  changeling,
+  crystalborn,
+  dryad,
+  'half-giant': halfGiant,
+  minotaur,
+  oozeling,
+  planarbeing,
+  ratfolk,
+  stoatling,
+  turtlefolk,
+  wyrdling
 };
 
 // Helper function to get an ancestry definition by ID

@@ -6,6 +6,7 @@ export const human: AncestryDefinition = {
   name: 'Human',
   description: 'Found in every terrain and environment, their curiosity and ambition drive them to explore every corner of the world, making them a ubiquitous and versatile race.',
   size: 'medium',
+  rarity: 'common',
   features: [
     {
       type: 'passive_feature',

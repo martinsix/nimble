@@ -3,6 +3,9 @@ import { z } from 'zod';
 // Size categories for different ancestries
 const SizeCategorySchema = z.enum(['tiny', 'small', 'medium', 'large', 'huge', 'gargantuan']);
 
+// Ancestry rarity types
+const AncestryRaritySchema = z.enum(['common', 'exotic']);
+
 // Damage/condition resistances
 const ResistanceSchema = z.object({
   type: z.enum(['damage', 'condition']).meta({ title: 'Resistance Type', description: 'Type of resistance (damage or condition)' }),
@@ -99,6 +102,7 @@ export const AncestryDefinitionSchema = z.object({
   name: z.string().min(1).meta({ title: 'Name', description: 'Display name of the ancestry' }),
   description: z.string().min(1).meta({ title: 'Description', description: 'Detailed description of the ancestry' }),
   size: SizeCategorySchema.meta({ title: 'Size', description: 'Default size category' }),
+  rarity: AncestryRaritySchema.meta({ title: 'Rarity', description: 'Common or exotic ancestry' }),
   features: z.array(AncestryFeatureSchema).meta({ title: 'Features', description: 'All features provided by this ancestry' }),
   nameConfig: AncestryNameConfigSchema.optional().meta({ title: 'Name Config', description: 'Optional name generation configuration' })
 }).meta({ title: 'Ancestry Definition', description: 'Character ancestry definition with features and traits' });
@@ -111,6 +115,7 @@ export const AncestryTraitSchema = z.object({
 // Export individual schemas for specific use cases
 export {
   SizeCategorySchema,
+  AncestryRaritySchema,
   ResistanceSchema,
   AncestryNameConfigSchema,
   NameGeneratorConfigSchema

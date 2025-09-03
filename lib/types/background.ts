@@ -9,7 +9,6 @@ interface BaseBackgroundFeature {
 // Passive feature - background benefits, social traits, knowledge, etc.
 export interface BackgroundPassiveFeature extends BaseBackgroundFeature {
   type: 'passive_feature';
-  category?: 'social' | 'professional' | 'cultural' | 'knowledge'; // Background-specific categories
 }
 
 export type BackgroundFeature = BackgroundPassiveFeature;

@@ -6,6 +6,7 @@ export const dwarf: AncestryDefinition = {
   name: 'Dwarf',
   description: 'Dwarf, in the old language, means "stone." You are resilient, solid, stout. Even when driven to exhaustion, you will not falter. Forgoing speed, you are gifted with physical vitality and a belly that can handle the finest (and worst) consumables this world has to offer.',
   size: 'medium',
+  rarity: 'common',
   features: [
     {
       type: 'passive_feature',
